@@ -1,4 +1,6 @@
 
+
+// сюда нужно передать массив ошибок который приходит в случае неправильных входных данных
 export const createErrorMessage = (array: any): {errorsMessages: {message: string, field: string}[]} => {
 
     const arrayWithErrors: { message: string, field: string }[] = [];

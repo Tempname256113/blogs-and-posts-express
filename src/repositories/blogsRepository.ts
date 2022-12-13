@@ -1,5 +1,6 @@
-import {IRequestBlogModel} from "../models/RequestBlogModel";
-import {IBlog} from "../models/BlogModel";
+import {IRequestBlogModel} from "../models/models";
+import {IBlog} from "../models/models";
+
 
 const blogsArrayDB: IBlog[] = [];
 let id: number = 0;
@@ -11,12 +12,43 @@ export const blogsRepository = {
     createNewBlog(newBlog: IRequestBlogModel): IBlog{
         id++;
         const createdBlog: IBlog = {
-            id: id,
+            id: String(id),
             name: newBlog.name,
             description: newBlog.description,
             websiteUrl: newBlog.websiteUrl
         };
         blogsArrayDB.push(createdBlog);
         return createdBlog;
+    },
+    getBlogByID(id: string){
+        return blogsArrayDB.find(elem => elem.id === id);
+    },
+    // возвращает false если такого объекта в базе данных нет
+    updateBlogByID(id: string, blog: IRequestBlogModel): false | true {
+        const findElemByID = blogsArrayDB.find(elem => elem.id === id);
+        if (!findElemByID) {
+            return false;
+        }
+        const otherElementsOfArray = blogsArrayDB.filter(elem => elem.id !== id);
+        blogsArrayDB.splice(0);
+        blogsArrayDB.push({
+            id: findElemByID.id,
+            name: blog.name,
+            description: blog.description,
+            websiteUrl: blog.websiteUrl
+        });
+        blogsArrayDB.push(...otherElementsOfArray);
+        return true;
+    },
+    // возвращает false если такого объекта нет в базе данных
+    deleteBlogByID(id: string): false | true {
+        const findElemByID = blogsArrayDB.find(elem => elem.id === id);
+        if (!findElemByID) {
+            return false;
+        }
+        const otherElementsOfArray = blogsArrayDB.filter(elem => elem.id !== id);
+        blogsArrayDB.splice(0);
+        blogsArrayDB.push(...otherElementsOfArray);
+        return true;
     }
 }
