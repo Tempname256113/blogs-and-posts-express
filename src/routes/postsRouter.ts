@@ -16,10 +16,10 @@ postsRouter.get('/', (req: Request, res: Response) => {
 
 postsRouter.post('/',
     authorizationMiddleware,
-    body('title').isString().isLength({max: 30}),
-    body('shortDescription').isString().isLength({max: 100}),
-    body('content').isString().isLength({max: 1000}),
-    body('blogId').isString().custom((value, {req}) => {
+    body('title').isString().trim().isLength({max: 30}),
+    body('shortDescription').isString().trim().isLength({max: 100}),
+    body('content').isString().trim().isLength({max: 1000}),
+    body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
     (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
@@ -45,10 +45,10 @@ postsRouter.get('/:id', (req: RequestWithURIParams<{id: string}>, res: ResponseW
 
 postsRouter.put('/:id',
     authorizationMiddleware,
-    body('title').isString().isLength({max: 30}),
-    body('shortDescription').isString().isLength({max: 100}),
-    body('content').isString().isLength({max: 1000}),
-    body('blogId').isString().custom((value, {req}) => {
+    body('title').isString().trim().isLength({max: 30}),
+    body('shortDescription').trim().isString().isLength({max: 100}),
+    body('content').isString().trim().isLength({max: 1000}),
+    body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
     (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {

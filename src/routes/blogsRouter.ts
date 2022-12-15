@@ -15,9 +15,9 @@ blogsRouter.get('/', (req: Request, res: Response) => {
 
 blogsRouter.post('/',
     authorizationMiddleware,
-    body('name',).isString().isLength({max: 15}),
-    body('description',).isString().isLength({max: 500}),
-    body('websiteUrl',).isString().isLength({max: 100}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
+    body('name',).isString().trim().isLength({max: 15}),
+    body('description',).isString().trim().isLength({max: 500}),
+    body('websiteUrl',).isString().trim().isLength({max: 100}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
     (req: RequestWithBody<IRequestBlogModel>, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -41,9 +41,9 @@ blogsRouter.get('/:id', (req: RequestWithURIParams<{id: string}>, res: Response)
 
 blogsRouter.put('/:id',
     authorizationMiddleware,
-    body('name').isString().isLength({max: 15}),
-    body('description').isString().isLength({max: 500}),
-    body('websiteUrl').isString().isLength({max: 100}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
+    body('name').isString().trim().isLength({max: 15}),
+    body('description').isString().trim().isLength({max: 500}),
+    body('websiteUrl').isString().trim().isLength({max: 100}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
     (req: RequestWithURIParamsAndBody<{id: string}, IRequestBlogModel>, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
