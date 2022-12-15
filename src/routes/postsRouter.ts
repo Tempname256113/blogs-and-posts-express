@@ -63,6 +63,15 @@ postsRouter.put('/:id',
     res.status(204).end();
 });
 
+postsRouter.delete('/:id',
+    authorizationMiddleware,
+    (req: RequestWithURIParams<{ id: string }>, res: Response) => {
+    if (postsRepository.deletePostByID(req.params.id)) {
+        return res.status(204).end();
+    }
+    res.status(404).end();
+});
+
 // надо сделать еще роут на удаление и один общий роут очищение всех баз данных.
 // для PUT метода простые тесты я уже написал, все работает. надо будет после delete написать простой тест и проверить
 // после последнего роута и теста нужно тестировать полностью все роуты постов на ошибки

@@ -56,5 +56,8 @@ export const blogsRepository = {
         const desiredElem = blogsArrayDB.find(elem => elem.id === id);
         if (desiredElem) return desiredElem.name;
         return 'undefined';
+    },
+    deleteAllData(): void{
+        blogsArrayDB.splice(0);
     }
 }

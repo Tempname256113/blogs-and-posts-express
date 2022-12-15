@@ -38,5 +38,19 @@ export const postsRepository = {
             blogName: blogsRepository.findBlogNameByID(post.blogId)
         });
         postsArrayDB.push(...otherValues);
+    },
+    // если нашел и удалил элемент - возвращает true. если элемента нет - false
+    deletePostByID(id: string): true | false {
+        const findElemFromParams = postsArrayDB.find(elem => elem.id === id);
+        if (findElemFromParams) {
+            const DBWithoutElemFromParams = postsArrayDB.filter(elem => elem.id !== id);
+            postsArrayDB.splice(0);
+            postsArrayDB.push(...DBWithoutElemFromParams);
+            return true;
+        }
+        return false
+    },
+    deleteAllData(): void{
+        postsArrayDB.splice(0);
     }
 }

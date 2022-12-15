@@ -180,4 +180,77 @@ describe('simple tests for routes /posts', () => {
             } as IPost)
     })
 
+    it ('test DELETE method /posts/:id by methods POST /blogs, POST, /posts, PUT /posts/:id, GET /posts:id',
+        async () => {
+            const responseBlog = await request(app)
+                .post('/blogs')
+                .auth('admin', 'qwerty')
+                .send({
+                    name: 'some name',
+                    description: 'some description for this blog',
+                    websiteUrl: 'https://github.com/Tempname256113'
+                } as IRequestBlogModel)
+                .expect(201)
+            const newCreatedBlog = responseBlog.body;
+            expect(newCreatedBlog).toEqual({
+                id: newCreatedBlog.id,
+                name: 'some name',
+                description: 'some description for this blog',
+                websiteUrl: 'https://github.com/Tempname256113'
+            } as IBlog)
+
+            const responsePost = await request(app)
+                .post('/posts')
+                .auth('admin', 'qwerty')
+                .send({
+                    title: 'some post title',
+                    shortDescription: 'some short description for new created post',
+                    content: 'content for new created post coming soon',
+                    blogId: newCreatedBlog.id
+                } as IRequestPostModel)
+                .expect(201)
+            const newCreatedPost = responsePost.body;
+            expect(newCreatedPost).toEqual({
+                id: newCreatedPost.id,
+                title: 'some post title',
+                shortDescription: 'some short description for new created post',
+                content: 'content for new created post coming soon',
+                blogId: newCreatedBlog.id,
+                blogName: blogsRepository.findBlogNameByID(newCreatedBlog.id)
+            } as IPost)
+
+            await request(app)
+                .put(`/posts/${newCreatedPost.id}`)
+                .auth('admin', 'qwerty')
+                .send({
+                    title: 'updated title',
+                    shortDescription: 'updated description',
+                    content: 'updated content',
+                    blogId: newCreatedBlog.id
+                } as IRequestPostModel)
+                .expect(204)
+
+
+            await request(app)
+                .get(`/posts/${newCreatedPost.id}`)
+                .expect(200, {
+                    id: newCreatedPost.id,
+                    title: 'updated title',
+                    shortDescription: 'updated description',
+                    content: 'updated content',
+                    blogId: newCreatedBlog.id,
+                    blogName: newCreatedBlog.name
+                } as IPost)
+
+            await request(app)
+                .delete(`/posts/${newCreatedPost.id}`)
+                .auth('admin', 'qwerty')
+                .expect(204)
+
+            await request(app)
+                .delete(`/posts/${newCreatedPost.id}`)
+                .auth('admin', 'qwerty')
+                .expect(404)
+        })
+
 })
