@@ -1,7 +1,6 @@
 import {IRequestBlogModel} from "../models/models";
 import {IBlog} from "../models/models";
 
-
 const blogsArrayDB: IBlog[] = [];
 let id: number = 0;
 
@@ -24,6 +23,7 @@ export const blogsRepository = {
         return blogsArrayDB.find(elem => elem.id === id);
     },
     // возвращает false если такого объекта в базе данных нет
+    // и true если операция прошла успешно
     updateBlogByID(id: string, blog: IRequestBlogModel): false | true {
         const findElemByID = blogsArrayDB.find(elem => elem.id === id);
         if (!findElemByID) {
@@ -41,6 +41,7 @@ export const blogsRepository = {
         return true;
     },
     // возвращает false если такого объекта нет в базе данных
+    // и true если успешно прошла операция
     deleteBlogByID(id: string): false | true {
         const findElemByID = blogsArrayDB.find(elem => elem.id === id);
         if (!findElemByID) {
@@ -50,5 +51,10 @@ export const blogsRepository = {
         blogsArrayDB.splice(0);
         blogsArrayDB.push(...otherElementsOfArray);
         return true;
+    },
+    findBlogNameByID(id: string) {
+        const desiredElem = blogsArrayDB.find(elem => elem.id === id);
+        if (desiredElem) return desiredElem.name;
+        return 'undefined';
     }
 }

@@ -1,7 +1,9 @@
 
 
+import {IErrorObj} from "./models/models";
+
 // сюда нужно передать массив ошибок который приходит в случае неправильных входных данных
-export const createErrorMessage = (array: any): {errorsMessages: {message: string, field: string}[]} => {
+export const createErrorMessage = (array: any): IErrorObj => {
 
     const arrayWithErrors: { message: string, field: string }[] = [];
 
