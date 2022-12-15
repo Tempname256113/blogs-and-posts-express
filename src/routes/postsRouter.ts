@@ -16,9 +16,9 @@ postsRouter.get('/', (req: Request, res: Response) => {
 
 postsRouter.post('/',
     authorizationMiddleware,
-    body('title').isString().trim().isLength({max: 30}),
-    body('shortDescription').isString().trim().isLength({max: 100}),
-    body('content').isString().trim().isLength({max: 1000}),
+    body('title').isString().trim().isLength({max: 30, min: 1}),
+    body('shortDescription').isString().trim().isLength({max: 100, min: 1}),
+    body('content').isString().trim().isLength({max: 1000, min: 1}),
     body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
@@ -45,9 +45,9 @@ postsRouter.get('/:id', (req: RequestWithURIParams<{id: string}>, res: ResponseW
 
 postsRouter.put('/:id',
     authorizationMiddleware,
-    body('title').isString().trim().isLength({max: 30}),
-    body('shortDescription').trim().isString().isLength({max: 100}),
-    body('content').isString().trim().isLength({max: 1000}),
+    body('title').isString().trim().isLength({max: 30, min: 1}),
+    body('shortDescription').trim().isString().isLength({max: 100, min: 1}),
+    body('content').isString().trim().isLength({max: 1000, min: 1}),
     body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
