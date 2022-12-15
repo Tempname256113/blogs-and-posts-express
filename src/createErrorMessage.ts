@@ -10,7 +10,7 @@ export const createErrorMessage = (array: any): IErrorObj => {
         for (let i = 0; i < array.length; i++) {
 
             if (arrayWithErrors.find(elem => elem.field === array[i]['param'])) {
-                break;
+                continue;
             }
             arrayWithErrors.push({
                 message: 'string',
