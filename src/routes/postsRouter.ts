@@ -1,17 +1,17 @@
 import {Response, Request, Router} from "express";
-import {postsRepository} from "../repositories/postsRepository";
 import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../ReqResTypes";
 import {IErrorObj, IPost, IRequestPostModel} from "../models/models";
 import {body, validationResult} from "express-validator";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
 import {createErrorMessage} from "../createErrorMessage";
 import {blogIdCustomMiddleware} from "../middlewares/blogIdCustomMiddleware";
+import {postsRepositoryDB} from "../repositories/postsRepositoryDB";
 
 
 export const postsRouter = Router();
 
-postsRouter.get('/', (req: Request, res: Response) => {
-    res.status(200).send(postsRepository.getAllPosts());
+postsRouter.get('/', async (req: Request, res: Response) => {
+    res.status(200).send(await postsRepositoryDB.getAllPosts());
 });
 
 postsRouter.post('/',
@@ -22,12 +22,12 @@ postsRouter.post('/',
     body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
-    (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
+    async (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).send(createErrorMessage(errors.array()));
         }
-        res.status(201).send(postsRepository.createNewPost({
+        res.status(201).send(await postsRepositoryDB.createNewPost({
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
@@ -35,9 +35,9 @@ postsRouter.post('/',
         }));
 });
 
-postsRouter.get('/:id', (req: RequestWithURIParams<{id: string}>, res: ResponseWithBody<IPost>) => {
-    const getPost = postsRepository.getPostByID(req.params.id);
-    if (getPost) {
+postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
+    const getPost = await postsRepositoryDB.getPostByID(req.params.id);
+    if (getPost !== null) {
         res.status(200).send(getPost);
     }
     res.status(404).end();
@@ -51,27 +51,22 @@ postsRouter.put('/:id',
     body('blogId').isString().trim().custom((value, {req}) => {
         return blogIdCustomMiddleware(req);
     }),
-    (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {
+    async (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).send(createErrorMessage(errors.array()));
     }
-    if (!postsRepository.getPostByID(req.params.id)) {
+    if (!await postsRepositoryDB.updatePostByID(req.params.id, req.body)) {
         return res.status(404).end();
     }
-    postsRepository.updatePostByID(req.params.id, req.body);
     res.status(204).end();
 });
 
 postsRouter.delete('/:id',
     authorizationMiddleware,
-    (req: RequestWithURIParams<{ id: string }>, res: Response) => {
-    if (postsRepository.deletePostByID(req.params.id)) {
+    async (req: RequestWithURIParams<{ id: string }>, res: Response) => {
+    if (await postsRepositoryDB.deletePostByID(req.params.id)) {
         return res.status(204).end();
     }
     res.status(404).end();
 });
-
-// надо сделать еще роут на удаление и один общий роут очищение всех баз данных.
-// для PUT метода простые тесты я уже написал, все работает. надо будет после delete написать простой тест и проверить
-// после последнего роута и теста нужно тестировать полностью все роуты постов на ошибки

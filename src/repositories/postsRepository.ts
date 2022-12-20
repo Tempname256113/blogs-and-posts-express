@@ -17,7 +17,8 @@ export const postsRepository = {
             shortDescription: newPost.shortDescription,
             content: newPost.content,
             blogId: newPost.blogId,
-            blogName: blogsRepository.findBlogNameByID(newPost.blogId)
+            blogName: blogsRepository.findBlogNameByID(newPost.blogId),
+            createdAt: new Date().toISOString()
         }
         postsArrayDB.push(createdPost);
         return createdPost;
@@ -35,7 +36,8 @@ export const postsRepository = {
             shortDescription: post.shortDescription,
             content: post.content,
             blogId: post.blogId,
-            blogName: blogsRepository.findBlogNameByID(post.blogId)
+            blogName: blogsRepository.findBlogNameByID(post.blogId),
+            createdAt: currentValue.createdAt
         });
         postsArrayDB.push(...otherValues);
     },

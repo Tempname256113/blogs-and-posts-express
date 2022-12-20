@@ -1,16 +1,15 @@
 import {Request, Response, Router} from "express";
-import {blogsRepository} from "../repositories/blogsRepository";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
 import {body, validationResult} from "express-validator";
 import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody} from "../ReqResTypes";
 import {IRequestBlogModel} from "../models/models";
 import {createErrorMessage} from "../createErrorMessage";
-import {IBlog} from "../models/models";
+import {blogsRepositoryDB} from "../repositories/blogsRepositoryDB";
 
 export const blogsRouter = Router();
 
-blogsRouter.get('/', (req: Request, res: Response) => {
-    res.status(200).send(blogsRepository.getAllBlogs());
+blogsRouter.get('/', async (req: Request, res: Response) => {
+    res.status(200).send(await blogsRepositoryDB.getAllBlogs());
 });
 
 blogsRouter.post('/',
@@ -18,21 +17,21 @@ blogsRouter.post('/',
     body('name',).isString().trim().isLength({max: 15, min: 1}),
     body('description',).isString().trim().isLength({max: 500, min: 1}),
     body('websiteUrl',).isString().trim().isLength({max: 100, min: 1}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
-    (req: RequestWithBody<IRequestBlogModel>, res: Response) => {
+    async (req: RequestWithBody<IRequestBlogModel>, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).send(createErrorMessage(errors.array()));
         }
-        res.status(201).send(blogsRepository.createNewBlog({
+        res.status(201).send(await blogsRepositoryDB.createNewBlog({
             name: req.body.name,
             description: req.body.description,
             websiteUrl: req.body.websiteUrl
         }))
 });
 
-blogsRouter.get('/:id', (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const getBlog: IBlog | undefined = blogsRepository.getBlogByID(req.params.id);
-    if (getBlog) {
+blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
+    const getBlog: any = await blogsRepositoryDB.getBlogByID(req.params.id);
+    if (getBlog === null) {
         res.status(200).send(getBlog)
     } else {
         res.status(404).end();
@@ -44,12 +43,12 @@ blogsRouter.put('/:id',
     body('name').isString().trim().isLength({max: 15, min: 1}),
     body('description').isString().trim().isLength({max: 500, min: 1}),
     body('websiteUrl').isString().trim().isLength({max: 100, min: 1}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
-    (req: RequestWithURIParamsAndBody<{id: string}, IRequestBlogModel>, res: Response) => {
+    async (req: RequestWithURIParamsAndBody<{id: string}, IRequestBlogModel>, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).send(createErrorMessage(errors.array()));
     }
-    if (blogsRepository.updateBlogByID(req.params.id,
+    if (await blogsRepositoryDB.updateBlogByID(req.params.id,
         {name: req.body.name, description: req.body.description, websiteUrl: req.body.websiteUrl})) {
         return res.status(204).end();
     }
@@ -58,8 +57,8 @@ blogsRouter.put('/:id',
 
 blogsRouter.delete('/:id',
     authorizationMiddleware,
-    (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    if (blogsRepository.deleteBlogByID(req.params.id)) {
+    async (req: RequestWithURIParams<{id: string}>, res: Response) => {
+    if (await blogsRepositoryDB.deleteBlogByID(req.params.id)) {
         return res.status(204).end();
     }
     res.status(404).end();

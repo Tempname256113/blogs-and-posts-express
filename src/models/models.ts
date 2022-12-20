@@ -5,7 +5,8 @@ export interface IBlog {
     id: string,
     name: string,
     description: string,
-    websiteUrl: string
+    websiteUrl: string,
+    createdAt: string
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового блога
@@ -23,6 +24,7 @@ export interface IPost {
     content: string,
     blogId: string,
     blogName: string
+    createdAt: string
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового поста

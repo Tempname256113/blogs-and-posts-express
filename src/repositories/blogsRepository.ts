@@ -14,7 +14,8 @@ export const blogsRepository = {
             id: String(id),
             name: newBlog.name,
             description: newBlog.description,
-            websiteUrl: newBlog.websiteUrl
+            websiteUrl: newBlog.websiteUrl,
+            createdAt: new Date().toISOString()
         };
         blogsArrayDB.push(createdBlog);
         return createdBlog;
@@ -35,7 +36,8 @@ export const blogsRepository = {
             id: findElemByID.id,
             name: blog.name,
             description: blog.description,
-            websiteUrl: blog.websiteUrl
+            websiteUrl: blog.websiteUrl,
+            createdAt: findElemByID.createdAt
         });
         blogsArrayDB.push(...otherElementsOfArray);
         return true;
