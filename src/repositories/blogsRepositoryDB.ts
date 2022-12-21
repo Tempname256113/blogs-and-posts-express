@@ -22,7 +22,9 @@ export const blogsRepositoryDB = {
                 createdAt: new Date().toISOString()
             };
             await db.insertOne(createdBlog);
-            return createdBlog;
+            const createdBlogWithout_id = {...createdBlog} as any;
+            delete createdBlogWithout_id._id;
+            return createdBlogWithout_id;
         } catch (err: any) {
             throw new Error(err);
         }
@@ -53,7 +55,7 @@ export const blogsRepositoryDB = {
             const findElemByID = await db.findOne(
                 {id: id}
             );
-            if (!findElemByID) {
+            if (findElemByID === null) {
                 return false;
             }
             await db.updateOne(
