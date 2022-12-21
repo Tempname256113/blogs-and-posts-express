@@ -31,7 +31,7 @@ blogsRouter.post('/',
 
 blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     const getBlog: any = await blogsRepositoryDB.getBlogByID(req.params.id);
-    if (getBlog === null) {
+    if (getBlog !== null) {
         res.status(200).send(getBlog)
     } else {
         res.status(404).end();

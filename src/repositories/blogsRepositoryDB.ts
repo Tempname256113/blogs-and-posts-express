@@ -7,7 +7,7 @@ const db = client.db('ht02DB').collection('blogs');
 export const blogsRepositoryDB = {
     async getAllBlogs() {
         try {
-            return await db.find().toArray();
+            return await db.find({}).project({_id: false}).toArray();
         } catch (err: any) {
             return 'nothing';
         }
@@ -29,9 +29,19 @@ export const blogsRepositoryDB = {
     },
     async getBlogByID(id: string) {
         try {
-            return await db.findOne(
+            const foundedObj =  await db.findOne(
                 {id: id}
             );
+            if (foundedObj) {
+                return {
+                    id: foundedObj.id,
+                    name: foundedObj.name,
+                    description: foundedObj.description,
+                    websiteUrl: foundedObj.websiteUrl,
+                    createdAt: foundedObj.createdAt
+                } as IBlog
+            }
+            return null;
         } catch (err: any) {
             return 'nothing';
         }

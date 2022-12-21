@@ -6,7 +6,7 @@ const db = client.db('ht02DB').collection('posts');
 
 export const postsRepositoryDB = {
     async getAllPosts(){
-        return db.find().toArray();
+        return await db.find().project({_id: false}).toArray();
     },
     async createNewPost(newPost: IRequestPostModel): Promise<IPost> {
         const createdPost: IPost = {
@@ -19,15 +19,23 @@ export const postsRepositoryDB = {
             createdAt: new Date().toISOString()
         }
         await db.insertOne(createdPost);
-        return createdPost;
+        const createdPostWithout_id = {...createdPost} as any;
+        delete createdPostWithout_id._id;
+        return createdPostWithout_id;
     },
     async getPostByID(id: string) {
-        return db.findOne({id: id});
+        const foundedPost = await db.findOne({id: id});
+        if (foundedPost !== null) {
+            const foundedPostCopyWithout_id = {...foundedPost} as any;
+            delete foundedPostCopyWithout_id._id
+            return foundedPostCopyWithout_id;
+        }
+        return null;
     },
     // возвращает true в случае удачного изменения объекта
     // или false в случае неудачного
     async updatePostByID(id: string, post: IRequestPostModel): Promise<false| true> {
-        if (await db.find({id: id}) === null) {
+        if (await db.findOne({id: id}) === null) {
             return false;
         }
         await db.updateOne(
