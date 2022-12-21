@@ -1,8 +1,13 @@
 
 import {MongoClient} from "mongodb";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 // connection URL
-const url = 'mongodb://localhost:27017' || process.env.MongoURI;
+const url = process.env.MONGO_URL;
+if (!url) {
+    throw new Error('Url doesn\'t found');
+}
 export const client = new MongoClient(url);
 
 // database name
@@ -20,5 +25,3 @@ export const connectionToDB = async () => {
         await client.close();
     }
 }
-
-
