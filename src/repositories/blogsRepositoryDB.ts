@@ -91,7 +91,7 @@ export const blogsRepositoryDB = {
         try {
             const blogByID =  await db.findOne({id: id});
             if (blogByID !== null) return blogByID.name;
-            return 'undefined';
+            return null;
         } catch {
             return 'nothing';
         }

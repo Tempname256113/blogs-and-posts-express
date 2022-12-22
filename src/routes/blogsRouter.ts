@@ -1,10 +1,11 @@
 import {Request, Response, Router} from "express";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
-import {body, validationResult} from "express-validator";
+import {validationResult} from "express-validator";
 import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody} from "../ReqResTypes";
 import {IRequestBlogModel} from "../models/models";
 import {createErrorMessage} from "../createErrorMessage";
 import {blogsRepositoryDB} from "../repositories/blogsRepositoryDB";
+import {blogsValidationMiddlewaresArray} from "../middlewares/blogsValidationMiddlewaresArray";
 
 export const blogsRouter = Router();
 
@@ -13,10 +14,7 @@ blogsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 blogsRouter.post('/',
-    authorizationMiddleware,
-    body('name',).isString().trim().isLength({max: 15, min: 1}),
-    body('description',).isString().trim().isLength({max: 500, min: 1}),
-    body('websiteUrl',).isString().trim().isLength({max: 100, min: 1}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
+    blogsValidationMiddlewaresArray,
     async (req: RequestWithBody<IRequestBlogModel>, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -39,10 +37,7 @@ blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 });
 
 blogsRouter.put('/:id',
-    authorizationMiddleware,
-    body('name').isString().trim().isLength({max: 15, min: 1}),
-    body('description').isString().trim().isLength({max: 500, min: 1}),
-    body('websiteUrl').isString().trim().isLength({max: 100, min: 1}).matches('^https://([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$'),
+    blogsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, IRequestBlogModel>, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -1,11 +1,11 @@
 import {Response, Request, Router} from "express";
 import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../ReqResTypes";
 import {IErrorObj, IPost, IRequestPostModel} from "../models/models";
-import {body, validationResult} from "express-validator";
+import {validationResult} from "express-validator";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
 import {createErrorMessage} from "../createErrorMessage";
-import {blogIdCustomMiddleware} from "../middlewares/blogIdCustomMiddleware";
 import {postsRepositoryDB} from "../repositories/postsRepositoryDB";
+import {postsValidationMiddlewaresArray} from "../middlewares/postsValidationMiddlewaresArray";
 
 
 export const postsRouter = Router();
@@ -15,13 +15,7 @@ postsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 postsRouter.post('/',
-    authorizationMiddleware,
-    body('title').isString().trim().isLength({max: 30, min: 1}),
-    body('shortDescription').isString().trim().isLength({max: 100, min: 1}),
-    body('content').isString().trim().isLength({max: 1000, min: 1}),
-    body('blogId').isString().trim().custom((value, {req}) => {
-        return blogIdCustomMiddleware(req);
-    }),
+    postsValidationMiddlewaresArray,
     async (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -44,13 +38,7 @@ postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 });
 
 postsRouter.put('/:id',
-    authorizationMiddleware,
-    body('title').isString().trim().isLength({max: 30, min: 1}),
-    body('shortDescription').trim().isString().isLength({max: 100, min: 1}),
-    body('content').isString().trim().isLength({max: 1000, min: 1}),
-    body('blogId').isString().trim().custom((value, {req}) => {
-        return blogIdCustomMiddleware(req);
-    }),
+    postsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
