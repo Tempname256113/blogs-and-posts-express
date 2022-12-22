@@ -1,9 +1,9 @@
 import {Request, Response, NextFunction} from "express";
 import {validationResult} from "express-validator";
-import {IErrorObj} from "../models/errorObjModel";
+import {errorObjType} from "../models/errorObjModel";
 
 // сюда нужно передать массив ошибок который приходит в случае неправильных входных данных
-const createErrorMessage = (array: any): IErrorObj => {
+const createErrorMessage = (array: any): errorObjType => {
 
     const arrayWithErrors: { message: string, field: string }[] = [];
 

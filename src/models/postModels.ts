@@ -1,6 +1,6 @@
 
 // такие объекты лежат в базе данных posts
-export interface IPost {
+export type postType = {
     id: string,
     title: string,
     shortDescription: string,
@@ -11,7 +11,7 @@ export interface IPost {
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового поста
-export interface IRequestPostModel {
+export type requestPostType = {
     title: string,
     shortDescription: string,
     content: string,

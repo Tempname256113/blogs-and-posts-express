@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon --inspect ./dist/index.js",
+    "dev-ts": "nodemon --inspect ./src/index.ts",
     "watch": "tsc -w",
     "test": "jest --runInBand --forceExit",
     "build": "tsc"
