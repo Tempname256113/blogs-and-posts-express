@@ -1,232 +1,185 @@
 
-// import request from "supertest";
-//
-// import {app} from "../../../app";
-// import {IBlog} from "../../../models/models";
-// import {IRequestBlogModel} from "../../../models/models";
-//
-//
-// // после миграции на mongo db тесты не работают
-//
-// describe('general blogs API simple tests without errors', () => {
-//
-//     it ('should return empty array blogs GET method /blogs',   async() => {
-//         await request(app)
-//             .get('/blogs')
-//             .expect(200, [])
-//     })
-//
-//     // для тестирования GET метода нужен id который придет с созданным объектом из метода POST
-//     let currentBlogID: string;
-//
-//     it('should return new created blog /blogs POST method', async () => {
-//         const response = await request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send(<IRequestBlogModel>{
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.type.com'
-//             })
-//             .expect(201)
-//         const requestBlog = response.body;
-//         const createdBlog: IBlog = {
-//             id: requestBlog.id,
-//             name: 'some name',
-//             description: 'some description',
-//             websiteUrl: 'https://www.type.com'
-//         }
-//         currentBlogID = requestBlog.id;
-//         expect(requestBlog).toEqual(createdBlog);
-//
-//     })
-//
-//     it ('should return existing blog from DB /blogs/:id GET method', async() => {
-//         await request(app)
-//             .get(`/blogs/${currentBlogID}`)
-//             .expect(200, {
-//                 id: currentBlogID,
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.type.com'
-//             } as IBlog);
-//     })
-//
-//     it ('should return 204 status /blogs/:id method PUT', async() => {
-//         await request(app)
-//             .put(`/blogs/${currentBlogID}`)
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'updated name',
-//                 description: 'updated description',
-//                 websiteUrl: "https://updatedURL.com"
-//             } as IRequestBlogModel)
-//             .expect(204)
-//     })
-//
-//     it ('should delete blog from DB /blogs/:id method DELETE and GET empty array', async () => {
-//         await request(app)
-//             .delete(`/blogs/${currentBlogID}`)
-//             .auth('admin', 'qwerty')
-//             .expect(204)
-//         await request(app)
-//             .get('/blogs')
-//             .expect(200, [])
-//     })
-//
-// })
-//
-// describe('tests of blogs API', () => {
-//
-//     it('should return empty array GET method /blogs', async () => {
-//         request(app)
-//             .get('/blogs')
-//             .expect(200, [])
-//     })
-//
-//     it('should return status 400 and error obj /blogs method POST', async () => {
-//         request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 123,
-//                 description: 'some desc',
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             })
-//             .expect(400, {
-//                 errorsMessages: [
-//                     {
-//                         message: expect.any(String),
-//                         field: "name"
-//                     }
-//                 ]
-//             })
-//         request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'some name',
-//                 description: 321,
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             })
-//             .expect(400, {
-//                 errorsMessages: [
-//                     {
-//                         message: expect.any(String),
-//                         field: "description"
-//                     }
-//                 ]
-//             })
-//         request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'some name',
-//                 description: 321,
-//                 websiteUrl: '2828'
-//             })
-//             .expect(400, {
-//                 errorsMessages: [
-//                     {
-//                         message: expect.any(String),
-//                         field: "description"
-//                     },
-//                     {
-//                         message: expect.any(String),
-//                         field: "websiteUrl"
-//                     }
-//                 ]
-//             })
-//     })
-//
-// })
-//
-// describe('GET method /blogs/:id and PUT method /blogs/:id tests', () => {
-//
-//     // собирает все создаваемые блоги тестом в один массив
-//     const createdBlogs: IBlog[] = [];
-//
-//     it('POST method /blogs should return new created blogs (3)', async () => {
-//
-//         const response = await request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             })
-//             createdBlogs.push(response.body);
-//             expect(createdBlogs[0]).toEqual({
-//                 id: createdBlogs[0].id,
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             } as IBlog)
-//         const response2 = await request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             })
-//         createdBlogs.push(response2.body);
-//         expect(createdBlogs[1]).toEqual({
-//             id: createdBlogs[1].id,
-//             name: 'some name',
-//             description: 'some description',
-//             websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//         } as IBlog)
-//         const response3 = await request(app)
-//             .post('/blogs')
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'some name',
-//                 description: 'some description',
-//                 websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//             })
-//         createdBlogs.push(response3.body);
-//         expect(createdBlogs[2]).toEqual({
-//             id: createdBlogs[2].id,
-//             name: 'some name',
-//             description: 'some description',
-//             websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
-//         } as IBlog)
-//     })
-//
-//     it('should return array of blogs GET method /blogs', async () => {
-//         const response = await request(app)
-//             .get('/blogs')
-//             .expect(200)
-//         expect(response.body).toStrictEqual(createdBlogs);
-//     })
-//
-//     it ('should update blog and show him PUT method /blogs/:id and GET method /blogs/:id', async () => {
-//         await request(app)
-//             .put(`/blogs/${createdBlogs[1].id}`)
-//             .auth('admin', 'qwerty')
-//             .send({
-//                 name: 'updated name',
-//                 description: 'some updated description',
-//                 websiteUrl: 'https://www.updated-website.kek'
-//             } as IRequestBlogModel)
-//             .expect(204)
-//         const response = await request(app)
-//             .get(`/blogs/${createdBlogs[1].id}`)
-//             .expect(200)
-//         const returnedBlog = response.body;
-//         expect(returnedBlog).toEqual({
-//             id: returnedBlog.id,
-//             name: 'updated name',
-//             description: 'some updated description',
-//             websiteUrl: 'https://www.updated-website.kek'
-//         } as IBlog)
-//     })
-//
-//     it('should return status 204 success DELETE method /blogs/:id', async () => {
-//         request(app)
-//             .delete(`blogs/${createdBlogs[2].id}`)
-//             .expect(204)
-//     })
-// })
+import request from "supertest";
+
+import {app} from "../../../app";
+import {IBlog, IRequestBlogModel} from "../../../models/blogModels";
+import {blogsRepositoryDB} from "../../../repositories/blogsRepositoryDB";
+import {postsRepositoryDB} from "../../../repositories/postsRepositoryDB";
+import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
+
+const errorsTemplate = {
+    errorCase1: {
+        reqBody: {
+            name: 123,
+            description: 'some desc',
+            websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
+        },
+        expectedResponseError: {
+            errorsMessages: [
+                {
+                    message: expect.any(String),
+                    field: "name"
+                }
+            ]
+        }
+    },
+    errorCase2: {
+        reqBody: {
+            name: 'some name',
+            description: 321,
+            websiteUrl: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types'
+        },
+        expectedResponseError: {
+            errorsMessages: [
+                {
+                    message: expect.any(String),
+                    field: "description"
+                }
+            ]
+        }
+    },
+    errorCase3: {
+        reqBody: {
+            name: 'some name',
+            description: 321,
+            websiteUrl: '2828'
+        },
+        expectedResponseError: {
+            errorsMessages: [
+                {
+                    message: expect.any(String),
+                    field: "description"
+                },
+                {
+                    message: expect.any(String),
+                    field: "websiteUrl"
+                }
+            ]
+        }
+    },
+}
+
+const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<IBlog> => {
+    const createdBlog = await createNewBlogWithoutErrors();
+    interface IUpdateBlogTemplate {
+        [scenario: string]: {
+            reqBody: IRequestBlogModel
+            resBody: IBlog
+        }
+    }
+    const updateBlogTemplate: IUpdateBlogTemplate = {
+        case1: {
+            reqBody: {
+                name: 'updated blog',
+                description: 'updated blog description',
+                websiteUrl: 'https://www.updated.com'
+            },
+            resBody: {
+                id: createdBlog.id,
+                name: 'updated blog',
+                description: 'updated blog description',
+                websiteUrl: 'https://www.updated.com',
+                createdAt: createdBlog.createdAt
+            }
+        }
+    }
+
+    await request(app)
+        .put(`/blogs/${createdBlog.id}`)
+        .auth('admin', 'qwerty')
+        .send(updateBlogTemplate[`case${scenario}`].reqBody)
+        .expect(204)
+    const updatedBlog: IBlog = updateBlogTemplate[`case${scenario}`].resBody;
+    await request(app)
+        .get(`/blogs/${updatedBlog.id}`)
+        .expect(200, updatedBlog)
+    return updatedBlog
+}
+
+const updateExistingBlogWithoutErrors = async (existingBlog: IBlog, reqBody: IRequestBlogModel): Promise<IBlog> => {
+    await request(app)
+        .put(`/blogs/${existingBlog.id}`)
+        .auth('admin', 'qwerty')
+        .send(reqBody)
+        .expect(204)
+    const updatedBlog: IBlog = {
+        id: existingBlog.id,
+        name: reqBody.name,
+        description: reqBody.description,
+        websiteUrl: reqBody.websiteUrl,
+        createdAt: existingBlog.createdAt
+    }
+    await request(app)
+        .get(`/blogs/${existingBlog.id}`)
+        .expect(200, updatedBlog)
+    return updatedBlog;
+}
+
+beforeAll( async () => {
+    await blogsRepositoryDB.deleteAllData();
+    await postsRepositoryDB.deleteAllData();
+})
+
+afterAll( async () => {
+    await blogsRepositoryDB.deleteAllData();
+    await postsRepositoryDB.deleteAllData();
+})
+
+describe('general blogs API simple tests without errors', () => {
+
+    it('should return empty array by GET method /blogs', async () => {
+        await request(app)
+            .get('/blogs')
+            .expect(200, [])
+    })
+
+    it('should return new created blog by POST method /blogs', async () => {
+        await createNewBlogWithoutErrors();
+    })
+
+    it ('should return existent blog from DB by /blogs/:id GET method additional method POST /blogs', async () => {
+        const existentBlog = await createNewBlogWithoutErrors();
+        const response = await request(app)
+            .get(`/blogs/${existentBlog.id}`)
+            .expect(200)
+        expect(response.body).toEqual(existentBlog)
+    })
+
+    it('should return 204 status by PUT method /blogs/:id and return updated blog. additional methods POST /blogs and GET /blogs/:id', async () => {
+        await createUpdateNewBlogWithoutErrors();
+    })
+
+    it('should delete blog from DB by DELETE method /blogs/:id. additional methods GET /blogs/:id and POST /blogs', async () => {
+        const existentBlog = await createNewBlogWithoutErrors();
+        await request(app)
+            .delete(`/blogs/${existentBlog.id}`)
+            .auth('admin', 'qwerty')
+            .expect(204)
+        await request(app)
+            .get(`/blogs/${existentBlog.id}`)
+            .expect(404)
+    })
+
+})
+
+describe('testing for errors', () => {
+
+    it ('should return status 400 and error obj by POST method /blogs', async () => {
+        request(app)
+            .post('/blogs')
+            .auth('admin', 'qwerty')
+            .send(errorsTemplate.errorCase1.reqBody)
+            .expect(400, errorsTemplate.errorCase1.expectedResponseError)
+        request(app)
+            .post('/blogs')
+            .auth('admin', 'qwerty')
+            .send(errorsTemplate.errorCase2.reqBody)
+            .expect(400, errorsTemplate.errorCase2.expectedResponseError)
+        request(app)
+            .post('/blogs')
+            .auth('admin', 'qwerty')
+            .send(errorsTemplate.errorCase3.reqBody)
+            .expect(400, errorsTemplate.errorCase3.expectedResponseError)
+    })
+
+})
