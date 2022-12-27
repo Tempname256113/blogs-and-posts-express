@@ -1,11 +1,9 @@
 import {Request, Response, Router} from "express";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
-import {validationResult} from "express-validator";
-import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody} from "../ReqResTypes";
-import {IRequestBlogModel} from "../models/models";
-import {createErrorMessage} from "../createErrorMessage";
+import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody} from "../models/reqResModel";
 import {blogsRepositoryDB} from "../repositories/blogsRepositoryDB";
-import {blogsValidationMiddlewaresArray} from "../middlewares/blogsValidationMiddlewaresArray";
+import {blogsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/blogsValidationMiddlewaresArray";
+import {IRequestBlogModel} from "../models/blogModels";
 
 export const blogsRouter = Router();
 
@@ -16,10 +14,6 @@ blogsRouter.get('/', async (req: Request, res: Response) => {
 blogsRouter.post('/',
     blogsValidationMiddlewaresArray,
     async (req: RequestWithBody<IRequestBlogModel>, res: Response) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).send(createErrorMessage(errors.array()));
-        }
         res.status(201).send(await blogsRepositoryDB.createNewBlog({
             name: req.body.name,
             description: req.body.description,
@@ -39,10 +33,6 @@ blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 blogsRouter.put('/:id',
     blogsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, IRequestBlogModel>, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).send(createErrorMessage(errors.array()));
-    }
     if (await blogsRepositoryDB.updateBlogByID(req.params.id,
         {name: req.body.name, description: req.body.description, websiteUrl: req.body.websiteUrl})) {
         return res.status(204).end();

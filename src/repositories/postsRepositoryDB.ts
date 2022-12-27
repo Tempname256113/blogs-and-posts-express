@@ -1,6 +1,6 @@
-import {IRequestPostModel, IPost} from "../models/models";
 import {client} from "../db";
 import {blogsRepositoryDB} from "./blogsRepositoryDB";
+import {IPost, IRequestPostModel} from "../models/postModels";
 
 const db = client.db('ht02DB').collection('posts');
 

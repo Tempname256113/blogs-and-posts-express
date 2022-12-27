@@ -1,11 +1,10 @@
 import {Response, Request, Router} from "express";
-import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../ReqResTypes";
-import {IErrorObj, IPost, IRequestPostModel} from "../models/models";
-import {validationResult} from "express-validator";
+import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/reqResModel";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
-import {createErrorMessage} from "../createErrorMessage";
 import {postsRepositoryDB} from "../repositories/postsRepositoryDB";
-import {postsValidationMiddlewaresArray} from "../middlewares/postsValidationMiddlewaresArray";
+import {postsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/postsValidationMiddlewaresArray";
+import {IErrorObj} from "../models/errorObjModel";
+import {IPost, IRequestPostModel} from "../models/postModels";
 
 
 export const postsRouter = Router();
@@ -17,16 +16,13 @@ postsRouter.get('/', async (req: Request, res: Response) => {
 postsRouter.post('/',
     postsValidationMiddlewaresArray,
     async (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).send(createErrorMessage(errors.array()));
-        }
-        res.status(201).send(await postsRepositoryDB.createNewPost({
+    const createdPost: IPost = await postsRepositoryDB.createNewPost({
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
             blogId: req.body.blogId
-        }));
+        })
+    res.status(201).send(createdPost);
 });
 
 postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
@@ -40,10 +36,6 @@ postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 postsRouter.put('/:id',
     postsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).send(createErrorMessage(errors.array()));
-    }
     if (!await postsRepositoryDB.updatePostByID(req.params.id, req.body)) {
         return res.status(404).end();
     }
