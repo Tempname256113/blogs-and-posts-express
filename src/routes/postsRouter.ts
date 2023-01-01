@@ -17,7 +17,7 @@ import {postsQueryRepository} from "../repositories/posts/postsQueryRepository";
 export const postsRouter = Router();
 
 postsRouter.get('/', async (req: RequestWithQuery<queryHT04Type>, res: Response) => {
-    const receivedPost = postsQueryRepository.getPostsWithSortAndPaginationQuery(
+    const receivedPost = await postsQueryRepository.getPostsWithSortAndPaginationQuery(
         req.query.pageNumber,
         req.query.pageSize,
         req.query.sortBy,
