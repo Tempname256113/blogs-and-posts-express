@@ -16,7 +16,14 @@ export const blogsRepositoryDB = {
     async getBlogByID(id: string) {
         const foundedObj = await db.findOne({id: id});
         if (foundedObj) {
-            const foundedObjCopy: {_id?: ObjectId} = {...foundedObj};
+            const foundedObjCopy: blogType & {_id?: ObjectId} = {
+                _id: foundedObj._id,
+                id: foundedObj.id,
+                name: foundedObj.name,
+                description: foundedObj.description,
+                websiteUrl: foundedObj.websiteUrl,
+                createdAt: foundedObj.createdAt
+            };
             delete foundedObjCopy._id;
             return foundedObjCopy;
         }

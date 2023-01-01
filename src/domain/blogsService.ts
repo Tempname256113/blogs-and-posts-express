@@ -1,5 +1,7 @@
 import {blogsRepositoryDB} from "../repositories/blogs/blogsRepositoryDB";
 import {blogType, requestBlogType} from "../models/blogModels";
+import {requestPostType} from "../models/postModels";
+import {postsService} from "./postsService";
 
 export const blogsService = {
     async getAllBlogs() {
@@ -14,6 +16,9 @@ export const blogsService = {
             createdAt: new Date().toISOString()
         };
         return await blogsRepositoryDB.createNewBlog(newBlogTemplate);
+    },
+    async createNewPostForSpecificBlog(newPost: requestPostType) {
+        return await postsService.createNewPost(newPost);
     },
     async getBlogByID(id: string) {
         return await blogsRepositoryDB.getBlogByID(id);
