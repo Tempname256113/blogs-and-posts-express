@@ -14,7 +14,6 @@ import {errorObjType} from "../models/errorObjModel";
 import {postType, requestPostType} from "../models/postModels";
 import {postsQueryRepository} from "../repositories/posts/postsQueryRepository";
 
-
 export const postsRouter = Router();
 
 postsRouter.get('/', async (req: RequestWithQuery<queryHT04Type>, res: Response) => {
