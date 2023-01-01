@@ -10,8 +10,8 @@ export type queryHT04Type = {
 }
 
 export type RequestWithBody<T> = Request<{}, {}, T>;
-export type RequestWithQueryHT04<T> = Request<{}, {}, {}, T>
-export type RequestWithURIParamsAndQueryHT04<T, Y> = Request<T, {}, {}, Y>
+export type RequestWithQuery<T> = Request<{}, {}, {}, T>
+export type RequestWithURIParamsAndQuery<T, Y> = Request<T, {}, {}, Y>
 export type RequestWithURIParams<T> = Request<T>;
 export type RequestWithURIParamsAndBody<T, Y> = Request<T, {}, Y>;
 

@@ -24,11 +24,12 @@ type postByQueryHT04Type = {
 }
 
 export const blogsQueryRepository = {
-    async getBlogByQueryHT04(searchNameTerm: string | null = null,
-    sortBy: string = 'createdAt',
-    sortDirection: string = 'desc',
-    pageNumber: number = 1,
-    pageSize: number = 10): Promise<blogByQueryHT04Type> {
+    async getBlogsWithSortAndPaginationQuery(
+        searchNameTerm: string | null = null,
+        sortBy: string = 'createdAt',
+        sortDirection: 'asc' | 'desc' = 'desc',
+        pageNumber: number = 1,
+        pageSize: number = 10): Promise<blogByQueryHT04Type> {
         const howMuchToSkip = (Number(pageNumber) - 1) * Number(pageSize);
         let sortDir: number;
         switch (sortDirection) {
@@ -38,8 +39,6 @@ export const blogsQueryRepository = {
             case 'desc':
                 sortDir = -1;
                 break;
-            default:
-                sortDir = -1;
         }
         const sortConfig = {[sortBy]: sortDir} as Sort;
         let arrayOfReturnedBlogs;
@@ -47,8 +46,8 @@ export const blogsQueryRepository = {
         let allBlogsFromDB;
         let totalCount: number;
         if (searchNameTerm) {
-            arrayOfReturnedBlogs = await blogsCollection.find({name: searchNameTerm}).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-            allBlogsFromDB = await blogsCollection.find({name: searchNameTerm}).toArray();
+            arrayOfReturnedBlogs = await blogsCollection.find({name: {$regex: `${searchNameTerm}`, $options: 'i'}}).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
+            allBlogsFromDB = await blogsCollection.find({name: {$regex: `${searchNameTerm}`, $options: 'i'}}).toArray();
             totalCount = allBlogsFromDB.length;
             pagesCount = Math.ceil(totalCount / Number(pageSize));
             return {
@@ -76,7 +75,7 @@ export const blogsQueryRepository = {
         pageNumber: number = 1,
         pageSize: number = 10,
         sortBy: string = 'createdAt',
-        sortDirection: string = 'desc'
+        sortDirection: 'asc' | 'desc' = 'desc'
     ): Promise<postByQueryHT04Type> {
         const howMuchToSkip = (Number(pageNumber) - 1) * Number(pageSize);
         let sortDir: number;
@@ -87,8 +86,6 @@ export const blogsQueryRepository = {
             case 'desc':
                 sortDir = -1;
                 break;
-            default:
-                sortDir = -1;
         }
         const sortConfig = {[sortBy]: sortDir} as Sort;
         let arrayOfReturnedPosts;
