@@ -2,9 +2,9 @@
 import request from "supertest";
 
 import {app} from "../../../app";
-import {IBlog, IRequestBlogModel} from "../../../models/blogModels";
-import {blogsRepositoryDB} from "../../../repositories/blogsRepositoryDB";
-import {postsRepositoryDB} from "../../../repositories/postsRepositoryDB";
+import {blogType, requestBlogType} from "../../../models/blogModels";
+import {blogsRepositoryDB} from "../../../repositories/blogs/blogsRepositoryDB";
+import {postsRepositoryDB} from "../../../repositories/posts/postsRepositoryDB";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {
@@ -59,12 +59,12 @@ const errorsTemplate = {
     },
 }
 
-const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<IBlog> => {
+const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<blogType> => {
     const createdBlog = await createNewBlogWithoutErrors();
     interface IUpdateBlogTemplate {
         [scenario: string]: {
-            reqBody: IRequestBlogModel
-            resBody: IBlog
+            reqBody: requestBlogType
+            resBody: blogType
         }
     }
     const updateBlogTemplate: IUpdateBlogTemplate = {
@@ -89,20 +89,20 @@ const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<I
         .auth('admin', 'qwerty')
         .send(updateBlogTemplate[`case${scenario}`].reqBody)
         .expect(204)
-    const updatedBlog: IBlog = updateBlogTemplate[`case${scenario}`].resBody;
+    const updatedBlog: blogType = updateBlogTemplate[`case${scenario}`].resBody;
     await request(app)
         .get(`/blogs/${updatedBlog.id}`)
         .expect(200, updatedBlog)
     return updatedBlog
 }
 
-const updateExistingBlogWithoutErrors = async (existingBlog: IBlog, reqBody: IRequestBlogModel): Promise<IBlog> => {
+const updateExistingBlogWithoutErrors = async (existingBlog: blogType, reqBody: requestBlogType): Promise<blogType> => {
     await request(app)
         .put(`/blogs/${existingBlog.id}`)
         .auth('admin', 'qwerty')
         .send(reqBody)
         .expect(204)
-    const updatedBlog: IBlog = {
+    const updatedBlog: blogType = {
         id: existingBlog.id,
         name: reqBody.name,
         description: reqBody.description,

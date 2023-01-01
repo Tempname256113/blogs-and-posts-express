@@ -1,10 +1,10 @@
 
 import request from "supertest"
 import {app} from "../../../app";
-import {blogsRepositoryDB} from "../../../repositories/blogsRepositoryDB";
-import {IPost, IRequestPostModel} from "../../../models/postModels";
-import {IBlog} from "../../../models/blogModels";
-import {postsRepositoryDB} from "../../../repositories/postsRepositoryDB";
+import {blogsRepositoryDB} from "../../../repositories/blogs/blogsRepositoryDB";
+import {postType, requestPostType} from "../../../models/postModels";
+import {blogType} from "../../../models/blogModels";
+import {postsRepositoryDB} from "../../../repositories/posts/postsRepositoryDB";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {
@@ -30,12 +30,12 @@ const errorsTemplate = {
     }
 }
 
-const createNewPostWithoutErrors = async (scenario: number = 1): Promise<IPost> => {
-    const newBlog: IBlog = await createNewBlogWithoutErrors();
+const createNewPostWithoutErrors = async (scenario: number = 1): Promise<postType> => {
+    const newBlog: blogType = await createNewBlogWithoutErrors();
     interface INewPostTemplate {
         [scenario: string]: {
-            reqBody: IRequestPostModel;
-            resBody: IPost;
+            reqBody: requestPostType;
+            resBody: postType;
         }
     }
     const newPostTemplate: INewPostTemplate = {
@@ -69,12 +69,12 @@ const createNewPostWithoutErrors = async (scenario: number = 1): Promise<IPost> 
     return response.body;
 }
 
-const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<IPost> => {
+const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<postType> => {
     const newPost = await createNewPostWithoutErrors();
     interface IUpdatePostTemplate {
         [scenario: string]: {
-            reqBody: IRequestPostModel
-            resBody: IPost
+            reqBody: requestPostType
+            resBody: postType
         }
     }
     const updatePostTemplate: IUpdatePostTemplate = {

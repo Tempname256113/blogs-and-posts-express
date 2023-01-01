@@ -1,6 +1,6 @@
-import {client} from "../db";
-import {blogsRepositoryDB} from "./blogsRepositoryDB";
-import {IPost, IRequestPostModel} from "../models/postModels";
+import {client} from "../../db";
+import {postType, requestPostType} from "../../models/postModels";
+import {ObjectId} from "mongodb";
 
 const db = client.db('ht02DB').collection('posts');
 
@@ -8,33 +8,32 @@ export const postsRepositoryDB = {
     async getAllPosts(){
         return await db.find().project({_id: false}).toArray();
     },
-    async createNewPost(newPost: IRequestPostModel): Promise<IPost> {
-        const createdPost: IPost = {
-            id: 'id' + (new Date()).getTime(),
-            title: newPost.title,
-            shortDescription: newPost.shortDescription,
-            content: newPost.content,
-            blogId: newPost.blogId,
-            blogName: await blogsRepositoryDB.findBlogNameByID(newPost.blogId),
-            createdAt: new Date().toISOString()
-        }
-        await db.insertOne(createdPost);
-        const createdPostWithout_id = {...createdPost} as any;
-        delete createdPostWithout_id._id;
-        return createdPostWithout_id;
+    async createNewPost(newPostTemplate: postType): Promise<postType> {
+        const copyCreatedPost = {...newPostTemplate};
+        await db.insertOne(newPostTemplate);
+        return copyCreatedPost;
     },
     async getPostByID(id: string) {
         const foundedPost = await db.findOne({id: id});
-        if (foundedPost !== null) {
-            const foundedPostCopyWithout_id = {...foundedPost} as any;
-            delete foundedPostCopyWithout_id._id
-            return foundedPostCopyWithout_id;
+        if (foundedPost) {
+            const foundedPostCopy: postType & {_id?: ObjectId} = {
+                _id: foundedPost._id,
+                id: foundedPost.id,
+                title: foundedPost.title,
+                shortDescription: foundedPost.shortDescription,
+                content: foundedPost.content,
+                blogId: foundedPost.blogId,
+                blogName: foundedPost.blogName,
+                createdAt: foundedPost.createdAt
+            };
+            delete foundedPostCopy._id;
+            return foundedPostCopy;
         }
         return null;
     },
     // возвращает true в случае удачного изменения объекта
     // или false в случае неудачного
-    async updatePostByID(id: string, post: IRequestPostModel): Promise<false| true> {
+    async updatePostByID(id: string, post: requestPostType): Promise<boolean> {
         if (await db.findOne({id: id}) === null) {
             return false;
         }
@@ -51,7 +50,7 @@ export const postsRepositoryDB = {
         return true;
     },
     // если нашел и удалил элемент - возвращает true. если элемента нет - false
-    async deletePostByID(id: string) {
+    async deletePostByID(id: string): Promise<boolean> {
         const deletedElem = await db.deleteOne({id: id});
         return deletedElem.deletedCount > 0;
     },

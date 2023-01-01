@@ -1,22 +1,22 @@
 import {Response, Request, Router} from "express";
 import {RequestWithBody, RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/reqResModel";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
-import {postsRepositoryDB} from "../repositories/postsRepositoryDB";
+import {postsService} from "../domain/postsService";
 import {postsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/postsValidationMiddlewaresArray";
-import {IErrorObj} from "../models/errorObjModel";
-import {IPost, IRequestPostModel} from "../models/postModels";
+import {errorObjType} from "../models/errorObjModel";
+import {postType, requestPostType} from "../models/postModels";
 
 
 export const postsRouter = Router();
 
 postsRouter.get('/', async (req: Request, res: Response) => {
-    res.status(200).send(await postsRepositoryDB.getAllPosts());
+    res.status(200).send(await postsService.getAllPosts());
 });
 
 postsRouter.post('/',
     postsValidationMiddlewaresArray,
-    async (req: RequestWithBody<IRequestPostModel>, res: ResponseWithBody<IErrorObj | IPost>) => {
-    const createdPost: IPost = await postsRepositoryDB.createNewPost({
+    async (req: RequestWithBody<requestPostType>, res: ResponseWithBody<errorObjType | postType>) => {
+    const createdPost: postType = await postsService.createNewPost({
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
@@ -26,7 +26,7 @@ postsRouter.post('/',
 });
 
 postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const getPost = await postsRepositoryDB.getPostByID(req.params.id);
+    const getPost = await postsService.getPostByID(req.params.id);
     if (getPost !== null) {
         res.status(200).send(getPost);
     }
@@ -35,8 +35,8 @@ postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 
 postsRouter.put('/:id',
     postsValidationMiddlewaresArray,
-    async (req: RequestWithURIParamsAndBody<{id: string}, IRequestPostModel>, res: Response) => {
-    if (!await postsRepositoryDB.updatePostByID(req.params.id, req.body)) {
+    async (req: RequestWithURIParamsAndBody<{id: string}, requestPostType>, res: Response) => {
+    if (!await postsService.updatePostByID(req.params.id, req.body)) {
         return res.status(404).end();
     }
     res.status(204).end();
@@ -45,7 +45,7 @@ postsRouter.put('/:id',
 postsRouter.delete('/:id',
     authorizationMiddleware,
     async (req: RequestWithURIParams<{ id: string }>, res: Response) => {
-    if (await postsRepositoryDB.deletePostByID(req.params.id)) {
+    if (await postsService.deletePostByID(req.params.id)) {
         return res.status(204).end();
     }
     res.status(404).end();

@@ -1,6 +1,6 @@
 
 // такие объекты лежат в базе данных blogs
-export interface IBlog {
+export type blogType = {
     id: string,
     name: string,
     description: string,
@@ -9,7 +9,7 @@ export interface IBlog {
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового блога
-export interface IRequestBlogModel {
+export type requestBlogType = {
     name: string;
     description: string;
     websiteUrl: string;

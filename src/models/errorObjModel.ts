@@ -1,10 +1,10 @@
 
 // такие объекты приходят в случае ошибок
-interface insideErrorObj {
+type insideErrorObjType = {
     message: string,
     field: string
 }
 
-export interface IErrorObj {
-    errorsMessages: insideErrorObj[];
+export type errorObjType = {
+    errorsMessages: insideErrorObjType[];
 }
