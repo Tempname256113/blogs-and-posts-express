@@ -3,7 +3,7 @@ import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
 import {
     queryHT04Type,
     RequestWithBody,
-    RequestWithQueryHT04, RequestWithURIParamsAndQueryHT04,
+    RequestWithQuery, RequestWithURIParamsAndQuery,
     RequestWithURIParams,
     RequestWithURIParamsAndBody
 } from "../models/reqResModel";
@@ -19,14 +19,15 @@ import {requestPostType} from "../models/postModels";
 
 export const blogsRouter = Router();
 
-blogsRouter.get('/', async (req: RequestWithQueryHT04<queryHT04Type>, res: Response) => {
-    res.status(200).send(await blogsQueryRepository.getBlogByQueryHT04(
+blogsRouter.get('/', async (req: RequestWithQuery<queryHT04Type>, res: Response) => {
+    const receivedBlogs = await blogsQueryRepository.getBlogsWithSortAndPaginationQuery(
         req.query.searchNameTerm,
         req.query.sortBy,
         req.query.sortDirection,
         req.query.pageNumber,
         req.query.pageSize
-    ));
+    );
+    res.status(200).send(receivedBlogs);
 });
 
 blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
@@ -40,7 +41,7 @@ blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
 
 blogsRouter.get('/:blogId/posts',
     blogIdUriParamCheckMiddleware,
-    async (req: RequestWithURIParamsAndQueryHT04<{blogId: string}, queryHT04Type>, res: Response) => {
+    async (req: RequestWithURIParamsAndQuery<{blogId: string}, queryHT04Type>, res: Response) => {
         const posts = await blogsQueryRepository.getAllPostsForSpecifiedBlog(
             req.params.blogId,
             req.query.pageNumber,
