@@ -7,12 +7,12 @@ import {blogIdUriParamCheckMiddleware} from "../blogIdUriParamCheckMiddleware";
 const titleFieldValidation = body('title').isString().trim().isLength({max: 30, min: 1});
 const shortDescriptionFieldValidation = body('shortDescription').isString().trim().isLength({max: 100, min: 1});
 const contentFieldValidation = body('content').isString().trim().isLength({max: 1000, min: 1});
-const blogIdFieldValidation = body('blogId').isString().trim().custom(async (value, {req}) => {
-    const blogName = await blogsQueryRepository.getBlogByID(req.body.blogId);
+const blogIdFieldValidation = body('blogId').isString().custom(async value => {
+    const blogName = await blogsQueryRepository.getBlogByID(value);
     if (!blogName) {
-        throw new Error('invalid blog id!');
+        return Promise.reject('invalid blog id!');
     }
-    return true;
+    return Promise.resolve();
 });
 
 export const postsValidationMiddlewaresArray = [authorizationMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, blogIdFieldValidation, catchErrorsMiddleware];

@@ -1,11 +1,10 @@
 
 import {Request, Response} from "express";
 
-export type queryHT04Type = {
-    searchNameTerm?: string,
+export type reqQueryPagination = {
     sortBy?: string,
     sortDirection?: 'asc' | 'desc',
-    pageNumber?: number
+    pageNumber?: number,
     pageSize?: number
 }
 

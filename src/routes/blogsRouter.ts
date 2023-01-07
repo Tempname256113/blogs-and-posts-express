@@ -1,11 +1,10 @@
 import {Response, Router} from "express";
 import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
 import {
-    queryHT04Type,
     RequestWithBody,
     RequestWithQuery, RequestWithURIParamsAndQuery,
     RequestWithURIParams,
-    RequestWithURIParamsAndBody
+    RequestWithURIParamsAndBody, reqQueryPagination
 } from "../models/reqResModel";
 import {blogsService} from "../domain/blogsService";
 import {blogsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/blogsValidationMiddlewaresArray";
@@ -16,17 +15,20 @@ import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
 } from "../middlewares/middlewaresArray/postsValidationMiddlewaresArray";
 import {requestPostType} from "../models/postModels";
+import {queryPaginationType} from "../models/queryModels";
 
 export const blogsRouter = Router();
 
-blogsRouter.get('/', async (req: RequestWithQuery<queryHT04Type>, res: Response) => {
-    const receivedBlogs = await blogsQueryRepository.getBlogsWithSortAndPaginationQuery(
-        req.query.searchNameTerm,
-        req.query.sortBy,
-        req.query.sortDirection,
-        req.query.pageNumber,
-        req.query.pageSize
-    );
+blogsRouter.get('/',
+    async (req: RequestWithQuery<{searchNameTerm: string | undefined} & reqQueryPagination>, res: Response) => {
+    const paginationConfig: {searchNameTerm: string | undefined} & queryPaginationType = {
+        searchNameTerm: req.query.searchNameTerm,
+        sortBy: req.query.sortBy ?? 'createdAt',
+        sortDirection: req.query.sortDirection ?? 'desc',
+        pageNumber: req.query.pageNumber ?? 1,
+        pageSize: req.query.pageSize ?? 10
+    }
+    const receivedBlogs = await blogsQueryRepository.getBlogsWithSortAndPagination(paginationConfig);
     res.status(200).send(receivedBlogs);
 });
 
@@ -35,20 +37,21 @@ blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Res
     if (blog !== null) {
         res.status(200).send(blog)
     } else {
-        res.status(404).end();
+        res.sendStatus(404);
     }
 });
 
 blogsRouter.get('/:blogId/posts',
     blogIdUriParamCheckMiddleware,
-    async (req: RequestWithURIParamsAndQuery<{blogId: string}, queryHT04Type>, res: Response) => {
-        const posts = await blogsQueryRepository.getAllPostsForSpecifiedBlog(
-            req.params.blogId,
-            req.query.pageNumber,
-            req.query.pageSize,
-            req.query.sortBy,
-            req.query.sortDirection
-        );
+    async (req: RequestWithURIParamsAndQuery<{blogId: string}, reqQueryPagination>, res: Response) => {
+        const paginationConfig: {blogId: string} & queryPaginationType = {
+            blogId: req.params.blogId,
+            sortBy: req.query.sortBy ?? 'createdAt',
+            sortDirection: req.query.sortDirection ?? 'desc',
+            pageNumber: req.query.pageNumber ?? 1,
+            pageSize: req.query.pageSize ?? 10,
+        }
+        const posts = await blogsQueryRepository.getAllPostsForSpecifiedBlog(paginationConfig);
         res.status(200).send(posts);
 });
 

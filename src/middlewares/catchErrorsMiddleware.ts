@@ -7,7 +7,10 @@ const createErrorMessage = (array: any): errorObjType => {
 
     const arrayWithErrors: { message: string, field: string }[] = [];
 
-    for (let i = 0; i < array.length; i++) {
+    //map
+    // for in / of
+    // for (let i = 0; i < array.length; i++) {
+    for (const i of array) {
 
         if (arrayWithErrors.find(elem => elem.field === array[i]['param'])) {
             continue;
