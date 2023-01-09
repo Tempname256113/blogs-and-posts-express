@@ -93,7 +93,7 @@ export const paginationUsersByQueryParams = async (
     else sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir} as Sort;
-    const arrayOfReturnedWithPaginationUsers = await usersCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
+    const arrayOfReturnedWithPaginationUsers = await usersCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false, password: false}).toArray();
     const allUsersFromDB = await usersCollection.find(searchConfig).toArray();
     const totalCount = allUsersFromDB.length;
     const pagesCount = Math.ceil(totalCount / Number(pageSize));
