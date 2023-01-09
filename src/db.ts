@@ -4,8 +4,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // connection URL
-const url = process.env.MONGO_URL;
-// const url = process.env.MONGO_LOCAL;
+// const url = process.env.MONGO_URL;
+const url = process.env.MONGO_LOCAL;
 if (!url) {
     throw new Error('Url doesn\'t found');
 }

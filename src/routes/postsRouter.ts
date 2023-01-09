@@ -7,7 +7,7 @@ import {
     RequestWithURIParamsAndBody,
     ResponseWithBody
 } from "../models/reqResModel";
-import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
+import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
 import {postsService} from "../domain/postsService";
 import {postsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/postsValidationMiddlewaresArray";
 import {errorObjType} from "../models/errorObjModel";
@@ -58,7 +58,7 @@ postsRouter.put('/:id',
 });
 
 postsRouter.delete('/:id',
-    authorizationMiddleware,
+    authorizationCheckMiddleware,
     async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     if (await postsService.deletePostByID(req.params.id)) {
         return res.sendStatus(204);

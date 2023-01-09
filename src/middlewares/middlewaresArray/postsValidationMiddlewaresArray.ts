@@ -1,5 +1,5 @@
 import {body} from "express-validator";
-import {authorizationMiddleware} from "../authorizationMiddleware";
+import {authorizationCheckMiddleware} from "../authorizationCheckMiddleware";
 import {catchErrorsMiddleware} from "../catchErrorsMiddleware";
 import {blogsQueryRepository} from "../../repositories/blogs/blogsQueryRepository";
 import {blogIdUriParamCheckMiddleware} from "../blogIdUriParamCheckMiddleware";
@@ -15,5 +15,5 @@ const blogIdFieldValidation = body('blogId').isString().custom(async value => {
     return Promise.resolve();
 });
 
-export const postsValidationMiddlewaresArray = [authorizationMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, blogIdFieldValidation, catchErrorsMiddleware];
-export const postsValidationMiddlewaresArrayWithUriBlogIdCheck = [authorizationMiddleware, blogIdUriParamCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, catchErrorsMiddleware]
+export const postsValidationMiddlewaresArray = [authorizationCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, blogIdFieldValidation, catchErrorsMiddleware];
+export const postsValidationMiddlewaresArrayWithUriBlogIdCheck = [authorizationCheckMiddleware, blogIdUriParamCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, catchErrorsMiddleware]

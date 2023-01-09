@@ -1,5 +1,5 @@
 import {Response, Router} from "express";
-import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
+import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
 import {
     RequestWithBody,
     RequestWithQuery, RequestWithURIParamsAndQuery,
@@ -58,49 +58,48 @@ blogsRouter.get('/:blogId/posts',
 blogsRouter.post('/',
     blogsValidationMiddlewaresArray,
     async (req: RequestWithBody<requestBlogType>, res: Response) => {
-    const createdBlog = await blogsService.createNewBlog({
+    const newBlogTemplate: requestBlogType = {
         name: req.body.name,
         description: req.body.description,
         websiteUrl: req.body.websiteUrl
-    })
+    };
+    const createdBlog = await blogsService.createNewBlog(newBlogTemplate);
     res.status(201).send(createdBlog);
 });
 
 blogsRouter.post('/:blogId/posts',
     postsValidationMiddlewaresArrayWithUriBlogIdCheck,
     async (req: RequestWithURIParamsAndBody<{blogId: string}, requestPostType>, res: Response) => {
-    const createdPost = await blogsService.createNewPostForSpecificBlog(
-        {
-            title: req.body.title,
-            shortDescription: req.body.shortDescription,
-            content: req.body.content,
-            blogId: req.params.blogId
-        }
-    )
+    const newPostTemplate: requestPostType = {
+        title: req.body.title,
+        shortDescription: req.body.shortDescription,
+        content: req.body.content,
+        blogId: req.params.blogId
+    };
+    const createdPost = await blogsService.createNewPostForSpecificBlog(newPostTemplate);
     res.status(201).send(createdPost);
 })
 
 blogsRouter.put('/:id',
     blogsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, requestBlogType>, res: Response) => {
-    const updateStatus = await blogsService.updateBlogByID(
-        req.params.id,
-        {name: req.body.name,
-            description: req.body.description,
-            websiteUrl: req.body.websiteUrl
-            }
-    )
+    const updateBlogTemplate: requestBlogType = {
+        name: req.body.name,
+        description: req.body.description,
+        websiteUrl: req.body.websiteUrl
+    };
+    const updateStatus: boolean = await blogsService.updateBlogByID(req.params.id, updateBlogTemplate);
     if (updateStatus) {
-        return res.status(204).end();
+        return res.sendStatus(204);
     }
-    res.status(404).end();
+    res.sendStatus(404);
 });
 
 blogsRouter.delete('/:id',
-    authorizationMiddleware,
+    authorizationCheckMiddleware,
     async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     if (await blogsService.deleteBlogByID(req.params.id)) {
-        return res.status(204).end();
+        return res.sendStatus(204);
     }
-    res.status(404).end();
+    res.sendStatus(404);
 });

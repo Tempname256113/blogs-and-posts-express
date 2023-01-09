@@ -4,7 +4,7 @@ import {ObjectId} from "mongodb";
 import {blogType} from "../../models/blogModels";
 import {
     paginationBlogsByQueryParams,
-    paginationPostsByQueryParams,
+    paginationPostsByQueryParams, queryPaginationTypeWithSearchConfig,
     searchTemplate
 } from "../mongoDBFeatures/paginationByQueryParamsFunctions";
 import {queryPaginationType} from "../../models/queryModels";
@@ -13,30 +13,28 @@ const blogsCollection = client.db('ht02DB').collection('blogs');
 
 export const blogsQueryRepository = {
     async getBlogsWithSortAndPagination(
-        paginationConfig: {searchNameTerm: string | undefined} & queryPaginationType) {
+        {searchNameTerm, sortBy, sortDirection, pageNumber, pageSize}: {searchNameTerm: string | undefined} & queryPaginationType) {
         let searchConfig: searchTemplate = {};
-        if (paginationConfig.searchNameTerm) searchConfig = {name: {$regex: paginationConfig.searchNameTerm, $options: 'i'}};
-        return paginationBlogsByQueryParams(
-            {
-                searchConfig: searchConfig,
-                sortBy: paginationConfig.sortBy,
-                sortDirection: paginationConfig.sortDirection,
-                pageNumber: paginationConfig.pageNumber,
-                pageSize: paginationConfig.pageSize
-            }
-        )
+        if (searchNameTerm) searchConfig = {name: {$regex: searchNameTerm, $options: 'i'}};
+        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+            searchConfig,
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }
+        return paginationBlogsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getAllPostsForSpecifiedBlog(
-        paginationConfig: {blogId: string} & queryPaginationType) {
-        return paginationPostsByQueryParams(
-            {
-            searchConfig: {blogId: paginationConfig.blogId},
-            sortBy: paginationConfig.sortBy,
-            sortDirection: paginationConfig.sortDirection,
-            pageNumber: paginationConfig.pageNumber,
-            pageSize: paginationConfig.pageSize
-            }
-        )
+        {blogId, sortBy, sortDirection, pageNumber, pageSize}: {blogId: string} & queryPaginationType) {
+        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+            searchConfig: {blogId: blogId},
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }
+        return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getBlogByID(id: string) {
         const foundedObj = await blogsCollection.findOne({id: id});
