@@ -23,5 +23,8 @@ export const usersService = {
         const findedUserHash = await usersQueryRepository.getUserHashForAuthentification(authData);
         if (findedUserHash) return compare(authData.password, findedUserHash);
         return false;
+    },
+    async deleteAllData(): Promise<void>{
+        await usersRepository.deleteAllData();
     }
 }

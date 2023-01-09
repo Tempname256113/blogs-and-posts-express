@@ -18,4 +18,7 @@ export const usersRepository = {
         const deletedUserStatus = await usersCollection.deleteOne({id: userId});
         return deletedUserStatus.deletedCount > 0;
     },
+    async deleteAllData(): Promise<void>{
+        await usersCollection.deleteMany({});
+    }
 }
