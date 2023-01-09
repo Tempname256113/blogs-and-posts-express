@@ -1,6 +1,6 @@
 
 // такие объекты приходят в случае ошибок
-type insideErrorObjType = {
+export type insideErrorObjType = {
     message: string,
     field: string
 }

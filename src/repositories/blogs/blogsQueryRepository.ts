@@ -1,108 +1,40 @@
 
 import {client} from "../../db";
-import {ObjectId, Sort} from "mongodb";
+import {ObjectId} from "mongodb";
 import {blogType} from "../../models/blogModels";
-import {postType} from "../../models/postModels";
+import {
+    paginationBlogsByQueryParams,
+    paginationPostsByQueryParams, queryPaginationTypeWithSearchConfig,
+    searchTemplate
+} from "../mongoDBFeatures/paginationByQueryParamsFunctions";
+import {queryPaginationType} from "../../models/queryModels";
 
 const blogsCollection = client.db('ht02DB').collection('blogs');
-const postsCollection = client.db('ht02DB').collection('posts');
-
-type blogByQueryHT04Type = {
-    pagesCount: number,
-    page: number,
-    pageSize: number,
-    totalCount: number,
-    items: blogType[]
-}
-
-type postByQueryHT04Type = {
-    pagesCount: number,
-    page: number,
-    pageSize: number,
-    totalCount: number,
-    items: postType[]
-}
 
 export const blogsQueryRepository = {
-    async getBlogsWithSortAndPaginationQuery(
-        searchNameTerm: string | null = null,
-        sortBy: string = 'createdAt',
-        sortDirection: 'asc' | 'desc' = 'desc',
-        pageNumber: number = 1,
-        pageSize: number = 10): Promise<blogByQueryHT04Type> {
-        const howMuchToSkip = (Number(pageNumber) - 1) * Number(pageSize);
-        let sortDir: number;
-        switch (sortDirection) {
-            case 'asc':
-                sortDir = 1;
-                break;
-            case 'desc':
-                sortDir = -1;
-                break;
+    async getBlogsWithSortAndPagination(
+        {searchNameTerm, sortBy, sortDirection, pageNumber, pageSize}: {searchNameTerm: string | undefined} & queryPaginationType) {
+        let searchConfig: searchTemplate = {};
+        if (searchNameTerm) searchConfig = {name: {$regex: searchNameTerm, $options: 'i'}};
+        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+            searchConfig,
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
         }
-        const sortConfig = {[sortBy]: sortDir} as Sort;
-        let arrayOfReturnedBlogs;
-        let pagesCount: number;
-        let allBlogsFromDB;
-        let totalCount: number;
-        if (searchNameTerm) {
-            arrayOfReturnedBlogs = await blogsCollection.find({name: {$regex: `${searchNameTerm}`, $options: 'i'}}).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-            allBlogsFromDB = await blogsCollection.find({name: {$regex: `${searchNameTerm}`, $options: 'i'}}).toArray();
-            totalCount = allBlogsFromDB.length;
-            pagesCount = Math.ceil(totalCount / Number(pageSize));
-            return {
-                pagesCount: pagesCount,
-                page: Number(pageNumber),
-                pageSize: Number(pageSize),
-                totalCount: totalCount,
-                items: arrayOfReturnedBlogs as any
-            }
-        }
-        arrayOfReturnedBlogs = await blogsCollection.find({}).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-        allBlogsFromDB = await blogsCollection.find({}).toArray();
-        totalCount = allBlogsFromDB.length;
-        pagesCount = Math.ceil(totalCount / Number(pageSize));
-        return {
-            pagesCount: pagesCount,
-            page: Number(pageNumber),
-            pageSize: Number(pageSize),
-            totalCount: totalCount,
-            items: arrayOfReturnedBlogs as any
-        }
+        return paginationBlogsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getAllPostsForSpecifiedBlog(
-        blogId: string,
-        pageNumber: number = 1,
-        pageSize: number = 10,
-        sortBy: string = 'createdAt',
-        sortDirection: 'asc' | 'desc' = 'desc'
-    ): Promise<postByQueryHT04Type> {
-        const howMuchToSkip = (Number(pageNumber) - 1) * Number(pageSize);
-        let sortDir: number;
-        switch (sortDirection) {
-            case 'asc':
-                sortDir = 1;
-                break;
-            case 'desc':
-                sortDir = -1;
-                break;
+        {blogId, sortBy, sortDirection, pageNumber, pageSize}: {blogId: string} & queryPaginationType) {
+        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+            searchConfig: {blogId: blogId},
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
         }
-        const sortConfig = {[sortBy]: sortDir} as Sort;
-        let arrayOfReturnedPosts;
-        let pagesCount: number;
-        let allPostsFromDBWithBlogIdFilter;
-        let totalCount: number;
-        arrayOfReturnedPosts = await postsCollection.find({blogId: blogId}).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-        allPostsFromDBWithBlogIdFilter = await postsCollection.find({blogId: blogId}).toArray();
-        totalCount = allPostsFromDBWithBlogIdFilter.length;
-        pagesCount = Math.ceil(totalCount / Number(pageSize));
-        return {
-            pagesCount: pagesCount,
-            page: Number(pageNumber),
-            pageSize: Number(pageSize),
-            totalCount: Number(totalCount),
-            items: arrayOfReturnedPosts as any
-        }
+        return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getBlogByID(id: string) {
         const foundedObj = await blogsCollection.findOne({id: id});

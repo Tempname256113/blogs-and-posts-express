@@ -1,37 +1,39 @@
 import {Response, Router} from "express";
 import {
-    queryHT04Type,
+    reqQueryPagination,
     RequestWithBody,
     RequestWithQuery,
     RequestWithURIParams,
     RequestWithURIParamsAndBody,
     ResponseWithBody
 } from "../models/reqResModel";
-import {authorizationMiddleware} from "../middlewares/authorizationMiddleware";
+import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
 import {postsService} from "../domain/postsService";
 import {postsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/postsValidationMiddlewaresArray";
 import {errorObjType} from "../models/errorObjModel";
 import {postType, requestPostType} from "../models/postModels";
 import {postsQueryRepository} from "../repositories/posts/postsQueryRepository";
+import {queryPaginationType} from "../models/queryModels";
 
 export const postsRouter = Router();
 
-postsRouter.get('/', async (req: RequestWithQuery<queryHT04Type>, res: Response) => {
-    const receivedPost = await postsQueryRepository.getPostsWithSortAndPaginationQuery(
-        req.query.pageNumber,
-        req.query.pageSize,
-        req.query.sortBy,
-        req.query.sortDirection
-    )
+postsRouter.get('/', async (req: RequestWithQuery<reqQueryPagination>, res: Response) => {
+    const paginationConfig: queryPaginationType = {
+        sortBy: req.query.sortBy ?? 'createdAt',
+        sortDirection: req.query.sortDirection ?? 'desc',
+        pageNumber: req.query.pageNumber ?? 1,
+        pageSize: req.query.pageSize ?? 10
+    }
+    const receivedPost = await postsQueryRepository.getPostsWithSortAndPagination(paginationConfig);
     res.status(200).send(receivedPost);
 });
 
 postsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const getPost = await postsService.getPostByID(req.params.id);
+    const getPost = await postsQueryRepository.getPostByID(req.params.id);
     if (getPost !== null) {
-        res.status(200).send(getPost);
+        return res.status(200).send(getPost);
     }
-    res.status(404).end();
+    res.sendStatus(404);
 });
 
 postsRouter.post('/',
@@ -50,16 +52,16 @@ postsRouter.put('/:id',
     postsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, requestPostType>, res: Response) => {
     if (!await postsService.updatePostByID(req.params.id, req.body)) {
-        return res.status(404).end();
+        return res.sendStatus(404);
     }
-    res.status(204).end();
+    res.sendStatus(204);
 });
 
 postsRouter.delete('/:id',
-    authorizationMiddleware,
-    async (req: RequestWithURIParams<{ id: string }>, res: Response) => {
+    authorizationCheckMiddleware,
+    async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     if (await postsService.deletePostByID(req.params.id)) {
-        return res.status(204).end();
+        return res.sendStatus(204);
     }
-    res.status(404).end();
+    res.sendStatus(404);
 });

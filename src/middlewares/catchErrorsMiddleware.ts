@@ -1,20 +1,20 @@
 import {Request, Response, NextFunction} from "express";
 import {validationResult} from "express-validator";
-import {errorObjType} from "../models/errorObjModel";
+import {errorObjType, insideErrorObjType} from "../models/errorObjModel";
 
 // сюда нужно передать массив ошибок который приходит в случае неправильных входных данных
 const createErrorMessage = (array: any): errorObjType => {
 
-    const arrayWithErrors: { message: string, field: string }[] = [];
+    const arrayWithErrors: insideErrorObjType[] = [];
 
-    for (let i = 0; i < array.length; i++) {
+    for (const i of array) {
 
-        if (arrayWithErrors.find(elem => elem.field === array[i]['param'])) {
+        if (arrayWithErrors.find(elem => elem.field === i.param)) {
             continue;
         }
         arrayWithErrors.push({
-            message: 'string',
-            field: array[i]['param']
+            message: 'i got the wrong value',
+            field: i.param
         })
     }
 
