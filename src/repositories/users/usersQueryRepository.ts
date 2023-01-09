@@ -10,7 +10,7 @@ const usersCollection = client.db('ht02DB').collection('users');
 export const usersQueryRepository = {
     async getAllUsersWithPagination({sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm = '', searchEmailTerm = ''}: usersQueryPaginationType){
         const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
-            searchConfig: {$and: [
+            searchConfig: {$or: [
                     {login: {$regex: searchLoginTerm, $options: 'i'}},
                     {email: {$regex: searchEmailTerm, $options: 'i'}}
                 ]},

@@ -38,7 +38,8 @@ export type searchTemplate = {
 }
 
 export type fewSearchTemplates = {
-    $and: searchTemplate[]
+    $and?: searchTemplate[]
+    $or?: searchTemplate[]
 }
 
 export type queryPaginationTypeWithSearchConfig = {searchConfig: searchTemplate | fewSearchTemplates} & queryPaginationType;
