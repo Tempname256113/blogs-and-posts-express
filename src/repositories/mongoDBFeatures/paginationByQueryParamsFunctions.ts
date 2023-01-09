@@ -52,7 +52,7 @@ export const paginationBlogsByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir} as Sort;
     const arrayOfReturnedWithPaginationBlogs = await blogsCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-    const allBlogsFromDB = await blogsCollection.find(searchConfig).toArray();
+    const allBlogsFromDB = await blogsCollection.find({}).toArray();
     const totalCount = allBlogsFromDB.length;
     const pagesCount = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -73,7 +73,7 @@ export const paginationPostsByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir} as Sort;
     const arrayOfReturnedWithPaginationPosts = await postsCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false}).toArray();
-    const allPostsFromDB = await postsCollection.find(searchConfig).toArray();
+    const allPostsFromDB = await postsCollection.find({}).toArray();
     const totalCount = allPostsFromDB.length;
     const pagesCount = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -94,7 +94,7 @@ export const paginationUsersByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir} as Sort;
     const arrayOfReturnedWithPaginationUsers = await usersCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false, password: false}).toArray();
-    const allUsersFromDB = await usersCollection.find(searchConfig).toArray();
+    const allUsersFromDB = await usersCollection.find({}).toArray();
     const totalCount = allUsersFromDB.length;
     const pagesCount = Math.ceil(totalCount / Number(pageSize));
     return {
