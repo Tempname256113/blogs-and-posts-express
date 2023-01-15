@@ -3,8 +3,8 @@ import request from "supertest";
 
 import {app} from "../../../app";
 import {blogType, requestBlogType} from "../../../models/blogModels";
-import {blogsRepositoryDB} from "../../../repositories/blogs/blogsRepositoryDB";
-import {postsRepositoryDB} from "../../../repositories/posts/postsRepositoryDB";
+import {blogsRepository} from "../../../repositories/blogs/blogsRepository";
+import {postsRepository} from "../../../repositories/posts/postsRepository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {
@@ -116,13 +116,13 @@ const updateExistingBlogWithoutErrors = async (existingBlog: blogType, reqBody: 
 }
 
 beforeAll( async () => {
-    await blogsRepositoryDB.deleteAllData();
-    await postsRepositoryDB.deleteAllData();
+    await blogsRepository.deleteAllData();
+    await postsRepository.deleteAllData();
 })
 
 afterAll( async () => {
-    await blogsRepositoryDB.deleteAllData();
-    await postsRepositoryDB.deleteAllData();
+    await blogsRepository.deleteAllData();
+    await postsRepository.deleteAllData();
 })
 
 describe('general blogs API simple tests without errors', () => {

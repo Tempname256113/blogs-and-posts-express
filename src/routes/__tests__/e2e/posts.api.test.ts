@@ -1,10 +1,10 @@
 
 import request from "supertest"
 import {app} from "../../../app";
-import {blogsRepositoryDB} from "../../../repositories/blogs/blogsRepositoryDB";
+import {blogsRepository} from "../../../repositories/blogs/blogsRepository";
 import {postType, requestPostType} from "../../../models/postModels";
 import {blogType} from "../../../models/blogModels";
-import {postsRepositoryDB} from "../../../repositories/posts/postsRepositoryDB";
+import {postsRepository} from "../../../repositories/posts/postsRepository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {
@@ -109,13 +109,13 @@ const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<p
 }
 
 beforeAll( async () => {
-    await blogsRepositoryDB.deleteAllData();
-    await postsRepositoryDB.deleteAllData();
+    await blogsRepository.deleteAllData();
+    await postsRepository.deleteAllData();
 })
 
 afterAll( async () => {
-    await blogsRepositoryDB.deleteAllData();
-    await postsRepositoryDB.deleteAllData();
+    await blogsRepository.deleteAllData();
+    await postsRepository.deleteAllData();
 })
 
 describe('simple tests for route /posts', () => {

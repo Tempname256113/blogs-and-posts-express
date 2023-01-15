@@ -1,5 +1,5 @@
 import {client} from "../../db";
-import {usersQueryPaginationType} from "../../models/userModels";
+import {usersQueryPaginationType, userType} from "../../models/userModels";
 import {
     paginationUsersByQueryParams,
     queryPaginationTypeWithSearchConfig,
@@ -21,13 +21,37 @@ export const usersQueryRepository = {
         }
         return paginationUsersByQueryParams(queryPaginationWithSearchConfig);
     },
-    async getUserHashForAuthentification(authData: {loginOrEmail: string, password: string}): Promise<string | void>{
-        const userByLogin = await usersCollection.findOne({
+    async getUserByLoginOrEmail(userLoginOrEmail: string): Promise<userType | null> {
+        const userByLoginOrEmail = await usersCollection.findOne({
             $or: [
-                {login: authData.loginOrEmail},
-                {email: authData.loginOrEmail}
+                {login: userLoginOrEmail},
+                {email: userLoginOrEmail}
             ]
         });
-        if (userByLogin) return userByLogin.password;
+        if (userByLoginOrEmail) {
+            const foundedUser: userType = {
+                id: userByLoginOrEmail.id,
+                login: userByLoginOrEmail.login,
+                email: userByLoginOrEmail.email,
+                password: userByLoginOrEmail.password,
+                createdAt: userByLoginOrEmail.createdAt
+            }
+            return foundedUser;
+        }
+        return null;
+    },
+    async getUserById(id: string): Promise<userType | null> {
+        const foundedUserById = await usersCollection.findOne({id});
+        if (foundedUserById) {
+            const infoAboutUser: userType = {
+                id: foundedUserById.id,
+                login: foundedUserById.login,
+                email: foundedUserById.email,
+                password: foundedUserById.password,
+                createdAt: foundedUserById.createdAt
+            }
+            return infoAboutUser;
+        }
+        return null;
     }
 }

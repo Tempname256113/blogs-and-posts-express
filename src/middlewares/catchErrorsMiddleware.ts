@@ -20,7 +20,8 @@ const createErrorMessage = (array: any): errorObjType => {
 
     return {errorsMessages: arrayWithErrors}
 }
-
+// приводит вид ошибок к нужному виду. писать в конце цепи после всех методов express-validator.
+// собирает все ошибки найденные express-validator, приводит к нужному виду и передает на клиент со статусом 400
 export const catchErrorsMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

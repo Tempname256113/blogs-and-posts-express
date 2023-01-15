@@ -18,3 +18,9 @@ export type userType = {
     password?: string,
     createdAt: string
 }
+
+export type infoAboutUserType = {
+    email: string,
+    login: string,
+    userId: string
+}
