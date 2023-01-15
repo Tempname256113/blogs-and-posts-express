@@ -19,10 +19,18 @@ export const usersService = {
     async deleteUser(userId: string): Promise<boolean> {
         return usersRepository.deleteUser(userId);
     },
-    async authUser(authData: {loginOrEmail: string, password: string}): Promise<boolean>{
-        const findedUserHash = await usersQueryRepository.getUserHashForAuthentification(authData);
-        if (findedUserHash) return compare(authData.password, findedUserHash);
-        return false;
+    async authUser(authData: {loginOrEmail: string, password: string}) {
+        const findedUserByLoginOrEmail: userType | null = await usersQueryRepository.getUserByLoginOrEmail(authData.loginOrEmail);
+        if (findedUserByLoginOrEmail) {
+            const comparePasswordStatus = await compare(authData.password, findedUserByLoginOrEmail.password!);
+            return {
+                findedUserByLoginOrEmail,
+                comparePasswordStatus
+            }
+        }
+        return {
+            comparePasswordStatus: false
+        };
     },
     async deleteAllData(): Promise<void>{
         await usersRepository.deleteAllData();

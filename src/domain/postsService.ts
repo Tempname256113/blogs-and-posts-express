@@ -1,5 +1,5 @@
 import {postType, requestPostType} from "../models/postModels";
-import {postsRepositoryDB} from "../repositories/posts/postsRepositoryDB";
+import {postsRepository} from "../repositories/posts/postsRepository";
 import {blogsService} from "./blogsService";
 
 export const postsService = {
@@ -13,15 +13,15 @@ export const postsService = {
             blogName: await blogsService.findBlogNameByID(newPost.blogId) as string,
             createdAt: new Date().toISOString()
         }
-        return postsRepositoryDB.createNewPost(newPostTemplate)
+        return postsRepository.createNewPost(newPostTemplate)
     },
     async updatePostByID(id: string, post: requestPostType): Promise<boolean> {
-        return postsRepositoryDB.updatePostByID(id, post);
+        return postsRepository.updatePostByID(id, post);
     },
     async deletePostByID(id: string): Promise<boolean> {
-        return postsRepositoryDB.deletePostByID(id);
+        return postsRepository.deletePostByID(id);
     },
     async deleteAllData(): Promise<void> {
-        await postsRepositoryDB.deleteAllData();
+        await postsRepository.deleteAllData();
     }
 }

@@ -5,7 +5,7 @@ import {
     RequestWithQuery,
     RequestWithURIParams,
     ResponseWithBody
-} from "../models/reqResModel";
+} from "../models/reqResModels";
 import {requestUserType, usersQueryPaginationType, userType} from "../models/userModels";
 import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";

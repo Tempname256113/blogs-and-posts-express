@@ -1,6 +1,5 @@
 
 import {client} from "../../db";
-import {ObjectId} from "mongodb";
 import {blogType} from "../../models/blogModels";
 import {
     paginationBlogsByQueryParams,
@@ -28,7 +27,7 @@ export const blogsQueryRepository = {
     async getAllPostsForSpecifiedBlog(
         {blogId, sortBy, sortDirection, pageNumber, pageSize}: {blogId: string} & queryPaginationType) {
         const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
-            searchConfig: {blogId: blogId},
+            searchConfig: {blogId},
             sortBy,
             sortDirection,
             pageNumber,
@@ -37,18 +36,16 @@ export const blogsQueryRepository = {
         return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getBlogByID(id: string) {
-        const foundedObj = await blogsCollection.findOne({id: id});
-        if (foundedObj) {
-            const foundedObjCopy: blogType & {_id?: ObjectId} = {
-                _id: foundedObj._id,
-                id: foundedObj.id,
-                name: foundedObj.name,
-                description: foundedObj.description,
-                websiteUrl: foundedObj.websiteUrl,
-                createdAt: foundedObj.createdAt
+        const foundedBlog = await blogsCollection.findOne({id});
+        if (foundedBlog) {
+            const foundedBlogCopy: blogType = {
+                id: foundedBlog.id,
+                name: foundedBlog.name,
+                description: foundedBlog.description,
+                websiteUrl: foundedBlog.websiteUrl,
+                createdAt: foundedBlog.createdAt
             };
-            delete foundedObjCopy._id;
-            return foundedObjCopy;
+            return foundedBlogCopy;
         }
         return null;
     }

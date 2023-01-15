@@ -1,6 +1,5 @@
 
 import {client} from "../../db";
-import {ObjectId} from "mongodb";
 import {postType} from "../../models/postModels";
 import {paginationPostsByQueryParams} from "../mongoDBFeatures/paginationByQueryParamsFunctions";
 import {queryPaginationType} from "../../models/queryModels";
@@ -8,22 +7,20 @@ import {queryPaginationType} from "../../models/queryModels";
 const postsCollection = client.db('ht02DB').collection('posts');
 
 export const postsQueryRepository = {
-    async getPostsWithSortAndPagination(paginationConfig: queryPaginationType) {
-        return paginationPostsByQueryParams(
-            {
-                searchConfig: {},
-                sortBy: paginationConfig.sortBy,
-                sortDirection: paginationConfig.sortDirection,
-                pageNumber: paginationConfig.pageNumber,
-                pageSize: paginationConfig.pageSize
-            }
-        )
+    async getPostsWithSortAndPagination({sortBy, sortDirection, pageNumber, pageSize}: queryPaginationType) {
+        const queryPaginationTypeWithSearchConfig = {
+            searchConfig: {},
+            sortBy: sortBy,
+            sortDirection: sortDirection,
+            pageNumber: pageNumber,
+            pageSize: pageSize
+        }
+        return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig);
     },
-    async getPostByID(id: string): Promise<postType & {_id?: ObjectId} | null> {
-        const foundedPost = await postsCollection.findOne({id: id});
+    async getPostByID(id: string): Promise<postType | null> {
+        const foundedPost = await postsCollection.findOne({id});
         if (foundedPost) {
-            const copyFoundedPost: postType & {_id?: ObjectId} = {
-                _id: foundedPost._id,
+            const copyFoundedPost: postType = {
                 id: foundedPost.id,
                 title: foundedPost.title,
                 shortDescription: foundedPost.shortDescription,
@@ -32,7 +29,6 @@ export const postsQueryRepository = {
                 blogName: foundedPost.blogName,
                 createdAt: foundedPost.createdAt
             }
-            delete copyFoundedPost._id;
             return copyFoundedPost;
         }
         return null;

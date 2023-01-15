@@ -5,7 +5,7 @@ import {
     RequestWithQuery, RequestWithURIParamsAndQuery,
     RequestWithURIParams,
     RequestWithURIParamsAndBody, reqQueryPagination
-} from "../models/reqResModel";
+} from "../models/reqResModels";
 import {blogsService} from "../domain/blogsService";
 import {blogsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/blogsValidationMiddlewaresArray";
 import {requestBlogType} from "../models/blogModels";
