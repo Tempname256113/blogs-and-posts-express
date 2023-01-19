@@ -6,8 +6,12 @@ import {usersService} from "../domain/usersService";
 import {jwtMethods} from "./application/jwtMethods";
 import {userTokenPayloadType} from "../models/tokenModels";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
-import {infoAboutUserType, userType} from "../models/userModels";
+import {infoAboutUserType, requestUserType, userType} from "../models/userModels";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearerUserAuthTokenCheckMiddleware";
+import {
+    createNewUserValidationMiddlewaresArray
+} from "../middlewares/middlewaresArray/createNewUserValidationMiddlewaresArray";
+import {authService} from "../domain/authService";
 
 export const authRouter = Router();
 const JWT_SECRET: string = process.env.JWT_SECRET!;
@@ -45,4 +49,16 @@ authRouter.get('/me',
             userId: userFromDB!.id
         }
         res.status(200).send(informationAboutCurrentUser);
-})
+});
+
+authRouter.post('/registration',
+    createNewUserValidationMiddlewaresArray,
+    async (req: Request, res: Response) => {
+        const userConfig: requestUserType = {
+            login: req.body.login,
+            password: req.body.password,
+            email: req.body.email
+        }
+        const result = await authService.registrationNewUser(userConfig);
+        res.status(200).send(result);
+});

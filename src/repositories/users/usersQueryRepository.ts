@@ -53,5 +53,33 @@ export const usersQueryRepository = {
             return infoAboutUser;
         }
         return null;
+    },
+    async getUserByLogin(userLogin: string): Promise<userType | null>{
+        const foundedUser = await usersCollection.findOne({login: userLogin});
+        if (foundedUser) {
+            const user: userType = {
+                id: foundedUser.id,
+                login: foundedUser.login,
+                email: foundedUser.email,
+                password: foundedUser.password,
+                createdAt: foundedUser.createdAt
+            }
+            return user;
+        }
+        return null;
+    },
+    async getUserByEmail(userEmail: string): Promise<userType | null>{
+        const foundedUser = await usersCollection.findOne({email: userEmail});
+        if (foundedUser) {
+            const user: userType = {
+                id: foundedUser.id,
+                login: foundedUser.login,
+                email: foundedUser.email,
+                password: foundedUser.password,
+                createdAt: foundedUser.createdAt
+            }
+            return user;
+        }
+        return null;
     }
 }

@@ -24,3 +24,18 @@ export type infoAboutUserType = {
     login: string,
     userId: string
 }
+
+export type userTypeExtended = {
+    id: string,
+    accountData: {
+        login: string,
+        email: string,
+        password: string,
+        createdAt: string
+    },
+    emailConfirmation: {
+        confirmationCode: string,
+        expirationDate: Date,
+        isConfirmed: boolean
+    }
+}
