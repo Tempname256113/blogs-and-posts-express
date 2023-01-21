@@ -30,7 +30,7 @@ export type userTypeExtended = {
     accountData: {
         login: string,
         email: string,
-        password: string,
+        password?: string,
         createdAt: string
     },
     emailConfirmation: {

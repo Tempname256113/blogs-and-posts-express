@@ -1,17 +1,18 @@
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catchErrorsMiddleware";
-import {RequestWithBody} from "../models/reqResModels";
+import {RequestWithBody, ResponseWithBody} from "../models/reqResModels";
 import {Request, Response, Router} from "express";
 import {usersService} from "../domain/usersService";
 import {jwtMethods} from "./application/jwtMethods";
 import {userTokenPayloadType} from "../models/tokenModels";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
-import {infoAboutUserType, requestUserType, userType} from "../models/userModels";
+import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "../models/userModels";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearerUserAuthTokenCheckMiddleware";
 import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewaresArray/createNewUserValidationMiddlewaresArray";
 import {authService} from "../domain/authService";
+import {errorObjType} from "../models/errorObjModel";
 
 export const authRouter = Router();
 const JWT_SECRET: string = process.env.JWT_SECRET!;
@@ -40,12 +41,12 @@ authRouter.post('/login',
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
-    async (req: Request, res: Response) => {
-        const userId: string = req.context!.JWT_PAYLOAD!.userId!
-        const userFromDB: userType | null = await usersQueryRepository.getUserById(userId);
+    async (req: Request, res: ResponseWithBody<{email: string, login: string, userId: string}>) => {
+        const userId: string = req.context!.JWT_PAYLOAD!.userId!;
+        const userFromDB: userTypeExtended | null = await usersQueryRepository.getUserById(userId);
         const informationAboutCurrentUser: infoAboutUserType = {
-            email: userFromDB!.email,
-            login: userFromDB!.login,
+            email: userFromDB!.accountData.email,
+            login: userFromDB!.accountData.login,
             userId: userFromDB!.id
         }
         res.status(200).send(informationAboutCurrentUser);
@@ -59,6 +60,30 @@ authRouter.post('/registration',
             password: req.body.password,
             email: req.body.email
         }
-        const result = await authService.registrationNewUser(userConfig);
-        res.status(200).send(result);
+        const registrationStatus = await authService.registrationNewUser(userConfig);
+        if (registrationStatus) {
+            return res.sendStatus(204);
+        }
+        const errorObj: errorObjType = {
+            errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
+        }
+        res.status(400).send(errorObj);
+});
+
+authRouter.post('/registration-confirmation',
+    body('code').isString().trim().isLength({min: 1}),
+    catchErrorsMiddleware,
+    async (req: RequestWithBody<{code: string}>, res: Response) => {
+    const confirmRegistrationStatus = await authService.confirmRegistration(req.body.code);
+    if (confirmRegistrationStatus) return res.sendStatus(204);
+    res.sendStatus(400);
+});
+
+authRouter.post('/registration-email-resending',
+    body('email').isEmail(),
+    catchErrorsMiddleware,
+    async (req: RequestWithBody<{email: string}>, res: Response) => {
+    const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
+    if (emailSecretCodeResendingStatus) return res.sendStatus(204);
+    res.sendStatus(400);
 });

@@ -3,7 +3,7 @@ import {client} from "../../db";
 import {blogType} from "../../models/blogModels";
 import {postType} from "../../models/postModels";
 import {queryPaginationType} from "../../models/queryModels";
-import {userType} from "../../models/userModels";
+import {userTypeExtended} from "../../models/userModels";
 
 const blogsCollection = client.db('ht02DB').collection('blogs');
 const postsCollection = client.db('ht02DB').collection('posts');
@@ -31,7 +31,7 @@ type resultOfPaginationUsersByQueryType = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: userType[]
+    items: userTypeExtended[]
 }
 
 export type resultOfPaginationCommentsByQueryType = {
@@ -103,7 +103,7 @@ export const paginationUsersByQueryParams = async (
     else sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir} as Sort;
-    const arrayOfReturnedWithPaginationUsers = await usersCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false, password: false}).toArray();
+    const arrayOfReturnedWithPaginationUsers = await usersCollection.find(searchConfig).sort(sortConfig).limit(Number(pageSize)).skip(howMuchToSkip).project({_id: false, 'accountData.password': false}).toArray();
     const allUsersFromDB = await usersCollection.find(searchConfig).toArray();
     const totalCount = allUsersFromDB.length;
     const pagesCount = Math.ceil(totalCount / Number(pageSize));

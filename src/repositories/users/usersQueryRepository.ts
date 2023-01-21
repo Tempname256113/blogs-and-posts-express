@@ -1,5 +1,5 @@
 import {client} from "../../db";
-import {usersQueryPaginationType, userType} from "../../models/userModels";
+import {usersQueryPaginationType, userType, userTypeExtended} from "../../models/userModels";
 import {
     paginationUsersByQueryParams,
     queryPaginationTypeWithSearchConfig,
@@ -21,62 +21,110 @@ export const usersQueryRepository = {
         }
         return paginationUsersByQueryParams(queryPaginationWithSearchConfig);
     },
-    async getUserByLoginOrEmail(userLoginOrEmail: string): Promise<userType | null> {
+    async getUserByLoginOrEmail(userLoginOrEmail: string): Promise<userTypeExtended | null> {
         const userByLoginOrEmail = await usersCollection.findOne({
             $or: [
-                {login: userLoginOrEmail},
-                {email: userLoginOrEmail}
+                {'accountData.login': userLoginOrEmail},
+                {'accountData.email': userLoginOrEmail}
             ]
         });
         if (userByLoginOrEmail) {
-            const foundedUser: userType = {
+            const foundedUser: userTypeExtended = {
                 id: userByLoginOrEmail.id,
-                login: userByLoginOrEmail.login,
-                email: userByLoginOrEmail.email,
-                password: userByLoginOrEmail.password,
-                createdAt: userByLoginOrEmail.createdAt
+                accountData: {
+                    login: userByLoginOrEmail.accountData.login,
+                    email: userByLoginOrEmail.accountData.email,
+                    password: userByLoginOrEmail.accountData.password,
+                    createdAt: userByLoginOrEmail.accountData.createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode: userByLoginOrEmail.emailConfirmation.confirmationCode,
+                    expirationDate: userByLoginOrEmail.emailConfirmation.expirationDate,
+                    isConfirmed: userByLoginOrEmail.emailConfirmation.isConfirmed
+                }
             }
             return foundedUser;
         }
         return null;
     },
-    async getUserById(id: string): Promise<userType | null> {
+    async getUserById(id: string): Promise<userTypeExtended | null> {
         const foundedUserById = await usersCollection.findOne({id});
         if (foundedUserById) {
-            const infoAboutUser: userType = {
+            const infoAboutUser: userTypeExtended = {
                 id: foundedUserById.id,
-                login: foundedUserById.login,
-                email: foundedUserById.email,
-                password: foundedUserById.password,
-                createdAt: foundedUserById.createdAt
+                accountData: {
+                    login: foundedUserById.accountData.login,
+                    email: foundedUserById.accountData.email,
+                    password: foundedUserById.accountData.password,
+                    createdAt: foundedUserById.accountData.createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode: foundedUserById.emailConfirmation.confirmationCode,
+                    expirationDate: foundedUserById.emailConfirmation.expirationDate,
+                    isConfirmed: foundedUserById.emailConfirmation.isConfirmed
+                }
             }
             return infoAboutUser;
         }
         return null;
     },
-    async getUserByLogin(userLogin: string): Promise<userType | null>{
-        const foundedUser = await usersCollection.findOne({login: userLogin});
+    async getUserByLogin(userLogin: string): Promise<userTypeExtended | null> {
+        const foundedUser = await usersCollection.findOne({'accountData.login': userLogin});
         if (foundedUser) {
-            const user: userType = {
+            const user: userTypeExtended = {
                 id: foundedUser.id,
-                login: foundedUser.login,
-                email: foundedUser.email,
-                password: foundedUser.password,
-                createdAt: foundedUser.createdAt
+                accountData: {
+                    login: foundedUser.accountData.login,
+                    email: foundedUser.accountData.email,
+                    password: foundedUser.accountData.password,
+                    createdAt: foundedUser.accountData.createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode: foundedUser.emailConfirmation.confirmationCode,
+                    expirationDate: foundedUser.emailConfirmation.expirationDate,
+                    isConfirmed: foundedUser.emailConfirmation.isConfirmed
+                }
             }
             return user;
         }
         return null;
     },
-    async getUserByEmail(userEmail: string): Promise<userType | null>{
-        const foundedUser = await usersCollection.findOne({email: userEmail});
+    async getUserByEmail(userEmail: string): Promise<userTypeExtended | null> {
+        const foundedUser = await usersCollection.findOne({'accountData.email': userEmail});
         if (foundedUser) {
-            const user: userType = {
+            const user: userTypeExtended = {
                 id: foundedUser.id,
-                login: foundedUser.login,
-                email: foundedUser.email,
-                password: foundedUser.password,
-                createdAt: foundedUser.createdAt
+                accountData: {
+                    login: foundedUser.accountData.login,
+                    email: foundedUser.accountData.email,
+                    password: foundedUser.accountData.password,
+                    createdAt: foundedUser.accountData.createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode: foundedUser.emailConfirmation.confirmationCode,
+                    expirationDate: foundedUser.emailConfirmation.expirationDate,
+                    isConfirmed: foundedUser.emailConfirmation.isConfirmed
+                }
+            }
+            return user;
+        }
+        return null;
+    },
+    async getUserByConfirmationEmailCode(code: string): Promise<userTypeExtended | null> {
+        const foundedUser = await usersCollection.findOne({'emailConfirmation.confirmationCode': code});
+        if (foundedUser) {
+            const user: userTypeExtended = {
+                id: foundedUser.id,
+                accountData: {
+                    login: foundedUser.accountData.login,
+                    email: foundedUser.accountData.email,
+                    createdAt: foundedUser.accountData.createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode: foundedUser.emailConfirmation.confirmationCode,
+                    expirationDate: foundedUser.emailConfirmation.expirationDate,
+                    isConfirmed: foundedUser.emailConfirmation.isConfirmed
+                }
             }
             return user;
         }
