@@ -1,14 +1,14 @@
 import {commentInTheDBType, commentType} from "../models/commentModel";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
-import {userType} from "../models/userModels";
+import {userTypeExtended} from "../models/userModels";
 import {commentsRepository} from "../repositories/comments/commentsRepository";
 
 export const commentsService = {
     // создает комментарий. нужно передать содержание комментария, id пользователя и id поста к которому был написан комментарий.
     // возвращает комментарий с видом нужным клиенту
     async createComment({content, userId, postId}: {content: string, userId: string, postId: string}): Promise<commentType>{
-        const userFromDB: userType | null = await usersQueryRepository.getUserById(userId);
-        const userLogin: string = userFromDB!.login;
+        const userFromDB: userTypeExtended | null = await usersQueryRepository.getUserById(userId);
+        const userLogin: string = userFromDB!.accountData.login;
         const createdAt = new Date().toISOString();
         const myUniqueId = 'id' + new Date().getTime();
         const commentToClient: commentType = {
