@@ -62,7 +62,7 @@ authRouter.post('/registration',
         }
         const registrationStatus = await authService.registrationNewUser(userConfig);
         if (registrationStatus) {
-            return res.status(204).send('Input data is accepted. Email with confirmation code will be send to passed email address');
+            return res.sendStatus(204);
         }
         const errorObj: errorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
@@ -79,7 +79,7 @@ authRouter.post('/registration-confirmation',
         const errorObj: errorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
         }
-    res.send(400).send(errorObj);
+    res.status(400).send(errorObj);
 });
 
 authRouter.post('/registration-email-resending',
