@@ -41,7 +41,10 @@ const sendLinkWithSecretCodeToEmail = async ({from = `"Temp256113" <${envVariabl
     });
     const linkWithConfirmationEmailCode: string = `https://some-front.com/confirm-registration?code=${confirmationCode}`;
     if (!html) {
-        html = `<a>${linkWithConfirmationEmailCode}</a>`;
+        html = ` <h1>Thank for your registration</h1>
+       <p>To finish registration please follow the link below:
+          <a href='https://somesite.com/confirm-email?code=${confirmationCode}'>complete registration</a>
+      </p>`;
     }
     const mailOptions = {
         from,
