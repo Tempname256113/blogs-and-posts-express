@@ -76,7 +76,10 @@ authRouter.post('/registration-confirmation',
     async (req: RequestWithBody<{code: string}>, res: Response) => {
     const confirmRegistrationStatus = await authService.confirmRegistration(req.body.code);
     if (confirmRegistrationStatus) return res.sendStatus(204);
-    res.sendStatus(400);
+        const errorObj: errorObjType = {
+            errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
+        }
+    res.send(400).send(errorObj);
 });
 
 authRouter.post('/registration-email-resending',
@@ -85,5 +88,8 @@ authRouter.post('/registration-email-resending',
     async (req: RequestWithBody<{email: string}>, res: Response) => {
     const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
     if (emailSecretCodeResendingStatus) return res.sendStatus(204);
-    res.sendStatus(400);
+    const errorObj: errorObjType = {
+        errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
+    }
+    res.status(400).send(errorObj);
 });
