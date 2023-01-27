@@ -4,7 +4,7 @@ import {RequestWithBody, ResponseWithBody} from "../models/reqResModels";
 import {Request, Response, Router} from "express";
 import {usersService} from "../domain/usersService";
 import {jwtMethods} from "./application/jwtMethods";
-import {userTokenPayloadType} from "../models/tokenModels";
+import {accessTokenPayloadType} from "../models/tokenModels";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
 import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "../models/userModels";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearerUserAuthTokenCheckMiddleware";
@@ -15,29 +15,37 @@ import {authService} from "../domain/authService";
 import {errorObjType} from "../models/errorObjModel";
 
 export const authRouter = Router();
-const JWT_SECRET: string = process.env.JWT_SECRET!;
+
+const getNewPairOfTokens = async ({userId}: accessTokenPayloadType) => {
+    const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
+    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '20s'});
+    return {
+        accessToken,
+        refreshToken
+    }
+}
 
 authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: Response) => {
+    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{accessToken: string}>) => {
         const recievedUser = await usersService.authUser({
             loginOrEmail: req.body.loginOrEmail,
             password: req.body.password
         });
         if (recievedUser.comparePasswordStatus) {
-            const tokenPayload: userTokenPayloadType = {
-                userId: recievedUser.findedUserByLoginOrEmail!.id
-            }
-            const token = await jwtMethods.createNewToken(tokenPayload, JWT_SECRET, {expiresIn: '999d'});
-            const responseObj = {
-                accessToken: token
-            }
-            return res.status(200).send(responseObj);
+            const {accessToken, refreshToken} = await getNewPairOfTokens({userId: recievedUser.findedUserByLoginOrEmail!.id});
+            return res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
+                .status(200).send({accessToken});
         }
         res.sendStatus(401);
 });
+
+// authRouter.post('/refresh-token',
+//     (req: Request, res: ResponseWithBody<{accessToken: string}>) => {
+//     req.cookies
+// })
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
@@ -54,7 +62,7 @@ authRouter.get('/me',
 
 authRouter.post('/registration',
     createNewUserValidationMiddlewaresArray,
-    async (req: Request, res: Response) => {
+    async (req: RequestWithBody<requestUserType>, res: Response) => {
         const userConfig: requestUserType = {
             login: req.body.login,
             password: req.body.password,
@@ -64,6 +72,8 @@ authRouter.post('/registration',
         if (registrationStatus) {
             return res.sendStatus(204);
         }
+        /* отправляется в случае ошибки только поле email.
+        если другие поля не пройдут массив проверочных middleware отправит ошибку сам */
         const errorObj: errorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }

@@ -1,5 +1,5 @@
 import {body} from "express-validator";
-import {authorizationCheckMiddleware} from "../authorizationCheckMiddleware";
+import {basicAuthorizationCheckMiddleware} from "../basicAuthorizationCheckMiddleware";
 import {catchErrorsMiddleware} from "../catchErrorsMiddleware";
 import {blogsQueryRepository} from "../../repositories/blogs/blogsQueryRepository";
 import {blogIdUriParamCheckMiddleware} from "../blogIdUriParamCheckMiddleware";
@@ -19,12 +19,10 @@ const contentFieldValidation = body('content')
 const blogIdFieldValidation = body('blogId')
     .isString()
     .custom(async value => {
-    const blogName = await blogsQueryRepository.getBlogByID(value);
-    if (!blogName) {
-        return Promise.reject('invalid blog id!');
-    }
+    const blog = await blogsQueryRepository.getBlogByID(value);
+    if (!blog) return Promise.reject('invalid blog id!');
     return Promise.resolve();
 });
-
-export const postsValidationMiddlewaresArray = [authorizationCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, blogIdFieldValidation, catchErrorsMiddleware];
-export const postsValidationMiddlewaresArrayWithUriBlogIdCheck = [authorizationCheckMiddleware, blogIdUriParamCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, catchErrorsMiddleware]
+// этот middleware проверяет весь приходящий объект в body и так же смотрит правильный blogId или нет
+export const postsValidationMiddlewaresArray = [titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, blogIdFieldValidation, catchErrorsMiddleware];
+export const postsValidationMiddlewaresArrayWithUriBlogIdCheck = [blogIdUriParamCheckMiddleware, titleFieldValidation, shortDescriptionFieldValidation, contentFieldValidation, catchErrorsMiddleware]

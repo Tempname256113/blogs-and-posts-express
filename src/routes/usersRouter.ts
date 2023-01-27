@@ -7,7 +7,7 @@ import {
     ResponseWithBody
 } from "../models/reqResModels";
 import {requestUserType, usersQueryPaginationType, userType} from "../models/userModels";
-import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
+import {basicAuthorizationCheckMiddleware} from "../middlewares/basicAuthorizationCheckMiddleware";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catchErrorsMiddleware";
@@ -16,7 +16,7 @@ import {usersService} from "../domain/usersService";
 export const usersRouter = Router();
 
 usersRouter.get('/',
-    authorizationCheckMiddleware,
+    basicAuthorizationCheckMiddleware,
     async (req: RequestWithQuery<reqQueryPagination & {searchLoginTerm?: string, searchEmailTerm?: string}>, res: Response) => {
     const paginationConfig: usersQueryPaginationType = {
         sortBy: req.query.sortBy ?? 'createdAt',
@@ -31,7 +31,7 @@ usersRouter.get('/',
 })
 
 usersRouter.post('/',
-    authorizationCheckMiddleware,
+    basicAuthorizationCheckMiddleware,
     body('login').isString().trim().matches('^[a-zA-Z0-9_-]*$').isLength({min: 3, max: 10}),
     body('password').isString().trim().isLength({min: 6, max: 20}),
     body('email').isString().trim().matches('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$').isLength({min: 5}),
@@ -47,7 +47,7 @@ usersRouter.post('/',
 })
 
 usersRouter.delete('/:id',
-    authorizationCheckMiddleware,
+    basicAuthorizationCheckMiddleware,
     async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     const deletedUserStatus = await usersService.deleteUser(req.params.id);
     if (deletedUserStatus) return res.sendStatus(204);

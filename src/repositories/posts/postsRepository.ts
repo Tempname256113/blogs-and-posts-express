@@ -11,22 +11,18 @@ export const postsRepository = {
     },
     // возвращает true в случае удачного изменения объекта
     // или false в случае неудачного
-    async updatePostByID(id: string, {title, shortDescription, content, blogId}: requestPostType): Promise<boolean> {
-        const foundedPost = await postsCollection.findOne({id});
-        if (foundedPost) {
-            const templateForUpdatePost = {
-                title,
-                shortDescription,
-                content,
-                blogId
+    async updatePostByID(id: string, {title, shortDescription, content, blogId}: requestPostType): Promise<void> {
+        await postsCollection.updateOne(
+            {id},
+            {
+                $set: {
+                    title,
+                    shortDescription,
+                    content,
+                    blogId
+                }
             }
-            await postsCollection.updateOne(
-                {id},
-                {$set: templateForUpdatePost}
-            )
-            return true;
-        }
-        return false;
+        )
     },
     // если нашел и удалил элемент - возвращает true. если элемента нет - false
     async deletePostByID(id: string): Promise<boolean> {

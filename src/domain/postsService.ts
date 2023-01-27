@@ -1,22 +1,33 @@
 import {postType, requestPostType} from "../models/postModels";
 import {postsRepository} from "../repositories/posts/postsRepository";
-import {blogsService} from "./blogsService";
+import {blogsQueryRepository} from "../repositories/blogs/blogsQueryRepository";
+import {blogType} from "../models/blogModels";
+import {postsQueryRepository} from "../repositories/posts/postsQueryRepository";
+import {v4 as uuid4} from "uuid";
 
 export const postsService = {
     async createNewPost(newPost: requestPostType): Promise<postType> {
+        /* blog придет потому что роут который обращается к этому сервису на уровне представления с помощью middleware
+        уже проверил существует этот blog в базе данных или нет. если запрос дошел сюда, то он существует.
+        еще одну проверку здесь делать не надо
+        */
+        const blog: blogType | null = await blogsQueryRepository.getBlogByID(newPost.blogId);
         const newPostTemplate: postType = {
-            id: 'id' + (new Date()).getTime(),
+            id: uuid4(),
             title: newPost.title,
             shortDescription: newPost.shortDescription,
             content: newPost.content,
             blogId: newPost.blogId,
-            blogName: await blogsService.findBlogNameByID(newPost.blogId) as string,
+            blogName: blog!.name,
             createdAt: new Date().toISOString()
         }
-        return postsRepository.createNewPost(newPostTemplate)
+        return postsRepository.createNewPost(newPostTemplate);
     },
-    async updatePostByID(id: string, post: requestPostType): Promise<boolean> {
-        return postsRepository.updatePostByID(id, post);
+    async updatePostByID(id: string, requestPost: requestPostType): Promise<boolean> {
+        const foundedPost: postType | null = await postsQueryRepository.getPostByID(id);
+        if (!foundedPost) return false;
+        await postsRepository.updatePostByID(id, requestPost);
+        return true;
     },
     async deletePostByID(id: string): Promise<boolean> {
         return postsRepository.deletePostByID(id);

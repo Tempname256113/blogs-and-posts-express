@@ -18,9 +18,11 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/comments', commentsRouter);
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
-    await Promise.all([blogsService.deleteAllData(),
+    await Promise.all([
+        blogsService.deleteAllData(),
         postsService.deleteAllData(),
         usersService.deleteAllData(),
-        commentsService.deleteAllData()]);
+        commentsService.deleteAllData()
+    ]);
     res.sendStatus(204);
 });

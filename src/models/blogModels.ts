@@ -9,6 +9,7 @@ export type blogType = {
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового блога
+// createBlogDto
 export type requestBlogType = {
     name: string;
     description: string;

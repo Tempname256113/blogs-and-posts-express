@@ -1,5 +1,5 @@
 import {Response, Router} from "express";
-import {authorizationCheckMiddleware} from "../middlewares/authorizationCheckMiddleware";
+import {basicAuthorizationCheckMiddleware} from "../middlewares/basicAuthorizationCheckMiddleware";
 import {
     RequestWithBody,
     RequestWithQuery, RequestWithURIParamsAndQuery,
@@ -8,7 +8,7 @@ import {
 } from "../models/reqResModels";
 import {blogsService} from "../domain/blogsService";
 import {blogsValidationMiddlewaresArray} from "../middlewares/middlewaresArray/blogsValidationMiddlewaresArray";
-import {requestBlogType} from "../models/blogModels";
+import {blogType, requestBlogType} from "../models/blogModels";
 import {blogsQueryRepository} from "../repositories/blogs/blogsQueryRepository";
 import {blogIdUriParamCheckMiddleware} from "../middlewares/blogIdUriParamCheckMiddleware";
 import {
@@ -33,9 +33,9 @@ blogsRouter.get('/',
 });
 
 blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const blog = await blogsQueryRepository.getBlogByID(req.params.id);
+    const blog: blogType | null = await blogsQueryRepository.getBlogByID(req.params.id);
     if (blog !== null) {
-        res.status(200).send(blog)
+        res.status(200).send(blog);
     } else {
         res.sendStatus(404);
     }
@@ -56,6 +56,7 @@ blogsRouter.get('/:blogId/posts',
 });
 
 blogsRouter.post('/',
+    basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
     async (req: RequestWithBody<requestBlogType>, res: Response) => {
     const newBlogTemplate: requestBlogType = {
@@ -68,6 +69,7 @@ blogsRouter.post('/',
 });
 
 blogsRouter.post('/:blogId/posts',
+    basicAuthorizationCheckMiddleware,
     postsValidationMiddlewaresArrayWithUriBlogIdCheck,
     async (req: RequestWithURIParamsAndBody<{blogId: string}, requestPostType>, res: Response) => {
     const newPostTemplate: requestPostType = {
@@ -81,6 +83,7 @@ blogsRouter.post('/:blogId/posts',
 })
 
 blogsRouter.put('/:id',
+    basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
     async (req: RequestWithURIParamsAndBody<{id: string}, requestBlogType>, res: Response) => {
     const updateBlogTemplate: requestBlogType = {
@@ -88,7 +91,7 @@ blogsRouter.put('/:id',
         description: req.body.description,
         websiteUrl: req.body.websiteUrl
     };
-    const updateStatus: boolean = await blogsService.updateBlogByID(req.params.id, updateBlogTemplate);
+    const updateStatus = await blogsService.updateBlogByID(req.params.id, updateBlogTemplate);
     if (updateStatus) {
         return res.sendStatus(204);
     }
@@ -96,7 +99,7 @@ blogsRouter.put('/:id',
 });
 
 blogsRouter.delete('/:id',
-    authorizationCheckMiddleware,
+    basicAuthorizationCheckMiddleware,
     async (req: RequestWithURIParams<{id: string}>, res: Response) => {
     if (await blogsService.deleteBlogByID(req.params.id)) {
         return res.sendStatus(204);

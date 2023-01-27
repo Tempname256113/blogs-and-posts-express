@@ -1,26 +1,20 @@
 import {NextFunction, Response} from "express";
 import {jwtMethods} from "../routes/application/jwtMethods";
-import {userTokenPayloadType} from "../models/tokenModels";
+import {accessTokenPayloadType} from "../models/tokenModels";
 import {commentsQueryRepository} from "../repositories/comments/commentsQueryRepository";
 import {RequestWithURIParams} from "../models/reqResModels";
 import {commentType} from "../models/commentModel";
 
 export const checkForChangeCommentMiddleware = async (req: RequestWithURIParams<{commentId: string}>, res: Response, next: NextFunction) => {
-    try {
-        const userTokenPayload: userTokenPayloadType | Error = await jwtMethods.compareUserAuthToken(req.headers.authorization!);
-        if ('userId' in userTokenPayload) {
-            const foundedCommentByID: commentType | null = await commentsQueryRepository.getCommentByID(req.params.commentId);
-            if (foundedCommentByID) {
-                if (foundedCommentByID.userId === userTokenPayload.userId) {
-                    return next();
-                } else {
-                    return res.sendStatus(403);
-                }
-            } else {
-                return res.sendStatus(404);
-            }
+    /* я уверен в том, что здесь значения будут потому что этот middleware нужно использовать после middleware проверки
+    на актуальность токена пользователя */
+    const userTokenPayload: accessTokenPayloadType = jwtMethods.compareToken.accessToken(req.headers.authorization!)!;
+    const foundedCommentById: commentType | null = await commentsQueryRepository.getCommentByID(req.params.commentId);
+    if (foundedCommentById) {
+        if (foundedCommentById.userId === userTokenPayload.userId) {
+            return next();
         }
-    } catch (e) {
-        return res.sendStatus(500);
+        return res.status(403);
     }
+    return res.sendStatus(404);
 }
