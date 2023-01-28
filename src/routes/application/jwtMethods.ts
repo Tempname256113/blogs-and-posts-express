@@ -21,13 +21,13 @@ const compareToken = (requestToken: string, secretKey: Secret, options?: (Verify
     // если передана строка без Bearer (только токен) то с этой проверкой все будет нормально
     if (options) {
         try {
-            return verify(requestToken, JWT_SECRET_ACCESS_TOKEN, options) as accessTokenPayloadType | refreshTokenPayloadType;
+            return verify(requestToken, secretKey, options) as accessTokenPayloadType | refreshTokenPayloadType;
         } catch (err) {
             return null;
         }
     } else {
         try {
-            return verify(requestToken, JWT_SECRET_ACCESS_TOKEN) as accessTokenPayloadType | refreshTokenPayloadType;
+            return verify(requestToken, secretKey) as accessTokenPayloadType | refreshTokenPayloadType;
         } catch (err) {
             return null;
         }

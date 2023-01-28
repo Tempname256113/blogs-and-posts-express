@@ -16,13 +16,14 @@ import {errorObjType} from "../models/errorObjModel";
 import {
     refreshTokensBlackListQueryRepository
 } from "../repositories/refreshTokensBlackList/refreshTokensBlackListQueryRepository";
+import {checkLogoutRequestCookieMiddleware} from "../middlewares/checkLogoutRequestCookieMiddleware";
 
 export const authRouter = Router();
 
 const refreshTokenString: string = 'refreshToken';
 const getNewPairOfTokens = ({userId}: accessTokenPayloadType) => {
     const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
-    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '20s'});
+    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '999d'});
     return {
         accessToken,
         refreshToken
@@ -33,7 +34,7 @@ authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{accessToken: string}>) => {
+    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string }>) => {
         const recievedUser = await usersService.authUser({
             loginOrEmail: req.body.loginOrEmail,
             password: req.body.password
@@ -47,50 +48,43 @@ authRouter.post('/login',
                 .status(200).send({accessToken});
         }
         res.sendStatus(401);
-});
+    });
 
 authRouter.post('/refresh-token',
-    async (req: Request, res: ResponseWithBody<{accessToken: string}>) => {
-    const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
-    if (refreshTokenFromCookies) {
-        const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
-        if (decodedRefreshToken) {
-            const {userId} = decodedRefreshToken;
-            const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshTokensForCurrentUserId(userId, refreshTokenFromCookies);
-            /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
-            система это не пропустит, некорректный токен */
-            if (foundedUserWithExpiredRefreshTokenInDB) {
+    async (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
+        const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
+        if (refreshTokenFromCookies) {
+            const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
+            if (decodedRefreshToken) {
+                const {userId} = decodedRefreshToken;
+                const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshTokensForCurrentUserId(userId, refreshTokenFromCookies);
+                /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
+                система это не пропустит, некорректный токен */
+                if (foundedUserWithExpiredRefreshTokenInDB) {
+                    return res.sendStatus(401);
+                }
+                const {accessToken, refreshToken} = getNewPairOfTokens({userId});
+                authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
+                return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
+                    .status(200).send({accessToken});
+            } else {
                 return res.sendStatus(401);
             }
-            const {accessToken, refreshToken} = getNewPairOfTokens({userId});
-            authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
-            return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
-                .status(200).send({accessToken});
-        } else {
-            return res.sendStatus(401);
         }
-    }
-    res.sendStatus(401);
-});
+        res.sendStatus(401);
+    });
 
-authRouter.post('/logout', (req: Request, res: Response) => {
-    const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
-    if (refreshTokenFromCookies) {
-        const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
-        if (decodedRefreshToken) {
-            const {userId} = decodedRefreshToken;
-            authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
-            return res.sendStatus(204);
-        } else {
-            return res.sendStatus(401);
-        }
-    }
-    res.sendStatus(401);
-});
+authRouter.post('/logout',
+    checkLogoutRequestCookieMiddleware,
+    (req: Request, res: Response) => {
+    const refreshTokenPayload = req.context.JWT_PAYLOAD;
+    authService.addRefreshTokenToBlackList(refreshTokenPayload!.userId, req.context.refreshTokenFromCookie!);
+    res.sendStatus(204);
+    });
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
-    async (req: Request, res: ResponseWithBody<{email: string, login: string, userId: string}>) => {
+    async (req: Request, res: ResponseWithBody<{ email: string, login: string, userId: string }>) => {
         const userId: string = req.context!.JWT_PAYLOAD!.userId!;
         const userFromDB: userTypeExtended | null = await usersQueryRepository.getUserById(userId);
         const informationAboutCurrentUser: infoAboutUserType = {
@@ -99,7 +93,7 @@ authRouter.get('/me',
             userId: userFromDB!.id
         }
         res.status(200).send(informationAboutCurrentUser);
-});
+    });
 
 authRouter.post('/registration',
     createNewUserValidationMiddlewaresArray,
@@ -119,28 +113,28 @@ authRouter.post('/registration',
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }
         res.status(400).send(errorObj);
-});
+    });
 
 authRouter.post('/registration-confirmation',
     body('code').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{code: string}>, res: Response) => {
-    const confirmRegistrationStatus = await authService.confirmRegistration(req.body.code);
-    if (confirmRegistrationStatus) return res.sendStatus(204);
+    async (req: RequestWithBody<{ code: string }>, res: Response) => {
+        const confirmRegistrationStatus = await authService.confirmRegistration(req.body.code);
+        if (confirmRegistrationStatus) return res.sendStatus(204);
         const errorObj: errorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
         }
-    res.status(400).send(errorObj);
-});
+        res.status(400).send(errorObj);
+    });
 
 authRouter.post('/registration-email-resending',
     body('email').isEmail(),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{email: string}>, res: Response) => {
-    const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
-    if (emailSecretCodeResendingStatus) return res.sendStatus(204);
-    const errorObj: errorObjType = {
-        errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
-    }
-    res.status(400).send(errorObj);
-});
+    async (req: RequestWithBody<{ email: string }>, res: Response) => {
+        const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
+        if (emailSecretCodeResendingStatus) return res.sendStatus(204);
+        const errorObj: errorObjType = {
+            errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
+        }
+        res.status(400).send(errorObj);
+    });
