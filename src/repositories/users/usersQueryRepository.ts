@@ -11,8 +11,8 @@ export const usersQueryRepository = {
     async getAllUsersWithPagination({sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm = '', searchEmailTerm = ''}: usersQueryPaginationType){
         const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
             searchConfig: {$or: [
-                    {login: {$regex: searchLoginTerm, $options: 'i'}},
-                    {email: {$regex: searchEmailTerm, $options: 'i'}}
+                    {'accountData.login': {$regex: searchLoginTerm, $options: 'i'}},
+                    {'accountData.email': {$regex: searchEmailTerm, $options: 'i'}}
                 ]},
             sortBy,
             sortDirection,
