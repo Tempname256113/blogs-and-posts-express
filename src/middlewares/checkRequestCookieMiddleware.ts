@@ -16,7 +16,7 @@ export const checkRequestCookieMiddleware = async (req: Request, res: Response, 
     if (refreshTokenFromCookie) {
         const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookie);
         if (decodedRefreshToken) {
-            const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshTokensForCurrentUserId(decodedRefreshToken.userId, refreshTokenFromCookie);
+            const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshToken(refreshTokenFromCookie);
             /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
             система это не пропустит, некорректный токен */
             if (foundedUserWithExpiredRefreshTokenInDB) {

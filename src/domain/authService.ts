@@ -127,10 +127,8 @@ export const authService = {
             return false;
         }
     },
-    addRefreshTokenToBlackList(userId: string, refreshToken: string): void {
-        if (refreshToken) {
-            refreshTokensBlackListRepository.addRefreshTokenToBlackList(userId, refreshToken);
-        }
+    addRefreshTokenToBlackList(refreshToken: string): void {
+        refreshTokensBlackListRepository.addRefreshTokenToBlackList(refreshToken);
     },
     deleteAllBannedRefreshTokens(): void {
         refreshTokensBlackListRepository.deleteAllData();
