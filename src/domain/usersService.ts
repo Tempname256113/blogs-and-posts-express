@@ -27,7 +27,7 @@ export const usersService = {
     async deleteUser(userId: string): Promise<boolean> {
         return usersRepository.deleteUser(userId);
     },
-    async authUser(authData: {loginOrEmail: string, password: string}) {
+    async authUser(authData: {loginOrEmail: string, password: string}): Promise<{findedUserByLoginOrEmail?: userTypeExtended, comparePasswordStatus: boolean}> {
         const findedUserByLoginOrEmail: userTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(authData.loginOrEmail);
         if (findedUserByLoginOrEmail) {
             const comparePasswordStatus = await compare(authData.password, findedUserByLoginOrEmail.accountData.password!);

@@ -4,7 +4,7 @@ import {RequestWithBody, ResponseWithBody} from "../models/reqResModels";
 import {Request, Response, Router} from "express";
 import {usersService} from "../domain/usersService";
 import {jwtMethods} from "./application/jwtMethods";
-import {accessTokenPayloadType} from "../models/tokenModels";
+import {accessTokenPayloadType, refreshTokenPayloadType} from "../models/tokenModels";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
 import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "../models/userModels";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearerUserAuthTokenCheckMiddleware";
@@ -13,10 +13,14 @@ import {
 } from "../middlewares/middlewaresArray/createNewUserValidationMiddlewaresArray";
 import {authService} from "../domain/authService";
 import {errorObjType} from "../models/errorObjModel";
+import {
+    refreshTokensBlackListQueryRepository
+} from "../repositories/refreshTokensBlackList/refreshTokensBlackListQueryRepository";
 
 export const authRouter = Router();
 
-const getNewPairOfTokens = async ({userId}: accessTokenPayloadType) => {
+const refreshTokenString: string = 'refreshToken';
+const getNewPairOfTokens = ({userId}: accessTokenPayloadType) => {
     const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
     const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '20s'});
     return {
@@ -35,17 +39,54 @@ authRouter.post('/login',
             password: req.body.password
         });
         if (recievedUser.comparePasswordStatus) {
-            const {accessToken, refreshToken} = await getNewPairOfTokens({userId: recievedUser.findedUserByLoginOrEmail!.id});
+            /* я могу быть уверен в том что юзер будет в этом условии потому что я написал такую логику в userService.
+            он здесь будет если passwordStatus === true */
+            const {accessToken, refreshToken} = getNewPairOfTokens({userId: recievedUser.findedUserByLoginOrEmail!.id});
+            authService.addRefreshTokenToBlackList(recievedUser.findedUserByLoginOrEmail!.id!, req.cookies[refreshTokenString]);
             return res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
                 .status(200).send({accessToken});
         }
         res.sendStatus(401);
 });
 
-// authRouter.post('/refresh-token',
-//     (req: Request, res: ResponseWithBody<{accessToken: string}>) => {
-//     req.cookies
-// })
+authRouter.post('/refresh-token',
+    async (req: Request, res: ResponseWithBody<{accessToken: string}>) => {
+    const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
+    if (refreshTokenFromCookies) {
+        const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
+        if (decodedRefreshToken) {
+            const {userId} = decodedRefreshToken;
+            const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshTokensForCurrentUserId(userId, refreshTokenFromCookies);
+            /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
+            система это не пропустит, некорректный токен */
+            if (foundedUserWithExpiredRefreshTokenInDB) {
+                return res.sendStatus(401);
+            }
+            const {accessToken, refreshToken} = getNewPairOfTokens({userId});
+            authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
+            return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
+                .status(200).send({accessToken});
+        } else {
+            return res.sendStatus(401);
+        }
+    }
+    res.sendStatus(401);
+});
+
+authRouter.post('/logout', (req: Request, res: Response) => {
+    const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
+    if (refreshTokenFromCookies) {
+        const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
+        if (decodedRefreshToken) {
+            const {userId} = decodedRefreshToken;
+            authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
+            return res.sendStatus(204);
+        } else {
+            return res.sendStatus(401);
+        }
+    }
+    res.sendStatus(401);
+});
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,

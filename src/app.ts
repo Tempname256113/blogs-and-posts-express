@@ -8,10 +8,14 @@ import {usersService} from "./domain/usersService";
 import {authRouter} from "./routes/authRouter";
 import {commentsRouter} from "./routes/commentsRouter";
 import {commentsService} from "./domain/commentsService";
+import cookieParser from "cookie-parser";
+import {client} from "./db";
+import {authService} from "./domain/authService";
 
 export const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use('/blogs', blogsRouter);
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
@@ -22,7 +26,8 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
         blogsService.deleteAllData(),
         postsService.deleteAllData(),
         usersService.deleteAllData(),
-        commentsService.deleteAllData()
+        commentsService.deleteAllData(),
+        authService.deleteAllBannedRefreshTokens()
     ]);
     res.sendStatus(204);
 });

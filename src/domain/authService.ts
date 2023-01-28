@@ -5,6 +5,9 @@ import {add} from 'date-fns';
 import {authRepository} from "../repositories/auth/authRepository";
 import {genSalt, hash} from "bcrypt";
 import {usersQueryRepository} from "../repositories/users/usersQueryRepository";
+import {
+    refreshTokensBlackListRepository
+} from "../repositories/refreshTokensBlackList/refreshTokensBlackListRepository";
 
 const envVariables = {
     mailUser: process.env.MAIL_USER,
@@ -43,7 +46,7 @@ const sendLinkWithSecretCodeToEmail = async ({from = `"Temp256113" <${envVariabl
         html = ` <h1>Thank for your registration</h1>
        <p>To finish registration please follow the link below:
           <a href=https://somesite.com/confirm-email?code=${confirmationCode}>complete registration</a>
-      </p>`;
+      </p> `;
     }
     const mailOptions = {
         from,
@@ -123,5 +126,13 @@ export const authService = {
         } catch (e) {
             return false;
         }
+    },
+    addRefreshTokenToBlackList(userId: string, refreshToken: string): void {
+        if (refreshToken) {
+            refreshTokensBlackListRepository.addRefreshTokenToBlackList(userId, refreshToken);
+        }
+    },
+    deleteAllBannedRefreshTokens(): void {
+        refreshTokensBlackListRepository.deleteAllData();
     }
 }
