@@ -12,11 +12,13 @@ const createNewToken = (payload: string | object | Buffer, secretKey: Secret, op
 }
 
 const compareToken = (requestToken: string, secretKey: Secret, options?: (VerifyOptions & { complete?: false })) => {
-    requestToken = requestToken.split(' ')[1];
-    // если передана строка без Bearer (только токен) то с этой проверкой все будет нормально
-    if (!requestToken) {
-        requestToken = requestToken[0];
+    const separatedRequestToken = requestToken.split(' ');
+    if (separatedRequestToken.length < 2) {
+        requestToken = separatedRequestToken[0];
+    } else {
+        requestToken = separatedRequestToken[1];
     }
+    // если передана строка без Bearer (только токен) то с этой проверкой все будет нормально
     if (options) {
         try {
             return verify(requestToken, JWT_SECRET_ACCESS_TOKEN, options) as accessTokenPayloadType | refreshTokenPayloadType;
