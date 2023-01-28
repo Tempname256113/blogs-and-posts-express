@@ -5,6 +5,13 @@ const refreshTokensBlackListCollection = client.db('ht02DB').collection('refresh
 export const refreshTokensBlackListQueryRepository = {
     // вернет объект {userId: string, expiredRefreshTokens: expiredRefreshTokens[]} или null
     async getBannedRefreshTokensForCurrentUserId(userId: string, refreshToken: string) {
-        return refreshTokensBlackListCollection.findOne({$and: {userId, expiredRefreshTokens: refreshToken}});
+        return refreshTokensBlackListCollection.findOne(
+            {
+                $and:
+                    [
+                        {userId},
+                        {expiredRefreshTokens: refreshToken}
+                    ]
+            });
     }
 }
