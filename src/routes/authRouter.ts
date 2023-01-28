@@ -43,7 +43,7 @@ authRouter.post('/login',
             /* я могу быть уверен в том что юзер будет в этом условии потому что я написал такую логику в userService.
             он здесь будет если passwordStatus === true */
             const {accessToken, refreshToken} = getNewPairOfTokens({userId: recievedUser.findedUserByLoginOrEmail!.id});
-            authService.addRefreshTokenToBlackList(recievedUser.findedUserByLoginOrEmail!.id!, req.cookies[refreshTokenString]);
+            authService.addRefreshTokenToBlackList(req.cookies[refreshTokenString]);
             return res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
                 .status(200).send({accessToken});
         }
@@ -55,7 +55,7 @@ authRouter.post('/refresh-token',
     (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
         const {JWT_PAYLOAD, refreshTokenFromCookie} = req.context;
         const {accessToken, refreshToken} = getNewPairOfTokens({userId: JWT_PAYLOAD!.userId});
-        authService.addRefreshTokenToBlackList(JWT_PAYLOAD!.userId, refreshTokenFromCookie!);
+        authService.addRefreshTokenToBlackList(refreshTokenFromCookie!);
         return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
             .status(200).send({accessToken});
     });
@@ -64,7 +64,7 @@ authRouter.post('/logout',
     checkRequestCookieMiddleware,
     (req: Request, res: Response) => {
         const refreshTokenPayload = req.context.JWT_PAYLOAD;
-        authService.addRefreshTokenToBlackList(refreshTokenPayload!.userId, req.context.refreshTokenFromCookie!);
+        authService.addRefreshTokenToBlackList(req.context.refreshTokenFromCookie!);
         res.sendStatus(204);
     });
 
