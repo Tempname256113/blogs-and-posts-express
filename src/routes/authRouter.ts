@@ -16,7 +16,7 @@ import {errorObjType} from "../models/errorObjModel";
 import {
     refreshTokensBlackListQueryRepository
 } from "../repositories/refreshTokensBlackList/refreshTokensBlackListQueryRepository";
-import {checkLogoutRequestCookieMiddleware} from "../middlewares/checkLogoutRequestCookieMiddleware";
+import {checkRequestCookieMiddleware} from "../middlewares/checkRequestCookieMiddleware";
 
 export const authRouter = Router();
 
@@ -51,35 +51,21 @@ authRouter.post('/login',
     });
 
 authRouter.post('/refresh-token',
-    async (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
-        const refreshTokenFromCookies: string | undefined = req.cookies[refreshTokenString];
-        if (refreshTokenFromCookies) {
-            const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookies);
-            if (decodedRefreshToken) {
-                const {userId} = decodedRefreshToken;
-                const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshTokensForCurrentUserId(userId, refreshTokenFromCookies);
-                /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
-                система это не пропустит, некорректный токен */
-                if (foundedUserWithExpiredRefreshTokenInDB) {
-                    return res.sendStatus(401);
-                }
-                const {accessToken, refreshToken} = getNewPairOfTokens({userId});
-                authService.addRefreshTokenToBlackList(userId, refreshTokenFromCookies);
-                return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
-                    .status(200).send({accessToken});
-            } else {
-                return res.sendStatus(401);
-            }
-        }
-        res.sendStatus(401);
+    checkRequestCookieMiddleware,
+    (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
+        const {JWT_PAYLOAD, refreshTokenFromCookie} = req.context;
+        const {accessToken, refreshToken} = getNewPairOfTokens({userId: JWT_PAYLOAD!.userId});
+        authService.addRefreshTokenToBlackList(JWT_PAYLOAD!.userId, refreshTokenFromCookie!);
+        return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
+            .status(200).send({accessToken});
     });
 
 authRouter.post('/logout',
-    checkLogoutRequestCookieMiddleware,
+    checkRequestCookieMiddleware,
     (req: Request, res: Response) => {
-    const refreshTokenPayload = req.context.JWT_PAYLOAD;
-    authService.addRefreshTokenToBlackList(refreshTokenPayload!.userId, req.context.refreshTokenFromCookie!);
-    res.sendStatus(204);
+        const refreshTokenPayload = req.context.JWT_PAYLOAD;
+        authService.addRefreshTokenToBlackList(refreshTokenPayload!.userId, req.context.refreshTokenFromCookie!);
+        res.sendStatus(204);
     });
 
 authRouter.get('/me',
