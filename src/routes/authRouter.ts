@@ -23,7 +23,7 @@ export const authRouter = Router();
 const refreshTokenString: string = 'refreshToken';
 const getNewPairOfTokens = ({userId}: accessTokenPayloadType) => {
     const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
-    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '999d'});
+    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '20s'});
     return {
         accessToken,
         refreshToken
