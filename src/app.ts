@@ -9,11 +9,11 @@ import {authRouter} from "./routes/authRouter";
 import {commentsRouter} from "./routes/commentsRouter";
 import {commentsService} from "./domain/commentsService";
 import cookieParser from "cookie-parser";
-import {client} from "./db";
 import {authService} from "./domain/authService";
 
 export const app = express();
 
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(cookieParser());
 app.use('/blogs', blogsRouter);

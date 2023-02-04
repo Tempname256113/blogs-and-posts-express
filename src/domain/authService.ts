@@ -130,7 +130,7 @@ export const authService = {
     addRefreshTokenToBlackList(refreshToken: string): void {
         refreshTokensBlackListRepository.addRefreshTokenToBlackList(refreshToken);
     },
-    deleteAllBannedRefreshTokens(): void {
-        refreshTokensBlackListRepository.deleteAllData();
+    async deleteAllBannedRefreshTokens(): Promise<void> {
+        await refreshTokensBlackListRepository.deleteAllData();
     }
 }
