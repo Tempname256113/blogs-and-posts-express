@@ -2,9 +2,9 @@
 import request from "supertest";
 
 import {app} from "../../../app";
-import {blogType, requestBlogType} from "../../../models/blogModels";
-import {blogsRepository} from "../../../repositories/blogs/blogsRepository";
-import {postsRepository} from "../../../repositories/posts/postsRepository";
+import {blogType, requestBlogType} from "../../../models/blog-models";
+import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
+import {postsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {

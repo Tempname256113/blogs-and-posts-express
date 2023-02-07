@@ -1,10 +1,10 @@
 
 import request from "supertest"
 import {app} from "../../../app";
-import {blogsRepository} from "../../../repositories/blogs/blogsRepository";
-import {postType, requestPostType} from "../../../models/postModels";
-import {blogType} from "../../../models/blogModels";
-import {postsRepository} from "../../../repositories/posts/postsRepository";
+import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
+import {postType, requestPostType} from "../../../models/post-models";
+import {blogType} from "../../../models/blog-models";
+import {postsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
 const errorsTemplate = {

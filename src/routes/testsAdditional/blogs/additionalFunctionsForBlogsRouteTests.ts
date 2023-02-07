@@ -2,7 +2,7 @@
 
 import request from "supertest";
 import {app} from "../../../app";
-import {blogType, requestBlogType} from "../../../models/blogModels";
+import {blogType, requestBlogType} from "../../../models/blog-models";
 
 export const createNewBlogWithoutErrors = async (scenario: number = 1): Promise<blogType> => {
     interface INewBlogTemplate {

@@ -2,7 +2,7 @@
 // допишу причину этого когда узнаю
 // импорт нужно писать потому что этот модуль по дефолту изолирован и его вся остальная система не видит
 // если добавить любой импорт из системы то он будет с ней связан, расширение интерфейса увидит остальная система и все будет работать
-import {accessTokenPayloadType, refreshTokenPayloadType} from "../../src/models/tokenModels";
+import {accessTokenPayloadType, refreshTokenPayloadType} from "../../src/models/token-models";
 
 declare global {
     declare namespace Express {
