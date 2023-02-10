@@ -36,9 +36,9 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 });
 
 app.get('/auth/login',
-    counterOfRequestsByASingleIpMiddlewareConfig({}),
+    // counterOfRequestsByASingleIpMiddlewareConfig(),
     (req, res) => {
-    // console.log(req.originalUrl);
-    // console.log(req.ip);
+    console.log(req.originalUrl);
+    console.log(req.ip);
     res.sendStatus(200)
 })
