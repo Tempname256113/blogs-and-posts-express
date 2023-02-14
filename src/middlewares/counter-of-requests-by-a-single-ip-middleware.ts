@@ -10,31 +10,43 @@ type configType = {
 
 type suspectedClientType = {
     [ip: string]: {
-        [route: string]: {
-            counter: number,
-            firstRequestTime: Date,
-            lastRequestTimeLimit: Date
-        }
+        counter: number,
+        firstRequestTime: Date,
+        lastRequestTimeLimit: Date
     }
 }
 
-type temporaryStorageForIpAddressesType = suspectedClientType[];
+type protectedRouteType = {
+    [route: string]: suspectedClientType
+}
 
-const temporaryStorageForIpAddresses: temporaryStorageForIpAddressesType = [
-    {
-    '127.0.0.0': {
-        '/auth/login': {
+type blockedIpAddress = {
+    ip: string,
+    unblockTime: Date
+}
+
+const temporaryStorageForIpAddresses: protectedRouteType = {
+    '/auth/login': {
+        '127.0.0.0': {
+            counter: 1,
+            firstRequestTime: new Date(),
+            lastRequestTimeLimit: new Date()
+        }
+    },
+    'auth/registration': {
+        'c': {
             counter: 1,
             firstRequestTime: new Date(),
             lastRequestTimeLimit: new Date()
         }
     }
-    }
-];
+}
+
+const localStorageForBlockedIpAddresses: blockedIpAddress[] = [];
 
 const testObj = {
-    '127.0.0.0': {
-        '/auth/login': {
+    '/auth/login': {
+        '127.0.0.0': {
             counter: 1,
             firstRequestTime: new Date(),
             lastRequestTimeLimit: new Date()
@@ -42,39 +54,71 @@ const testObj = {
     }
 }
 const str = '127.0.0.0';
+const str2 = '/auth/login';
 
-/* функция для проверки ip адреса на количество запросов в определенный интервал времени
-* принимает параметры ip => ip, который нужно найти в хранилище и проверить количество его запросов за интервал времени
-* timeLimit => лимит времени за который совершаются все возможные попытки запросов на защищенный роут
-* count => количество запросов разрешенных за timeLimit интервал времени. если запросов будет больше этого числа то ip заблокируется
-* route => роут, роут на котором проверяются попытки входа */
-const checkIpAddress = (ip: string, timeLimit: number, count: number, route: string) => {
-    const foundCurrentIpAddress = (temporaryIpAddressesStorage: temporaryStorageForIpAddressesType): string | undefined => {
-        for (let value of temporaryIpAddressesStorage) {
-            for (let ipAddress in value) {
-                if (ipAddress === ip) {
-                    return ipAddress;
-                }
-            }
+/* создание нового объекта с ip адресом подозреваемого клиента */
+const createSuspectedClientObj = (timeLimit: number, ip: string): suspectedClientType => {
+    const currentDate = new Date();
+    const suspectedClient: suspectedClientType = {
+        [ip]: {
+            counter: 1,
+            firstRequestTime: currentDate,
+            lastRequestTimeLimit: add(currentDate, {seconds: timeLimit})
         }
     }
-    const foundedIpAddress = foundCurrentIpAddress(temporaryStorageForIpAddresses);
-    if (!foundedIpAddress) {
-        const currentDate = new Date();
-        const suspectedClient: suspectedClientType = {
-            [ip]: {
-                [route]: {
-                    counter: 1,
-                    firstRequestTime: currentDate,
-                    lastRequestTimeLimit: add(currentDate, {seconds: timeLimit})
-                }
-            }
+    return suspectedClient;
+}
+
+/* функция для проверки ip адреса на его существование в хранилище или его добавление
+* принимает параметры ip => ip, который нужно найти в хранилище или добавить
+* timeLimit => лимит времени (в секундах) за который совершаются все возможные попытки запросов на защищенный роут
+* route => роут, на котором нужно найти приходящий ip адрес */
+const checkOrCreateIpAddressAndRoutes = (ip: string, timeLimit: number, route: string) => {
+    const checkTheExistenceOfTheRoute = (routesStorage: protectedRouteType): void => {
+        const checkTheExistenceOfTheRoute: boolean = routesStorage.hasOwnProperty(route);
+        // если роута нет в списке, то он добавляется
+        if (!checkTheExistenceOfTheRoute) temporaryStorageForIpAddresses[route] = {};
+    }
+    checkTheExistenceOfTheRoute(temporaryStorageForIpAddresses);
+    const checkCurrentIpAddress = (temporaryIpAddressesStorage: protectedRouteType): boolean => {
+        const currentSuspectedIp: boolean = temporaryIpAddressesStorage[route].hasOwnProperty(ip);
+        if (currentSuspectedIp) {
+            return true;
+        } else {
+            return false;
         }
-    } else {
-        // const foundedCurrentRoute = foundedIpAddress.
+    }
+    const foundedIpAddress: boolean = checkCurrentIpAddress(temporaryStorageForIpAddresses);
+    if (!foundedIpAddress) {
+        const addNewIpAddressToTemporaryStorage = (temporaryIpAddressesStorage: protectedRouteType): void => {
+            const temporaryStorageForIpAddressesContent = temporaryIpAddressesStorage[route];
+            temporaryIpAddressesStorage[route] = {...temporaryStorageForIpAddressesContent, ...createSuspectedClientObj(timeLimit, ip)};
+        }
+        addNewIpAddressToTemporaryStorage(temporaryStorageForIpAddresses);
     }
 }
 
+/* блокировка ip адреса
+* ip => ip адрес который нужно заблокировать
+* unblockTime => время в минутах до разблокировки указанного ip */
+const blockIpAddress = (ip: string, unblockTime: number): void => {
+    const blockedIpAddress: blockedIpAddress = {
+        ip,
+        unblockTime: add(new Date, {minutes: unblockTime})
+    }
+    localStorageForBlockedIpAddresses.push(blockedIpAddress);
+}
+
+/* проверяет количество запросов за определенный интервал времени
+* count => количество разрешенных запросов (выше этого числа идет блокировка)
+* route => по какому роуту нужно искать
+* ip => какой ip адрес проверить */
+const checkRequestsCountForInterval = (count: number, route: string, ip: string) => {
+    const suspectedIpAddress = temporaryStorageForIpAddresses[route][ip];
+    if (suspectedIpAddress.counter > count) {
+        
+    }
+}
 // const d = new Date();
 // const futureD = add(d, {seconds: 10});
 // console.log(`d > futureD? => ${d > futureD}`); false
@@ -94,14 +138,16 @@ export const counterOfRequestsByASingleIpMiddlewareConfig = (
             timeLimit: 10,
             count: 6,
             blockTime: 30,
-            storage: function(){}
+            storage: function () {
+            }
         }
     } else {
         config = {
             timeLimit: config.timeLimit ?? 10,
             count: config.count ?? 6,
             blockTime: config.blockTime ?? 30,
-            storage: config.storage ?? function (){}
+            storage: config.storage ?? function () {
+            }
         }
     }
     return (req: Request, res: Response, next: NextFunction) => {
