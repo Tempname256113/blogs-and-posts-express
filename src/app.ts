@@ -11,7 +11,7 @@ import {commentsService} from "./domain/comments-service";
 import cookieParser from "cookie-parser";
 import {authService} from "./domain/auth-service";
 import {
-    counterOfRequestsByASingleIpMiddlewareConfig
+    counterOfRequestsByASingleIpMiddleware
 } from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
 
 export const app = express();
@@ -36,9 +36,9 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 });
 
 app.get('/auth/login',
-    // counterOfRequestsByASingleIpMiddlewareConfig(),
+    counterOfRequestsByASingleIpMiddleware,
     (req, res) => {
-    console.log(req.originalUrl);
-    console.log(req.ip);
+    // console.log(req.originalUrl);
+    // console.log(req.ip);
     res.sendStatus(200)
 })

@@ -1,18 +1,19 @@
 import {NextFunction, Request, Response} from "express";
 import {add} from "date-fns";
 
+/* timeLimit => время за которое поступает нужное количество запросов
+* count => количество разрешенных запросов за интервал timeLimit (выше этого числа будет бан ip адреса)
+* unblockTime => время разбана ip адресов */
 type configType = {
     timeLimit?: number,
     count?: number,
-    blockTime?: number,
-    storage?: () => any
+    unblockTime?: number,
 }
 
 type suspectedClientType = {
     [ip: string]: {
         counter: number,
-        firstRequestTime: Date,
-        lastRequestTimeLimit: Date
+        lastRequestTimeLimit: number
     }
 }
 
@@ -20,145 +21,184 @@ type protectedRouteType = {
     [route: string]: suspectedClientType
 }
 
-type blockedIpAddress = {
-    ip: string,
-    unblockTime: Date
-}
-
-const temporaryStorageForIpAddresses: protectedRouteType = {
-    '/auth/login': {
-        '127.0.0.0': {
-            counter: 1,
-            firstRequestTime: new Date(),
-            lastRequestTimeLimit: new Date()
-        }
-    },
-    'auth/registration': {
-        'c': {
-            counter: 1,
-            firstRequestTime: new Date(),
-            lastRequestTimeLimit: new Date()
-        }
+type blockedIpAddressesAndRoutes = {
+    [route: string]: {
+        [ip: string]: number
     }
 }
 
-const localStorageForBlockedIpAddresses: blockedIpAddress[] = [];
+const temporaryStorageForIpAddresses: protectedRouteType = {}
 
-const testObj = {
-    '/auth/login': {
-        '127.0.0.0': {
-            counter: 1,
-            firstRequestTime: new Date(),
-            lastRequestTimeLimit: new Date()
-        }
-    }
-}
-const str = '127.0.0.0';
-const str2 = '/auth/login';
+const localStorageForBlockedIpAddresses: blockedIpAddressesAndRoutes = {}
 
-/* создание нового объекта с ip адресом подозреваемого клиента */
-const createSuspectedClientObj = (timeLimit: number, ip: string): suspectedClientType => {
-    const currentDate = new Date();
-    const suspectedClient: suspectedClientType = {
-        [ip]: {
-            counter: 1,
-            firstRequestTime: currentDate,
-            lastRequestTimeLimit: add(currentDate, {seconds: timeLimit})
-        }
+/* создание нового объекта с ip адресом подозреваемого клиента
+* timeLimit => время для отслеживания количества запросов за заданный интервал.
+* если в течение этого интервала будет количество запросов превышающее заданное,
+* то ip будет заблокирован
+* ip => ip адрес подозреваемого клиента
+* route => роут к которому нужно добавить новый ip адрес */
+const addNewIpAddressToTemporaryStorage = (
+    {ip, route, timeLimit}: {ip: string, route: string, timeLimit: number}): void => {
+    temporaryStorageForIpAddresses[route][ip] = {
+        counter: 1,
+        lastRequestTimeLimit: timeLimit,
     }
-    return suspectedClient;
 }
 
 /* функция для проверки ip адреса на его существование в хранилище или его добавление
 * принимает параметры ip => ip, который нужно найти в хранилище или добавить
-* timeLimit => лимит времени (в секундах) за который совершаются все возможные попытки запросов на защищенный роут
+* timeLimit => лимит времени за который совершаются все возможные попытки запросов на защищенный роут
 * route => роут, на котором нужно найти приходящий ip адрес */
-const checkOrCreateIpAddressAndRoutes = (ip: string, timeLimit: number, route: string) => {
-    const checkTheExistenceOfTheRoute = (routesStorage: protectedRouteType): void => {
-        const checkTheExistenceOfTheRoute: boolean = routesStorage.hasOwnProperty(route);
-        // если роута нет в списке, то он добавляется
-        if (!checkTheExistenceOfTheRoute) temporaryStorageForIpAddresses[route] = {};
+const checkExistenceOrCreateIpAddressAndRoutes = ({ip, route, timeLimit}: {ip: string, route: string, timeLimit: number}) => {
+    const checkTheExistenceOfTheCurrentRoute = (): boolean => {
+        return temporaryStorageForIpAddresses.hasOwnProperty(route);
     }
-    checkTheExistenceOfTheRoute(temporaryStorageForIpAddresses);
-    const checkCurrentIpAddress = (temporaryIpAddressesStorage: protectedRouteType): boolean => {
-        const currentSuspectedIp: boolean = temporaryIpAddressesStorage[route].hasOwnProperty(ip);
-        if (currentSuspectedIp) {
-            return true;
-        } else {
-            return false;
+    const existenceRouteStatus: boolean = checkTheExistenceOfTheCurrentRoute();
+    if (!existenceRouteStatus) temporaryStorageForIpAddresses[route] = {};
+    const checkTheExistenceOfTheCurrentIpAddress = (): boolean => {
+        for (let route in temporaryStorageForIpAddresses) {
+            if (temporaryStorageForIpAddresses[route].hasOwnProperty(ip)) return true;
         }
+        return false;
     }
-    const foundedIpAddress: boolean = checkCurrentIpAddress(temporaryStorageForIpAddresses);
-    if (!foundedIpAddress) {
-        const addNewIpAddressToTemporaryStorage = (temporaryIpAddressesStorage: protectedRouteType): void => {
-            const temporaryStorageForIpAddressesContent = temporaryIpAddressesStorage[route];
-            temporaryIpAddressesStorage[route] = {...temporaryStorageForIpAddressesContent, ...createSuspectedClientObj(timeLimit, ip)};
-        }
-        addNewIpAddressToTemporaryStorage(temporaryStorageForIpAddresses);
-    }
+    const foundedIpAddress: boolean = checkTheExistenceOfTheCurrentIpAddress();
+    if (!foundedIpAddress) addNewIpAddressToTemporaryStorage({timeLimit, ip, route});
 }
 
 /* блокировка ip адреса
-* ip => ip адрес который нужно заблокировать
-* unblockTime => время в минутах до разблокировки указанного ip */
-const blockIpAddress = (ip: string, unblockTime: number): void => {
-    const blockedIpAddress: blockedIpAddress = {
-        ip,
-        unblockTime: add(new Date, {minutes: unblockTime})
-    }
-    localStorageForBlockedIpAddresses.push(blockedIpAddress);
+* ip => ip адрес клиента
+* route => роут доступ к которому будет заблокирован для указанного ip адреса
+* unblockTime => время до разблокировки указанного ip адреса */
+const banIpAddress = (
+    {ip, route, unblockTime}: {ip: string, route: string, unblockTime: number}): void => {
+    localStorageForBlockedIpAddresses[route][ip] = unblockTime;
 }
 
-/* проверяет количество запросов за определенный интервал времени
+/* проверяет существование роута в хранилище для заблокированных ip адресов */
+const checkExistenceOrCreateRouteForBannedIpAddresses = ({route}: {route: string}): void => {
+    if (!localStorageForBlockedIpAddresses.hasOwnProperty(route))
+        localStorageForBlockedIpAddresses[route] = {};
+}
+
+/* поиск заблокированного ip адреса
+* ip => ip который нужно найти в списке заблокированных
+* route => роут, по которому нужно найти заблокированный ip адрес */
+const findBannedIpAddress = (
+    {ip, route}: {ip: string, route: string}): boolean => {
+    return localStorageForBlockedIpAddresses[route].hasOwnProperty(ip);
+}
+
+/* функция будет запускаться при каждом запросе и
+* очищать неактуальные подозреваемые ip адреса */
+const clearNotValidSuspectedIpAddresses = (): void => {
+    for (let route in temporaryStorageForIpAddresses) {
+        for (let ip in temporaryStorageForIpAddresses[route]) {
+             if (new Date().getTime() >= temporaryStorageForIpAddresses[route][ip].lastRequestTimeLimit) {
+                delete temporaryStorageForIpAddresses[route][ip];
+            }
+        }
+    }
+}
+
+/* чистит заблокированные ip адреса у которых истекло время блокировки */
+const clearNotValidBannedIpAddresses = (): void => {
+    for (let route in localStorageForBlockedIpAddresses) {
+        for (let ip in localStorageForBlockedIpAddresses[route]) {
+             if (new Date().getTime() >= localStorageForBlockedIpAddresses[route][ip]) {
+                delete localStorageForBlockedIpAddresses[route][ip];
+            }
+        }
+    }
+}
+
+/* увеличивает счетчик ip адреса при запросе
+* route => по какому роуту нужно найти ip
+* ip => ip адрес на котором нужно увеличить счетчик */
+const increaseRequestCounter = (
+    {ip, route}: {ip: string, route: string}): void => {
+    temporaryStorageForIpAddresses[route][ip].counter++;
+}
+
+/* проверяет количество запросов за определенный интервал времени и блокирует ip адреса
 * count => количество разрешенных запросов (выше этого числа идет блокировка)
 * route => по какому роуту нужно искать
-* ip => какой ip адрес проверить */
-const checkRequestsCountForInterval = (count: number, route: string, ip: string) => {
-    const suspectedIpAddress = temporaryStorageForIpAddresses[route][ip];
-    if (suspectedIpAddress.counter > count) {
-        
+* ip => какой ip адрес проверить
+* unblockTime => время в минутах до разблокировки указанного ip
+* timeLimit => время в секундах для отслеживания количества запросов.
+* если в течение этого интервала будет количество запросов превышающее заданное,
+* то ip будет заблокирован */
+const checkRequestCounterForBanIpAddress = (
+    {
+        ip,
+        route,
+        count,
+        unblockTime,
+    }:
+        {
+        ip: string,
+        route: string,
+        count: number,
+        unblockTime: number
+        }
+) => {
+    if (temporaryStorageForIpAddresses[route][ip].counter > count) {
+        if (new Date().getTime() <= temporaryStorageForIpAddresses[route][ip].lastRequestTimeLimit)
+            banIpAddress({ip, route, unblockTime});
     }
 }
-// const d = new Date();
-// const futureD = add(d, {seconds: 10});
-// console.log(`d > futureD? => ${d > futureD}`); false
-// console.log(`d < futureD? => ${d < futureD}`); true
 
 /* принимает параметры:
-* timeLimit (default 10s) = время в секундах за которое поступает нужное количество запросов
-* count (default 6) = количество запросов за время указанное в time для блокировки ip для текущего роута
-* blockTime (default 30m) = время в минутах для блокировки ip на текущем роуте
+* timeLimit (default 10s) = время за которое поступает нужное количество запросов
+* count (default 6) = количество запросов за время указанное в timeLimit для блокировки ip для текущего роута
+* unblockTime (default 30min) = время для блокировки ip на текущем роуте
 * storage = хранилище для заблокированных ip и роутов. нужно передать функцию для сохранения заблокированного ip в базе данных
 * по дефолту будет в оперативной памяти */
-export const counterOfRequestsByASingleIpMiddlewareConfig = (
-    config?: configType
-): (req: Request, res: Response, next: NextFunction) => void => {
-    if (!config) {
-        config = {
-            timeLimit: 10,
-            count: 6,
-            blockTime: 30,
-            storage: function () {
-            }
-        }
-    } else {
-        config = {
-            timeLimit: config.timeLimit ?? 10,
-            count: config.count ?? 6,
-            blockTime: config.blockTime ?? 30,
-            storage: config.storage ?? function () {
-            }
-        }
-    }
+const counterOfRequestsByASingleIpMiddlewareConfig = (
+    {
+        timeLimit = add(new Date(), {seconds: 10}).getTime(),
+        count = 5,
+        unblockTime = add(new Date(), {seconds: 10}).getTime()
+    }: configType
+): (req: Request, res: Response, next: NextFunction) => any => {
     return (req: Request, res: Response, next: NextFunction) => {
-        // if (localStorageForIpAddressess[0].count < 6) {
-        //     localStorageForIpAddressess[0].id = req.ip;
-        //     localStorageForIpAddressess[0].count++;
-        //     console.log(localStorageForIpAddressess[0]);
-        //     next();
-        // } else {
-        //     console.log(localStorageForIpAddressess[0]);
-        //     res.sendStatus(429);
-        // }
+        const ip = req.ip;
+        const route = req.originalUrl;
+        clearNotValidBannedIpAddresses();
+        clearNotValidSuspectedIpAddresses();
+        checkExistenceOrCreateRouteForBannedIpAddresses({route});
+        const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});
+        if (foundedBannedIpAddress) return res.sendStatus(429);
+        checkExistenceOrCreateIpAddressAndRoutes({ip, route, timeLimit});
+        increaseRequestCounter({ip, route});
+        checkRequestCounterForBanIpAddress({ip, route, count, unblockTime});
+        console.log('temporaryStorageForIpAddresses:');
+        console.log(temporaryStorageForIpAddresses);
+        console.log('localStorageForBlockedIpAddresses:');
+        console.log(localStorageForBlockedIpAddresses);
+        next();
     };
 }
+
+export const counterOfRequestsByASingleIpMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const objConfig = {
+        timeLimit: add(new Date(), {seconds: 10}).getTime(),
+        count: 5,
+        unblockTime: add(new Date(), {seconds: 10}).getTime()
+    }
+    const {timeLimit, count, unblockTime} = objConfig;
+    const ip = req.ip;
+    const route = req.originalUrl;
+    clearNotValidBannedIpAddresses();
+    clearNotValidSuspectedIpAddresses();
+    checkExistenceOrCreateRouteForBannedIpAddresses({route});
+    const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});
+    if (foundedBannedIpAddress) return res.sendStatus(429);
+    checkExistenceOrCreateIpAddressAndRoutes({ip, route, timeLimit});
+    increaseRequestCounter({ip, route});
+    checkRequestCounterForBanIpAddress({ip, route, count, unblockTime});
+    console.log('temporaryStorageForIpAddresses:');
+    console.log(temporaryStorageForIpAddresses);
+    console.log('localStorageForBlockedIpAddresses:');
+    console.log(localStorageForBlockedIpAddresses);
+    next();
+};
