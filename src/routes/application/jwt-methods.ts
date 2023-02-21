@@ -1,5 +1,6 @@
 import {Secret, sign, SignOptions, verify, VerifyOptions} from "jsonwebtoken";
 import {accessTokenPayloadType, refreshTokenPayloadType} from "../../models/token-models";
+import {add} from "date-fns";
 
 const JWT_SECRET_REFRESH_TOKEN: string = process.env.JWT_SECRET_REFRESH_TOKEN!;
 const JWT_SECRET_ACCESS_TOKEN: string = process.env.JWT_SECRET_ACCESS_TOKEN!;
@@ -11,7 +12,7 @@ const createNewToken = (payload: string | object | Buffer, secretKey: Secret, op
     return sign(payload, secretKey);
 }
 
-const compareToken = (requestToken: string, secretKey: Secret, options?: (VerifyOptions & { complete?: false })) => {
+const compareToken = (requestToken: string, secretKey: Secret, options?: (VerifyOptions & { complete?: false })): accessTokenPayloadType | refreshTokenPayloadType | null => {
     const separatedRequestToken = requestToken.split(' ');
     if (separatedRequestToken.length < 2) {
         requestToken = separatedRequestToken[0];
@@ -50,5 +51,20 @@ export const jwtMethods = {
         refreshToken(requestToken: string, options?: (VerifyOptions & { complete?: false | undefined })): refreshTokenPayloadType | null {
             return compareToken(requestToken, JWT_SECRET_REFRESH_TOKEN, options) as refreshTokenPayloadType | null;
         },
+    }
+}
+
+export const createNewDefaultPairOfTokens = ({userId, deviceId}: refreshTokenPayloadType) => {
+    const issuedAt: number = Math.floor(new Date().getTime() / 1000);
+    const expiresDate: number = Math.floor(add(new Date(), {seconds: 20}).getTime() / 1000);
+    const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
+    const refreshToken: string = jwtMethods.createToken.refreshToken({userId, deviceId, iat: issuedAt, exp: expiresDate});
+    return {
+        accessToken,
+        refreshToken: {
+            refreshToken,
+            issuedAt,
+            expiresDate
+        }
     }
 }

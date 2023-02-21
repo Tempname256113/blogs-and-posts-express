@@ -3,11 +3,10 @@ import {createTransport} from "nodemailer";
 import {v4 as uuidv4} from 'uuid';
 import {add} from 'date-fns';
 import {authRepository} from "../repositories/auth/auth-repository";
-import {genSalt, hash} from "bcrypt";
+import {compare, genSalt, hash} from "bcrypt";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
-import {
-    refreshTokensBlackListRepository
-} from "../repositories/refreshTokensBlackList/refresh-tokens-black-list-repository";
+import {refreshTokenPayloadType} from "../models/token-models";
+import {createNewDefaultPairOfTokens, jwtMethods} from "../routes/application/jwt-methods";
 
 const envVariables = {
     mailUser: process.env.MAIL_USER,
@@ -21,15 +20,40 @@ type mailOptions = {
     html?: string
 }
 
+type sessionDataType = {
+    userLoginOrEmail: string,
+    userPassword: string,
+    userIp: string,
+    userDeviceName: string
+}
+
+export type sessionType = {
+    issuedAt: number,
+    expiresDate: number,
+    deviceId: string,
+    userIp: string,
+    userDeviceName: string,
+    userId: string
+}
+
+export type dataForUpdateSessionType = {
+    issuedAt: number,
+    expiresDate: number,
+    userIp: string,
+    userDeviceName: string
+}
+
 /* настраивает почтовый сервис и отправляет письмо с кодом подтверждения на почту клиента.
 * обязательно нужно передать почтовый адрес клиента, другие настройки можно передавать при необходимости.
 * если не передавать то дефолтные настройки подставятся сами.
 * также нужно передать секретный код который будет интегрирован в ссылку письма для подтверждения */
-const sendLinkWithSecretCodeToEmail = async ({from = `"Temp256113" <${envVariables.mailUser}>`,
-                                    to,
-                                    subject = "Confirm registration please",
-                                    html}: mailOptions,
-                                confirmationCode: string): Promise<void> => {
+const sendLinkWithSecretCodeToEmail = async ({
+                                                 from = `"Temp256113" <${envVariables.mailUser}>`,
+                                                 to,
+                                                 subject = "Confirm registration please",
+                                                 html
+                                             }: mailOptions,
+                                             confirmationCode: string): Promise<void> => {
     const transporter = createTransport({
         host: 'smtp.mail.ru',
         port: 465,
@@ -110,9 +134,7 @@ export const authService = {
                 },
                 emailConfirmation: {
                     confirmationCode: confirmationEmailCode,
-                    expirationDate: add(new Date(), {
-                        days: 3
-                    }),
+                    expirationDate: add(new Date(), {days: 3}),
                     isConfirmed: false
                 }
             }
@@ -127,10 +149,39 @@ export const authService = {
             return false;
         }
     },
-    addRefreshTokenToBlackList(refreshToken: string): void {
-        refreshTokensBlackListRepository.addRefreshTokenToBlackList(refreshToken);
+    async createNewSession({userLoginOrEmail, userPassword, userIp, userDeviceName}: sessionDataType):
+        Promise<{ accessToken: string, refreshToken: string } | null> {
+        const foundedUserByLoginOrEmail: userTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
+        if (!foundedUserByLoginOrEmail) return null;
+        const comparePass = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
+        if (!comparePass) return null;
+        const deviceId: string = uuidv4();
+        const userId: string = foundedUserByLoginOrEmail.id;
+        const {accessToken, refreshToken: {refreshToken, expiresDate, issuedAt}} = createNewDefaultPairOfTokens({
+            userId,
+            deviceId
+        });
+        const newSession: sessionType = {
+            issuedAt,
+            expiresDate,
+            deviceId,
+            userIp,
+            userDeviceName,
+            userId
+        }
+        await authRepository.createNewSession(newSession);
+        return {
+            accessToken,
+            refreshToken
+        }
+    },
+    updateSession(deviceId: string, dataForUpdateSession: dataForUpdateSessionType): Promise<boolean> {
+        return authRepository.updateSession(deviceId, dataForUpdateSession);
+    },
+    logout(deviceId: string){
+
     },
     async deleteAllBannedRefreshTokens(): Promise<void> {
-        await refreshTokensBlackListRepository.deleteAllData();
+
     }
 }

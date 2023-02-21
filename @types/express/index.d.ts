@@ -8,8 +8,12 @@ declare global {
     declare namespace Express {
         export interface Request {
             context: {
-                JWT_PAYLOAD?: accessTokenPayloadType | refreshTokenPayloadType
-                refreshTokenFromCookie?: string
+                refreshTokenPayload?: {
+                    userId: string,
+                    deviceId: string,
+                    iat?: number,
+                    exp?: number
+                }
             }
         }
     }

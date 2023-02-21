@@ -4,8 +4,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // connection URL
-const url = process.env.MONGO_URL
-// const url = process.env.MONGO_LOCAL;
+// const url = process.env.MONGO_URL
+const url = process.env.MONGO_LOCAL;
 if (!url) {
     throw new Error('Url doesn\'t found');
 }
@@ -22,7 +22,6 @@ export const connectionToDB = async () => {
         await client.db(dbName).command({ping: 1});
         console.log('connected successfully to mongo server');
     } catch {
-        console.log('cant connect to db');
-        await client.close();
+        throw new Error('failed connect to mongoDB');
     }
 }

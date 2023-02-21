@@ -10,9 +10,7 @@ import {commentsRouter} from "./routes/comments-router";
 import {commentsService} from "./domain/comments-service";
 import cookieParser from "cookie-parser";
 import {authService} from "./domain/auth-service";
-import {
-    counterOfRequestsByASingleIpMiddleware
-} from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
+import {counterOfRequestsByASingleIpMiddleware} from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
 
 export const app = express();
 
@@ -35,10 +33,16 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
     res.sendStatus(204);
 });
 
-app.get('/auth/login',
-    counterOfRequestsByASingleIpMiddleware,
-    (req, res) => {
-    // console.log(req.originalUrl);
-    // console.log(req.ip);
-    res.sendStatus(200)
+// app.get('/auth/login',
+//     counterOfRequestsByASingleIpMiddleware,
+//     (req, res) => {
+//     // console.log(req.originalUrl);
+//     // console.log(req.ip);
+//     res.sendStatus(200)
+// })
+
+app.get('/test-route', (req, res) => {
+    console.log(req.query);
+    console.log(req.headers["user-agent"]);
+    res.sendStatus(200);
 })

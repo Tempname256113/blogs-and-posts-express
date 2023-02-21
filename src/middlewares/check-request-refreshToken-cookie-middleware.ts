@@ -1,36 +1,59 @@
 import {Request, Response, NextFunction} from "express";
 import {refreshTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "../routes/application/jwt-methods";
-import {
-    refreshTokensBlackListQueryRepository
-} from "../repositories/refreshTokensBlackList/refresh-tokens-black-list-query-repository";
+import {authQueryRepository} from "../repositories/auth/auth-query-repository";
+import {sessionType} from "../domain/auth-service";
 
-const refreshTokenString: string = 'refreshToken';
+const refreshTokenPropTitle: string = 'refreshToken';
 
-/* проверяет есть ли в запросе куки. если есть то расшифровывает и мутирует объект запроса.
-req.context = {
-JWT_PAYLOAD: decodedRefreshToken,
-refreshTokenFromCookie: refreshToken} */
-export const checkRequestRefreshTokenCookieMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    const refreshTokenFromCookie: string | undefined = req.cookies[refreshTokenString];
-    if (refreshTokenFromCookie) {
-        const decodedRefreshToken: refreshTokenPayloadType | null = jwtMethods.compareToken.refreshToken(refreshTokenFromCookie);
-        if (decodedRefreshToken) {
-            const foundedUserWithExpiredRefreshTokenInDB = await refreshTokensBlackListQueryRepository.getBannedRefreshToken(refreshTokenFromCookie);
-            /* если в базе данных нашлась запись с заблокированным рефреш токеном у этого пользователя значит он пытается выдать себя за другого.
-            система это не пропустит, некорректный токен */
-            if (foundedUserWithExpiredRefreshTokenInDB) {
-                return res.sendStatus(401);
-            }
-            req.context = {
-                JWT_PAYLOAD: decodedRefreshToken,
-                refreshTokenFromCookie
-            }
-            next();
-        } else {
-            res.send(401);
+/* мидлвар полностью проверяет приходящий с запросом рефреш токен чтобы можно было выдать новую пару токенов.
+* в случае ошибок отсылает ответ с 401 статусом.
+* мутирует объект запроса добавляя к нему новые свойства =>
+* req.context = {
+        refreshTokenPayload: {
+            userId: string,
+            deviceId: string,
+            iat: number,
+            exp: number
         }
-    } else {
-        res.send(401);
+    } */
+export const checkRequestRefreshTokenCookieMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    const refreshTokenFromCookie: string | undefined = req.cookies[refreshTokenPropTitle];
+    const compareRefreshToken = (refreshToken: string): refreshTokenPayloadType | null => {
+        return jwtMethods.compareToken.refreshToken(refreshToken);
+    };
+    if (!refreshTokenFromCookie) return res.sendStatus(401);
+    const checkRefreshTokenValidity = (): boolean => {
+        const refreshTokenPayload: refreshTokenPayloadType | null = compareRefreshToken(refreshTokenFromCookie);
+        return refreshTokenPayload ? true : false;
     }
+    const refreshTokenIsValid: boolean = checkRefreshTokenValidity();
+    if (!refreshTokenIsValid) return res.sendStatus(401);
+    const {
+        userId,
+        deviceId,
+        iat,
+        exp
+    } = compareRefreshToken(refreshTokenFromCookie) as refreshTokenPayloadType;
+    const findSessionByDeviceId = (): Promise<sessionType | null> => {
+        return authQueryRepository.getSessionByDeviceId(deviceId);
+    }
+    const foundedSessionByDeviceIdFromDB: sessionType | null = await findSessionByDeviceId();
+    if (!foundedSessionByDeviceIdFromDB) return res.sendStatus(401);
+    const checkVersionsOfRefreshTokens = (): boolean => {
+        const requestRefreshTokenVersion = iat;
+        const refreshTokenVersionFromDB = foundedSessionByDeviceIdFromDB.issuedAt;
+        return refreshTokenVersionFromDB === requestRefreshTokenVersion;
+    }
+    const compareRefreshTokensVersionsStatus: boolean = checkVersionsOfRefreshTokens();
+    if (!compareRefreshTokensVersionsStatus) return res.sendStatus(401);
+    req.context = {
+        refreshTokenPayload: {
+            userId,
+            deviceId,
+            iat,
+            exp
+        }
+    }
+    next();
 }

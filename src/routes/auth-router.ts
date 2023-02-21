@@ -2,58 +2,63 @@ import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {RequestWithBody, ResponseWithBody} from "../models/req-res-models";
 import {Request, Response, Router} from "express";
-import {usersService} from "../domain/users-service";
-import {jwtMethods} from "./application/jwt-methods";
-import {accessTokenPayloadType, refreshTokenPayloadType} from "../models/token-models";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
 import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "../models/user-models";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewares-array/create-new-user-validation-middlewares-array";
-import {authService} from "../domain/auth-service";
+import {authService, dataForUpdateSessionType} from "../domain/auth-service";
 import {errorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
+import {refreshTokenPayloadType} from "../models/token-models";
+import {createNewDefaultPairOfTokens} from "./application/jwt-methods";
 
 export const authRouter = Router();
 
-const refreshTokenString: string = 'refreshToken';
-const getNewPairOfTokens = ({userId}: accessTokenPayloadType) => {
-    const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'});
-    const refreshToken: string = jwtMethods.createToken.refreshToken({userId}, {expiresIn: '20s'});
-    return {
-        accessToken,
-        refreshToken
-    }
-}
+const refreshTokenPropTitle: string = 'refreshToken';
 
 authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string }>) => {
-        const recievedUser = await usersService.authUser({
-            loginOrEmail: req.body.loginOrEmail,
-            password: req.body.password
+        const userLoginOrEmail = req.body.loginOrEmail;
+        const userPassword = req.body.password;
+        const userIp = req.ip;
+        const userDeviceName = req.headers["user-agent"];
+        const pairOfTokens: { accessToken: string, refreshToken: string } | null = await authService.createNewSession({
+            userLoginOrEmail,
+            userPassword,
+            userIp,
+            userDeviceName: userDeviceName ?? 'unknown device name'
         });
-        if (recievedUser.comparePasswordStatus) {
-            /* я могу быть уверен в том что юзер будет в этом условии потому что я написал такую логику в userService.
-            он здесь будет если passwordStatus === true */
-            const {accessToken, refreshToken} = getNewPairOfTokens({userId: recievedUser.findedUserByLoginOrEmail!.id});
-            authService.addRefreshTokenToBlackList(req.cookies[refreshTokenString]);
-            return res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
-                .status(200).send({accessToken});
-        }
-        res.sendStatus(401);
+        if (!pairOfTokens) return res.sendStatus(401);
+        const {accessToken, refreshToken} = pairOfTokens;
+        res
+            .cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
+            .status(200)
+            .send({accessToken});
     });
 
 authRouter.post('/refresh-token',
     checkRequestRefreshTokenCookieMiddleware,
-    (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
-        const {JWT_PAYLOAD, refreshTokenFromCookie} = req.context;
-        const {accessToken, refreshToken} = getNewPairOfTokens({userId: JWT_PAYLOAD!.userId});
-        authService.addRefreshTokenToBlackList(refreshTokenFromCookie!);
-        return res.cookie(refreshTokenString, refreshToken, {httpOnly: true, secure: true})
+    async (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
+        const userIp = req.ip;
+        const userDeviceName = req.headers["user-agent"];
+        const {userId, deviceId} = req.context.refreshTokenPayload as refreshTokenPayloadType;
+        const {accessToken, refreshToken: {refreshToken, issuedAt, expiresDate}} = createNewDefaultPairOfTokens({
+            userId,
+            deviceId
+        });
+        const dataForUpdateSession: dataForUpdateSessionType = {
+            issuedAt,
+            expiresDate,
+            userIp,
+            userDeviceName: userDeviceName ?? 'unknown device name'
+        };
+        await authService.updateSession(deviceId, dataForUpdateSession);
+        res.cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
             .status(200).send({accessToken});
     });
 

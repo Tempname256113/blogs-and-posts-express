@@ -65,19 +65,20 @@ const checkExistenceOrCreateIpAddressAndRoutes = ({ip, route, timeLimit}: {ip: s
     if (!foundedIpAddress) addNewIpAddressToTemporaryStorage({timeLimit, ip, route});
 }
 
+/* проверяет существование роута в хранилище для заблокированных ip адресов */
+const checkExistenceOrCreateRouteForBannedIpAddresses = ({route}: {route: string}): void => {
+    if (!localStorageForBlockedIpAddresses.hasOwnProperty(route))
+        localStorageForBlockedIpAddresses[route] = {};
+}
+
 /* блокировка ip адреса
 * ip => ip адрес клиента
 * route => роут доступ к которому будет заблокирован для указанного ip адреса
 * unblockTime => время до разблокировки указанного ip адреса */
 const banIpAddress = (
     {ip, route, unblockTime}: {ip: string, route: string, unblockTime: number}): void => {
+    checkExistenceOrCreateRouteForBannedIpAddresses({route});
     localStorageForBlockedIpAddresses[route][ip] = unblockTime;
-}
-
-/* проверяет существование роута в хранилище для заблокированных ip адресов */
-const checkExistenceOrCreateRouteForBannedIpAddresses = ({route}: {route: string}): void => {
-    if (!localStorageForBlockedIpAddresses.hasOwnProperty(route))
-        localStorageForBlockedIpAddresses[route] = {};
 }
 
 /* поиск заблокированного ip адреса
@@ -150,34 +151,27 @@ const checkRequestCounterForBanIpAddress = (
 /* принимает параметры:
 * timeLimit (default 10s) = время за которое поступает нужное количество запросов
 * count (default 6) = количество запросов за время указанное в timeLimit для блокировки ip для текущего роута
-* unblockTime (default 30min) = время для блокировки ip на текущем роуте
-* storage = хранилище для заблокированных ip и роутов. нужно передать функцию для сохранения заблокированного ip в базе данных
-* по дефолту будет в оперативной памяти */
-const counterOfRequestsByASingleIpMiddlewareConfig = (
-    {
-        timeLimit = add(new Date(), {seconds: 10}).getTime(),
-        count = 5,
-        unblockTime = add(new Date(), {seconds: 10}).getTime()
-    }: configType
-): (req: Request, res: Response, next: NextFunction) => any => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const ip = req.ip;
-        const route = req.originalUrl;
-        clearNotValidBannedIpAddresses();
-        clearNotValidSuspectedIpAddresses();
-        checkExistenceOrCreateRouteForBannedIpAddresses({route});
-        const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});
-        if (foundedBannedIpAddress) return res.sendStatus(429);
-        checkExistenceOrCreateIpAddressAndRoutes({ip, route, timeLimit});
-        increaseRequestCounter({ip, route});
-        checkRequestCounterForBanIpAddress({ip, route, count, unblockTime});
-        console.log('temporaryStorageForIpAddresses:');
-        console.log(temporaryStorageForIpAddresses);
-        console.log('localStorageForBlockedIpAddresses:');
-        console.log(localStorageForBlockedIpAddresses);
-        next();
-    };
-}
+* unblockTime (default 10s) = время для блокировки ip на текущем роуте */
+// const counterOfRequestsByASingleIpMiddlewareConfig = (
+//     {
+//         timeLimit = add(new Date(), {seconds: 10}).getTime(),
+//         count = 5,
+//         unblockTime = add(new Date(), {seconds: 10}).getTime()
+//     }: configType
+// ): (req: Request, res: Response, next: NextFunction) => any => {
+//     return (req: Request, res: Response, next: NextFunction) => {
+//         const ip = req.ip;
+//         const route = req.originalUrl;
+//         clearNotValidBannedIpAddresses();
+//         clearNotValidSuspectedIpAddresses();
+//         const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});
+//         if (foundedBannedIpAddress) return res.sendStatus(429);
+//         checkExistenceOrCreateIpAddressAndRoutes({ip, route, timeLimit});
+//         increaseRequestCounter({ip, route});
+//         checkRequestCounterForBanIpAddress({ip, route, count, unblockTime});
+//         next();
+//     };
+// }
 
 export const counterOfRequestsByASingleIpMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const objConfig = {
@@ -190,15 +184,10 @@ export const counterOfRequestsByASingleIpMiddleware = (req: Request, res: Respon
     const route = req.originalUrl;
     clearNotValidBannedIpAddresses();
     clearNotValidSuspectedIpAddresses();
-    checkExistenceOrCreateRouteForBannedIpAddresses({route});
     const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});
     if (foundedBannedIpAddress) return res.sendStatus(429);
     checkExistenceOrCreateIpAddressAndRoutes({ip, route, timeLimit});
     increaseRequestCounter({ip, route});
     checkRequestCounterForBanIpAddress({ip, route, count, unblockTime});
-    console.log('temporaryStorageForIpAddresses:');
-    console.log(temporaryStorageForIpAddresses);
-    console.log('localStorageForBlockedIpAddresses:');
-    console.log(localStorageForBlockedIpAddresses);
     next();
 };
