@@ -8,17 +8,20 @@ import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-aut
 import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewares-array/create-new-user-validation-middlewares-array";
-import {authService, dataForUpdateSessionType} from "../domain/auth-service";
+import {authService} from "../domain/auth-service";
 import {errorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
-import {refreshTokenPayloadType} from "../models/token-models";
+import {accessTokenPayloadType, refreshTokenPayloadType} from "../models/token-models";
 import {createNewDefaultPairOfTokens} from "./application/jwt-methods";
+import {dataForUpdateSessionType} from "../models/session-models";
+import {counterOfRequestsByASingleIpMiddleware} from "../middlewares/counter-of-requests-by-a-single-ip-middleware";
 
 export const authRouter = Router();
 
 const refreshTokenPropTitle: string = 'refreshToken';
 
 authRouter.post('/login',
+    counterOfRequestsByASingleIpMiddleware,
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
@@ -64,26 +67,28 @@ authRouter.post('/refresh-token',
 
 authRouter.post('/logout',
     checkRequestRefreshTokenCookieMiddleware,
-    (req: Request, res: Response) => {
-        const refreshTokenPayload = req.context.JWT_PAYLOAD;
-        authService.addRefreshTokenToBlackList(req.context.refreshTokenFromCookie!);
+    async (req: Request, res: Response) => {
+        const {deviceId} = req.context.refreshTokenPayload as refreshTokenPayloadType;
+        await authService.deleteSessionByDeviceId(deviceId);
         res.sendStatus(204);
     });
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
-    async (req: Request, res: ResponseWithBody<{ email: string, login: string, userId: string }>) => {
-        const userId: string = req.context!.JWT_PAYLOAD!.userId!;
+    async (req: Request, res: ResponseWithBody<infoAboutUserType>) => {
+        const {userId} = req.context.accessTokenPayload as accessTokenPayloadType;
         const userFromDB: userTypeExtended | null = await usersQueryRepository.getUserById(userId);
+        if (!userFromDB) return res.sendStatus(401);
         const informationAboutCurrentUser: infoAboutUserType = {
-            email: userFromDB!.accountData.email,
-            login: userFromDB!.accountData.login,
-            userId: userFromDB!.id
+            email: userFromDB.accountData.email,
+            login: userFromDB.accountData.login,
+            userId: userFromDB.id
         }
         res.status(200).send(informationAboutCurrentUser);
     });
 
 authRouter.post('/registration',
+    counterOfRequestsByASingleIpMiddleware,
     createNewUserValidationMiddlewaresArray,
     async (req: RequestWithBody<requestUserType>, res: Response) => {
         const userConfig: requestUserType = {
@@ -104,6 +109,7 @@ authRouter.post('/registration',
     });
 
 authRouter.post('/registration-confirmation',
+    counterOfRequestsByASingleIpMiddleware,
     body('code').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ code: string }>, res: Response) => {
@@ -116,6 +122,7 @@ authRouter.post('/registration-confirmation',
     });
 
 authRouter.post('/registration-email-resending',
+    counterOfRequestsByASingleIpMiddleware,
     body('email').isEmail(),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ email: string }>, res: Response) => {

@@ -8,12 +8,8 @@ declare global {
     declare namespace Express {
         export interface Request {
             context: {
-                refreshTokenPayload?: {
-                    userId: string,
-                    deviceId: string,
-                    iat?: number,
-                    exp?: number
-                }
+                refreshTokenPayload?: refreshTokenPayloadType,
+                accessTokenPayload?: accessTokenPayloadType
             }
         }
     }

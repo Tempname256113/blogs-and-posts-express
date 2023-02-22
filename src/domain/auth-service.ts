@@ -5,8 +5,9 @@ import {add} from 'date-fns';
 import {authRepository} from "../repositories/auth/auth-repository";
 import {compare, genSalt, hash} from "bcrypt";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
-import {refreshTokenPayloadType} from "../models/token-models";
-import {createNewDefaultPairOfTokens, jwtMethods} from "../routes/application/jwt-methods";
+import {createNewDefaultPairOfTokens} from "../routes/application/jwt-methods";
+import {dataForUpdateSessionType, sessionType} from "../models/session-models";
+import {authQueryRepository} from "../repositories/auth/auth-query-repository";
 
 const envVariables = {
     mailUser: process.env.MAIL_USER,
@@ -23,22 +24,6 @@ type mailOptions = {
 type sessionDataType = {
     userLoginOrEmail: string,
     userPassword: string,
-    userIp: string,
-    userDeviceName: string
-}
-
-export type sessionType = {
-    issuedAt: number,
-    expiresDate: number,
-    deviceId: string,
-    userIp: string,
-    userDeviceName: string,
-    userId: string
-}
-
-export type dataForUpdateSessionType = {
-    issuedAt: number,
-    expiresDate: number,
     userIp: string,
     userDeviceName: string
 }
@@ -97,9 +82,7 @@ export const authService = {
                 },
                 emailConfirmation: {
                     confirmationCode: confirmationEmailCode,
-                    expirationDate: add(new Date, {
-                        days: 3
-                    }),
+                    expirationDate: add(new Date, {days: 3}),
                     isConfirmed: false
                 }
             }
@@ -115,7 +98,29 @@ export const authService = {
         if (!foundedUserByConfirmationEmailCode) return false;
         if (foundedUserByConfirmationEmailCode.emailConfirmation.isConfirmed) return false;
         if (new Date() > foundedUserByConfirmationEmailCode.emailConfirmation.expirationDate) return false;
-        await authRepository.updateUserEmailConfirmationStatus(foundedUserByConfirmationEmailCode.id);
+        const updateUserEmailConfirmationStatus = async (): Promise<void> => {
+            const {
+                id,
+                accountData: {login, email, password, createdAt},
+                emailConfirmation: {confirmationCode, expirationDate}
+            } = foundedUserByConfirmationEmailCode;
+            const templateForUpdateUser: userTypeExtended = {
+                id,
+                accountData: {
+                    login,
+                    email,
+                    password,
+                    createdAt
+                },
+                emailConfirmation: {
+                    confirmationCode,
+                    expirationDate,
+                    isConfirmed: true
+                }
+            }
+            await authRepository.updateUser(templateForUpdateUser);
+        }
+        await updateUserEmailConfirmationStatus();
         return true;
     },
     async resendSecretCodeToEmail(email: string): Promise<boolean> {
@@ -124,13 +129,14 @@ export const authService = {
         if (foundedUserByEmail.emailConfirmation.isConfirmed) return false;
         try {
             const confirmationEmailCode: string = uuidv4();
+            const {id, accountData: {login, email, password, createdAt}} = foundedUserByEmail;
             const templateForUpdateUser: userTypeExtended = {
-                id: foundedUserByEmail.id,
+                id,
                 accountData: {
-                    login: foundedUserByEmail.accountData.login,
-                    email: foundedUserByEmail.accountData.email,
-                    password: foundedUserByEmail.accountData.password,
-                    createdAt: foundedUserByEmail.accountData.createdAt
+                    login,
+                    email,
+                    password,
+                    createdAt
                 },
                 emailConfirmation: {
                     confirmationCode: confirmationEmailCode,
@@ -139,12 +145,9 @@ export const authService = {
                 }
             }
             const updateUserStatus = await authRepository.updateUser(templateForUpdateUser);
-            if (updateUserStatus) {
-                await sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
-                return true;
-            } else {
-                return false;
-            }
+            if (!updateUserStatus) return false;
+            await sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
+            return true;
         } catch (e) {
             return false;
         }
@@ -178,10 +181,19 @@ export const authService = {
     updateSession(deviceId: string, dataForUpdateSession: dataForUpdateSessionType): Promise<boolean> {
         return authRepository.updateSession(deviceId, dataForUpdateSession);
     },
-    logout(deviceId: string){
-
+    deleteSessionByDeviceId(deviceId: string): Promise<boolean> {
+        return authRepository.deleteSessionByDeviceId(deviceId);
     },
-    async deleteAllBannedRefreshTokens(): Promise<void> {
-
+    async deleteAllSessionsExceptCurrent(currentUserId: string, currentDeviceId: string): Promise<void> {
+        type deviceId = string;
+        const sessionsDeviceIdExceptCurrentArr: deviceId[] = [];
+        const sessionsHandler = (session: sessionType): void => {
+            if (session.deviceId !== currentDeviceId) sessionsDeviceIdExceptCurrentArr.push(session.deviceId);
+        }
+        await authQueryRepository.getAllSessionsByUserId(currentUserId).forEach(sessionsHandler);
+        authRepository.deleteManySessions(sessionsDeviceIdExceptCurrentArr);
+    },
+    async deleteAllSessions(): Promise<void> {
+        await authRepository.deleteAllSessions();
     }
 }

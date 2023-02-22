@@ -3,20 +3,16 @@ import {jwtMethods} from "../routes/application/jwt-methods";
 import {accessTokenPayloadType} from "../models/token-models";
 
 /* добавляет к объекту запроса context где context = {
-JWT_PAYLOAD: {userId: string, iat: number}
+accessTokenPayload: {userId: string, iat: number, exp: number}
 }
 также если находит ошибки в присылаемом токене отправляет 401 статус */
 export const bearerUserAuthTokenCheckMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const reqToken: string | undefined = req.headers.authorization;
-    if (reqToken) {
-        const accessTokenPayload: accessTokenPayloadType | null = jwtMethods.compareToken.accessToken(reqToken);
-        if (accessTokenPayload) {
-            req.context = {
-                JWT_PAYLOAD: accessTokenPayload
-            }
-            return next();
-        }
-        return res.sendStatus(401);
+    if (!reqToken) return res.sendStatus(401);
+    const accessTokenPayload: accessTokenPayloadType | null = jwtMethods.compareToken.accessToken(reqToken);
+    if (!accessTokenPayload) return res.sendStatus(401);
+    req.context = {
+        accessTokenPayload
     }
-    res.sendStatus(401);
+    next();
 }

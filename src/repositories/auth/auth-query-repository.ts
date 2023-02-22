@@ -1,8 +1,9 @@
-import {sessionType} from "../../domain/auth-service";
+
 import {client} from "../../db";
+import {sessionType} from "../../models/session-models";
 
 const db = client.db('ht02DB');
-const sessionsCollection = db.collection('sessions');
+const sessionsCollection = db.collection<sessionType>('sessions');
 
 export const authQueryRepository = {
     async getSessionByDeviceId(deviceId: string): Promise<sessionType | null> {
@@ -20,5 +21,8 @@ export const authQueryRepository = {
         } else {
             return null;
         }
+    },
+     getAllSessionsByUserId(userId: string) {
+        return sessionsCollection.find({userId});
     }
 }

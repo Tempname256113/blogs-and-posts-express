@@ -78,7 +78,7 @@ postsRouter.post('/:id/comments',
         if (!foundedPost) return res.sendStatus(404);
         const dataForCreateNewComment = {
             content: req.body.content,
-            userId: req.context!.JWT_PAYLOAD!.userId,
+            userId: req.context.accessTokenPayload!.userId,
             postId: req.params.id
         }
         const newCreatedComment = await commentsService.createComment(dataForCreateNewComment);

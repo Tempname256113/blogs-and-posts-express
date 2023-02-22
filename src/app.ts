@@ -10,7 +10,7 @@ import {commentsRouter} from "./routes/comments-router";
 import {commentsService} from "./domain/comments-service";
 import cookieParser from "cookie-parser";
 import {authService} from "./domain/auth-service";
-import {counterOfRequestsByASingleIpMiddleware} from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
+import {securityDevicesRouter} from "./routes/security-devices-router";
 
 export const app = express();
 
@@ -22,13 +22,14 @@ app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/comments', commentsRouter);
+app.use('/security/devices', securityDevicesRouter);
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
     await Promise.all([
         blogsService.deleteAllData(),
         postsService.deleteAllData(),
         usersService.deleteAllData(),
         commentsService.deleteAllData(),
-        authService.deleteAllBannedRefreshTokens()
+        authService.deleteAllSessions()
     ]);
     res.sendStatus(204);
 });
@@ -41,8 +42,9 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     res.sendStatus(200)
 // })
 
-app.get('/test-route', (req, res) => {
-    console.log(req.query);
-    console.log(req.headers["user-agent"]);
-    res.sendStatus(200);
-})
+// app.get('/test-route', (req, res) => {
+//     console.log(req.query);
+//     console.log(req.headers["user-agent"]);
+//     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
+//     res.cookie('testCookieProp', refreshToken).status(200).send('ready or not');
+// })
