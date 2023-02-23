@@ -11,6 +11,8 @@ import {commentsService} from "./domain/comments-service";
 import cookieParser from "cookie-parser";
 import {authService} from "./domain/auth-service";
 import {securityDevicesRouter} from "./routes/security-devices-router";
+import {jwtMethods} from "./routes/application/jwt-methods";
+import {counterOfRequestsByASingleIpMiddleware} from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
 
 export const app = express();
 
@@ -42,9 +44,11 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     res.sendStatus(200)
 // })
 
-// app.get('/test-route', (req, res) => {
+// app.get('/test-route',
+//     counterOfRequestsByASingleIpMiddleware,
+//     (req, res) => {
 //     console.log(req.query);
 //     console.log(req.headers["user-agent"]);
 //     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
-//     res.cookie('testCookieProp', refreshToken).status(200).send('ready or not');
+//     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
 // })

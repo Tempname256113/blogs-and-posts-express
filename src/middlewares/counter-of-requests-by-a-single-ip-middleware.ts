@@ -5,9 +5,9 @@ import {add} from "date-fns";
 * count => количество разрешенных запросов за интервал timeLimit (выше этого числа будет бан ip адреса)
 * unblockTime => время разбана ip адресов */
 type configType = {
-    timeLimit?: number,
-    count?: number,
-    unblockTime?: number,
+    timeLimit: number,
+    count: number,
+    unblockTime: number,
 }
 
 type suspectedClientType = {
@@ -86,6 +86,7 @@ const banIpAddress = (
 * route => роут, по которому нужно найти заблокированный ip адрес */
 const findBannedIpAddress = (
     {ip, route}: {ip: string, route: string}): boolean => {
+    checkExistenceOrCreateRouteForBannedIpAddresses({route});
     return localStorageForBlockedIpAddresses[route].hasOwnProperty(ip);
 }
 
@@ -174,7 +175,7 @@ const checkRequestCounterForBanIpAddress = (
 // }
 
 export const counterOfRequestsByASingleIpMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const objConfig = {
+    const objConfig: configType = {
         timeLimit: add(new Date(), {seconds: 10}).getTime(),
         count: 5,
         unblockTime: add(new Date(), {seconds: 10}).getTime()

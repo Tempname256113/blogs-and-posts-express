@@ -25,7 +25,7 @@ authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string }>) => {
+    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string, refreshToken: string }>) => {
         const userLoginOrEmail = req.body.loginOrEmail;
         const userPassword = req.body.password;
         const userIp = req.ip;
@@ -41,12 +41,12 @@ authRouter.post('/login',
         res
             .cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
             .status(200)
-            .send({accessToken});
+            .send({accessToken, refreshToken});
     });
 
 authRouter.post('/refresh-token',
     checkRequestRefreshTokenCookieMiddleware,
-    async (req: Request, res: ResponseWithBody<{ accessToken: string }>) => {
+    async (req: Request, res: ResponseWithBody<{ accessToken: string, refreshToken: string }>) => {
         const userIp = req.ip;
         const userDeviceName = req.headers["user-agent"];
         const {userId, deviceId} = req.context.refreshTokenPayload as refreshTokenPayloadType;
@@ -62,7 +62,7 @@ authRouter.post('/refresh-token',
         };
         await authService.updateSession(deviceId, dataForUpdateSession);
         res.cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
-            .status(200).send({accessToken});
+            .status(200).send({accessToken, refreshToken});
     });
 
 authRouter.post('/logout',
