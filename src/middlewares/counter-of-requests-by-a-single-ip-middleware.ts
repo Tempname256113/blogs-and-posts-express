@@ -3,7 +3,7 @@ import {add} from "date-fns";
 
 /* timeLimit => время за которое поступает нужное количество запросов
 * count => количество разрешенных запросов за интервал timeLimit (выше этого числа будет бан ip адреса)
-* unblockTime => время разбана ip адресов */
+* unblockTime => время до разбана ip адресов */
 type configType = {
     timeLimit: number,
     count: number,
@@ -31,12 +31,7 @@ const temporaryStorageForIpAddresses: protectedRouteType = {}
 
 const localStorageForBlockedIpAddresses: blockedIpAddressesAndRoutes = {}
 
-/* создание нового объекта с ip адресом подозреваемого клиента
-* timeLimit => время для отслеживания количества запросов за заданный интервал.
-* если в течение этого интервала будет количество запросов превышающее заданное,
-* то ip будет заблокирован
-* ip => ip адрес подозреваемого клиента
-* route => роут к которому нужно добавить новый ip адрес */
+// создание нового объекта с ip адресом подозреваемого клиента
 const addNewIpAddressToTemporaryStorage = (
     {ip, route, timeLimit}: {ip: string, route: string, timeLimit: number}): void => {
     temporaryStorageForIpAddresses[route][ip] = {
@@ -45,10 +40,7 @@ const addNewIpAddressToTemporaryStorage = (
     }
 }
 
-/* функция для проверки ip адреса на его существование в хранилище или его добавление
-* принимает параметры ip => ip, который нужно найти в хранилище или добавить
-* timeLimit => лимит времени за который совершаются все возможные попытки запросов на защищенный роут
-* route => роут, на котором нужно найти приходящий ip адрес */
+// функция для проверки ip адреса на его существование в хранилище или его добавление
 const checkExistenceOrCreateIpAddressAndRoutes = ({ip, route, timeLimit}: {ip: string, route: string, timeLimit: number}) => {
     const checkTheExistenceOfTheCurrentRoute = (): boolean => {
         return temporaryStorageForIpAddresses.hasOwnProperty(route);
@@ -71,19 +63,14 @@ const checkExistenceOrCreateRouteForBannedIpAddresses = ({route}: {route: string
         localStorageForBlockedIpAddresses[route] = {};
 }
 
-/* блокировка ip адреса
-* ip => ip адрес клиента
-* route => роут доступ к которому будет заблокирован для указанного ip адреса
-* unblockTime => время до разблокировки указанного ip адреса */
+// блокировка ip адреса
 const banIpAddress = (
     {ip, route, unblockTime}: {ip: string, route: string, unblockTime: number}): void => {
     checkExistenceOrCreateRouteForBannedIpAddresses({route});
     localStorageForBlockedIpAddresses[route][ip] = unblockTime;
 }
 
-/* поиск заблокированного ip адреса
-* ip => ip который нужно найти в списке заблокированных
-* route => роут, по которому нужно найти заблокированный ip адрес */
+// поиск заблокированного ip адреса
 const findBannedIpAddress = (
     {ip, route}: {ip: string, route: string}): boolean => {
     checkExistenceOrCreateRouteForBannedIpAddresses({route});
@@ -102,7 +89,7 @@ const clearNotValidSuspectedIpAddresses = (): void => {
     }
 }
 
-/* чистит заблокированные ip адреса у которых истекло время блокировки */
+// чистит заблокированные ip адреса у которых истекло время блокировки
 const clearNotValidBannedIpAddresses = (): void => {
     for (let route in localStorageForBlockedIpAddresses) {
         for (let ip in localStorageForBlockedIpAddresses[route]) {
@@ -113,22 +100,13 @@ const clearNotValidBannedIpAddresses = (): void => {
     }
 }
 
-/* увеличивает счетчик ip адреса при запросе
-* route => по какому роуту нужно найти ip
-* ip => ip адрес на котором нужно увеличить счетчик */
+// увеличивает счетчик ip адреса при запросе
 const increaseRequestCounter = (
     {ip, route}: {ip: string, route: string}): void => {
     temporaryStorageForIpAddresses[route][ip].counter++;
 }
 
-/* проверяет количество запросов за определенный интервал времени и блокирует ip адреса
-* count => количество разрешенных запросов (выше этого числа идет блокировка)
-* route => по какому роуту нужно искать
-* ip => какой ip адрес проверить
-* unblockTime => время в минутах до разблокировки указанного ip
-* timeLimit => время в секундах для отслеживания количества запросов.
-* если в течение этого интервала будет количество запросов превышающее заданное,
-* то ip будет заблокирован */
+// проверяет количество запросов за определенный интервал времени и блокирует ip адреса
 const checkRequestCounterForBanIpAddress = (
     {
         ip,

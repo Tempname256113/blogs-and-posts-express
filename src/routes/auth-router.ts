@@ -113,7 +113,7 @@ authRouter.post('/registration-confirmation',
     body('code').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ code: string }>, res: Response) => {
-        const confirmRegistrationStatus = await authService.confirmRegistration(req.body.code);
+        const confirmRegistrationStatus: boolean = await authService.confirmRegistration(req.body.code);
         if (confirmRegistrationStatus) return res.sendStatus(204);
         const errorObj: errorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]

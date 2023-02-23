@@ -19,7 +19,7 @@ securityDevicesRouter.get('/',
         const converterSecondsToStringDate = (seconds: number): string => {
             const milliseconds = seconds * 1000;
             const date = new Date(milliseconds);
-            return format(date, 'PPpp');
+            return date.toISOString();
         };
         const {userIp, userDeviceName, issuedAt, deviceId} = session;
         const lastActivateDate = converterSecondsToStringDate(issuedAt);
