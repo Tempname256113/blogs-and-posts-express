@@ -56,8 +56,8 @@ export const jwtMethods = {
 
 export const createNewDefaultPairOfTokens = ({userId, deviceId}: refreshTokenPayloadType) => {
     const issuedAt: number = Math.floor(new Date().getTime() / 1000);
-    const expiresDate: number = Math.floor(add(new Date(), {years: 2}).getTime() / 1000); //20s
-    const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '2y'}); //10s
+    const expiresDate: number = Math.floor(add(new Date(), {seconds: 20}).getTime() / 1000); //20s //2years for tests
+    const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'}); //10s //2years for tests
     const refreshToken: string = jwtMethods.createToken.refreshToken({userId, deviceId, iat: issuedAt, exp: expiresDate});
     return {
         accessToken,

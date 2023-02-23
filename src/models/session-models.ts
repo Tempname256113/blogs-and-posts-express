@@ -18,6 +18,6 @@ export type dataForUpdateSessionType = {
 export type userSessionsDataType = {
     ip: string,
     title: string,
-    lastActivateDate: string,
+    lastActiveDate: string,
     deviceId: string
 }

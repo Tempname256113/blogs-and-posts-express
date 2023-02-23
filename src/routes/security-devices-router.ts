@@ -3,7 +3,6 @@ import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-req
 import {authQueryRepository} from "../repositories/auth/auth-query-repository";
 import {refreshTokenPayloadType} from "../models/token-models";
 import {userSessionsDataType, sessionType} from "../models/session-models";
-import {format} from "date-fns";
 import {RequestWithURIParams, ResponseWithBody} from "../models/req-res-models";
 import {authService} from "../domain/auth-service";
 
@@ -22,11 +21,11 @@ securityDevicesRouter.get('/',
             return date.toISOString();
         };
         const {userIp, userDeviceName, issuedAt, deviceId} = session;
-        const lastActivateDate = converterSecondsToStringDate(issuedAt);
+        const lastActiveDate = converterSecondsToStringDate(issuedAt);
         const userSessionData: userSessionsDataType = {
             ip: userIp,
             title: userDeviceName,
-            lastActivateDate,
+            lastActiveDate,
             deviceId
         }
         sessionsArrayOfCurrentUser.push(userSessionData);
