@@ -53,3 +53,4 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
 //     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
 // })
+//
