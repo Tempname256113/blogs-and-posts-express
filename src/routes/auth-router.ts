@@ -25,7 +25,7 @@ authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string, refreshToken: string }>) => {
+    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string }>) => {
         const userLoginOrEmail = req.body.loginOrEmail;
         const userPassword = req.body.password;
         const userIp = req.ip;
@@ -41,7 +41,7 @@ authRouter.post('/login',
         res
             .cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
             .status(200)
-            .send({accessToken, refreshToken});
+            .send({accessToken});
     });
 
 authRouter.post('/refresh-token',
