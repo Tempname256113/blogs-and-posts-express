@@ -156,11 +156,11 @@ export const counterOfRequestsByASingleIpMiddleware = (req: Request, res: Respon
     const objConfig: configType = {
         timeLimit: add(new Date(), {seconds: 10}).getTime(),
         count: 5,
-        unblockTime: add(new Date(), {seconds: 10}).getTime()
-    }
+        unblockTime: add(new Date(), {minutes: 30}).getTime() //unblockTime was 10s
+    };
     const {timeLimit, count, unblockTime} = objConfig;
     const ip = req.ip;
-    const route = req.originalUrl;
+    const route = req.url;
     clearNotValidBannedIpAddresses();
     clearNotValidSuspectedIpAddresses();
     const foundedBannedIpAddress: boolean = findBannedIpAddress({ip, route});

@@ -50,7 +50,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     console.log(req.query);
 //     console.log(req.headers["user-agent"]);
 //     console.log(new Date().toISOString());
+//     console.log(req.url);
 //     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
 //     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
 // })
-//

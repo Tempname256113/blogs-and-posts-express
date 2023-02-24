@@ -54,4 +54,5 @@ securityDevicesRouter.delete('/:deviceId',
     const ownershipSessionStatus: boolean = checkOwnershipSession();
     if (!ownershipSessionStatus) return res.sendStatus(403);
     await authService.deleteSessionByDeviceId(req.params.deviceId);
+    res.sendStatus(204);
 });
