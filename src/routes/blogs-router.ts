@@ -7,13 +7,13 @@ import {
     RequestWithURIParamsAndBody, reqQueryPagination
 } from "../models/req-res-models";
 import {blogsService} from "../domain/blogs-service";
-import {blogsValidationMiddlewaresArray} from "../middlewares/middlewares-array/blogs-validation-middlewares-array";
+import {blogsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/blogs-validation-middlewares-array";
 import {blogType, requestBlogType} from "../models/blog-models";
 import {blogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {blogIdUriParamCheckMiddleware} from "../middlewares/blogId-uri-param-check-middleware";
 import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
-} from "../middlewares/middlewares-array/posts-validation-middlewares-array";
+} from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
 import {requestPostType} from "../models/post-models";
 import {queryPaginationType} from "../models/query-models";
 

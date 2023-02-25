@@ -9,7 +9,7 @@ import {
 } from "../models/req-res-models";
 import {basicAuthorizationCheckMiddleware} from "../middlewares/basic-authorization-check-middleware";
 import {postsService} from "../domain/posts-service";
-import {postsValidationMiddlewaresArray} from "../middlewares/middlewares-array/posts-validation-middlewares-array";
+import {postsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
 import {errorObjType} from "../models/errorObj-model";
 import {postType, requestPostType} from "../models/post-models";
 import {postsQueryRepository} from "../repositories/posts/posts-query-repository";

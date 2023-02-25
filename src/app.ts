@@ -12,7 +12,7 @@ import cookieParser from "cookie-parser";
 import {authService} from "./domain/auth-service";
 import {securityDevicesRouter} from "./routes/security-devices-router";
 import {jwtMethods} from "./routes/application/jwt-methods";
-import {counterOfRequestsByASingleIpMiddleware} from "./middlewares/counter-of-requests-by-a-single-ip-middleware";
+import {requestLimiterMiddleware} from "./middlewares/request-limiter-middleware";
 
 export const app = express();
 
@@ -45,7 +45,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 // })
 
 // app.get('/test-route',
-//     counterOfRequestsByASingleIpMiddleware,
+//     requestLimiterMiddleware,
 //     (req, res) => {
 //     console.log(req.query);
 //     console.log(req.headers["user-agent"]);

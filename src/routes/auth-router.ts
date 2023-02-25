@@ -7,21 +7,21 @@ import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "..
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {
     createNewUserValidationMiddlewaresArray
-} from "../middlewares/middlewares-array/create-new-user-validation-middlewares-array";
+} from "../middlewares/middlewares-arrays/create-new-user-validation-middlewares-array";
 import {authService} from "../domain/auth-service";
 import {errorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
 import {accessTokenPayloadType, refreshTokenPayloadType} from "../models/token-models";
 import {createNewDefaultPairOfTokens} from "./application/jwt-methods";
 import {dataForUpdateSessionType} from "../models/session-models";
-import {counterOfRequestsByASingleIpMiddleware} from "../middlewares/counter-of-requests-by-a-single-ip-middleware";
+import {requestLimiterMiddleware} from "../middlewares/request-limiter-middleware";
 
 export const authRouter = Router();
 
 const refreshTokenPropTitle: string = 'refreshToken';
 
 authRouter.post('/login',
-    counterOfRequestsByASingleIpMiddleware,
+    requestLimiterMiddleware,
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
@@ -88,7 +88,7 @@ authRouter.get('/me',
     });
 
 authRouter.post('/registration',
-    counterOfRequestsByASingleIpMiddleware,
+    requestLimiterMiddleware,
     createNewUserValidationMiddlewaresArray,
     async (req: RequestWithBody<requestUserType>, res: Response) => {
         const userConfig: requestUserType = {
@@ -109,7 +109,7 @@ authRouter.post('/registration',
     });
 
 authRouter.post('/registration-confirmation',
-    counterOfRequestsByASingleIpMiddleware,
+    requestLimiterMiddleware,
     body('code').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ code: string }>, res: Response) => {
@@ -122,7 +122,7 @@ authRouter.post('/registration-confirmation',
     });
 
 authRouter.post('/registration-email-resending',
-    counterOfRequestsByASingleIpMiddleware,
+    requestLimiterMiddleware,
     body('email').isEmail(),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{ email: string }>, res: Response) => {

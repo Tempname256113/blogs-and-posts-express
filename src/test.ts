@@ -2,6 +2,7 @@ import {sign, verify} from "jsonwebtoken";
 import {format, millisecondsToSeconds, toDate} from "date-fns";
 import {compare, hash} from "bcrypt";
 import {client} from "./db";
+import {RequestLimiterDataType} from "./middlewares/request-limiter-middleware";
 
 const payload = {payloadProp: 'is string'};
 const jwt = sign(payload, '123', {expiresIn: '1h'});
@@ -36,13 +37,13 @@ const jwt = sign(payload, '123', {expiresIn: '1h'});
 // console.log(format(new Date(1676820306193), 'PPpp'))
 
 const db = client.db('ht02DB');
-const usersCollection = db.collection('sessions');
-const t = async () => {
-    const updatedSession = await usersCollection.updateOne(
-        {deviceId: 'fd2f5e1a-a74e-4faf-8a61-397e9446ade5'},
-        { $set: {userDeviceName: 'example device name'}
-        });
-    console.log(updatedSession);
-}
-
-t();
+// const usersCollection = db.collection('sessions');
+// const t = async () => {
+//     const updatedSession = await usersCollection.updateOne(
+//         {deviceId: 'fd2f5e1a-a74e-4faf-8a61-397e9446ade5'},
+//         { $set: {userDeviceName: 'example device name'}
+//         });
+//     console.log(updatedSession);
+// }
+//
+// t();
