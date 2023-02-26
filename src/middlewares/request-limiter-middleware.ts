@@ -34,7 +34,7 @@ export const requestLimiterMiddleware = async (req: Request, res: Response, next
             timestamp
         };
         const quantityOfRequests = await requestLimiterRepository.getRequestDataQuantity(dataForChecking);
-        return quantityOfRequests >= 5;
+        return quantityOfRequests >= 4;
     };
     const shouldBan: boolean = await checkBanOrNot();
     if (shouldBan) requestLimiterRepository.banIpAddress({ip: currentIp, routeUrl});
