@@ -32,13 +32,13 @@ type sessionDataType = {
 * обязательно нужно передать почтовый адрес клиента, другие настройки можно передавать при необходимости.
 * если не передавать то дефолтные настройки подставятся сами.
 * также нужно передать секретный код который будет интегрирован в ссылку письма для подтверждения */
-const sendLinkWithSecretCodeToEmail = async ({
+const sendLinkWithSecretCodeToEmail = ({
                                                  from = `"Temp256113" <${envVariables.mailUser}>`,
                                                  to,
                                                  subject = "Confirm registration please",
                                                  html
                                              }: mailOptions,
-                                             confirmationCode: string): Promise<void> => {
+                                             confirmationCode: string) => {
     const transporter = createTransport({
         host: 'smtp.mail.ru',
         port: 465,
@@ -63,15 +63,14 @@ const sendLinkWithSecretCodeToEmail = async ({
         subject,
         html
     }
-    await transporter.sendMail(mailOptions);
+    transporter.sendMail(mailOptions);
 }
 
 export const authService = {
     async registrationNewUser({login, password, email}: requestUserType): Promise<boolean> {
         const confirmationEmailCode: string = uuidv4();
         try {
-            const salt = await genSalt(10);
-            const passwordHash = await hash(password, salt);
+            const passwordHash = await hash(password, 10);
             const newUser: userTypeExtended = {
                 id: uuidv4(),
                 accountData: {
@@ -87,7 +86,7 @@ export const authService = {
                 }
             }
             await authRepository.createNewUser(newUser);
-            await sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
+            sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
             return true;
         } catch (e) {
             return false;
@@ -146,7 +145,7 @@ export const authService = {
             }
             const updateUserStatus = await authRepository.updateUser(templateForUpdateUser);
             if (!updateUserStatus) return false;
-            await sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
+            sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
             return true;
         } catch (e) {
             return false;
