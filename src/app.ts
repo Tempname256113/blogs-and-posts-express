@@ -46,13 +46,13 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     res.sendStatus(200)
 // })
 
-// app.get('/test-route',
-//     requestLimiterMiddleware,
-//     (req, res) => {
-//     console.log(req.query);
-//     console.log(req.headers["user-agent"]);
-//     console.log(new Date().toISOString());
-//     console.log(req.originalUrl);
-//     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
-//     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
-// })
+app.get('/test-route',
+    requestLimiterMiddleware,
+    (req, res) => {
+    console.log(req.query);
+    console.log(req.headers["user-agent"]);
+    console.log(new Date().toISOString());
+    console.log(req.originalUrl);
+    const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
+    res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
+})

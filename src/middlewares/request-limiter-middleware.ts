@@ -5,42 +5,27 @@ import {secondsToMilliseconds} from "date-fns";
 export type RequestLimiterDataType = {
     ip: string,
     routeUrl: string,
-    timestamp: number
+    time: Date
 }
 
 export type BannedIpAddressType = {
     ip: string,
-    routeUrl: string
+    routeUrl: string,
+    time: Date
 }
 
 export const requestLimiterMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    const convertDateToMilliseconds = (date: Date) => date.getTime();
-    const requestsLimit: number = 5;
+    const interval = 10 * 1000
     const currentIp: string = req.ip;
-    const routeUrl: string = req.originalUrl;
-    const ipAddressBannedOrNot: boolean = await requestLimiterRepository.findBannedIpAddress({ip: currentIp, routeUrl});
-    if (ipAddressBannedOrNot) return res.sendStatus(429);
-    const timestamp: number = convertDateToMilliseconds(new Date());
-    const requestData: RequestLimiterDataType = {
-        ip: currentIp,
-        routeUrl,
-        timestamp
-    };
-    requestLimiterRepository.addRequestData(requestData);
-    const checkBanOrNot = async (): Promise<boolean> => {
-        const timestamp: number = convertDateToMilliseconds(new Date()) - secondsToMilliseconds(10);
-        const dataForChecking: RequestLimiterDataType = {
-            ip: currentIp,
-            routeUrl,
-            timestamp
-        };
-        const quantityOfRequests = await requestLimiterRepository.getRequestDataQuantity(dataForChecking);
-        return quantityOfRequests > requestsLimit;
-    };
-    const shouldBan: boolean = await checkBanOrNot();
-    if (shouldBan) {
-        requestLimiterRepository.banIpAddress({ip: currentIp, routeUrl});
-        return res.sendStatus(429);
-    };
-    next();
+    const routeUrl: string = req.url;
+    const currentDate = new Date()
+    const attemptsTime = new Date(currentDate.getTime() - interval)
+    const attemptsCount: number = await requestLimiterRepository.findBannedIpAddress({ip: currentIp, routeUrl, time: attemptsTime});
+    await requestLimiterRepository.addRequestData({ip: currentIp, routeUrl, time: currentDate})
+    if(attemptsCount < 5) {
+        console.log(attemptsCount)
+        next();
+    } else {
+        res.sendStatus(429)
+    }
 };
