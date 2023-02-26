@@ -13,6 +13,7 @@ import {authService} from "./domain/auth-service";
 import {securityDevicesRouter} from "./routes/security-devices-router";
 import {jwtMethods} from "./routes/application/jwt-methods";
 import {requestLimiterMiddleware} from "./middlewares/request-limiter-middleware";
+import {requestLimiterRepository} from "./repositories/request-limiter-middleware/request-limiter-repository";
 
 export const app = express();
 
@@ -31,7 +32,8 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
         postsService.deleteAllData(),
         usersService.deleteAllData(),
         commentsService.deleteAllData(),
-        authService.deleteAllSessions()
+        authService.deleteAllSessions(),
+        requestLimiterRepository.deleteAllIpAddresses()
     ]);
     res.sendStatus(204);
 });
@@ -50,7 +52,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     console.log(req.query);
 //     console.log(req.headers["user-agent"]);
 //     console.log(new Date().toISOString());
-//     console.log(req.url);
+//     console.log(req.originalUrl);
 //     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
 //     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
 // })

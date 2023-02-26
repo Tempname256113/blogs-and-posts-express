@@ -15,8 +15,9 @@ export type BannedIpAddressType = {
 
 export const requestLimiterMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const convertDateToMilliseconds = (date: Date) => date.getTime();
+    const requestsLimit: number = 5;
     const currentIp: string = req.ip;
-    const routeUrl: string = req.url;
+    const routeUrl: string = req.originalUrl;
     const ipAddressBannedOrNot: boolean = await requestLimiterRepository.findBannedIpAddress({ip: currentIp, routeUrl});
     if (ipAddressBannedOrNot) return res.sendStatus(429);
     const timestamp: number = convertDateToMilliseconds(new Date());
@@ -34,9 +35,12 @@ export const requestLimiterMiddleware = async (req: Request, res: Response, next
             timestamp
         };
         const quantityOfRequests = await requestLimiterRepository.getRequestDataQuantity(dataForChecking);
-        return quantityOfRequests >= 4;
+        return quantityOfRequests > requestsLimit;
     };
     const shouldBan: boolean = await checkBanOrNot();
-    if (shouldBan) requestLimiterRepository.banIpAddress({ip: currentIp, routeUrl});
+    if (shouldBan) {
+        requestLimiterRepository.banIpAddress({ip: currentIp, routeUrl});
+        return res.sendStatus(429);
+    };
     next();
 };

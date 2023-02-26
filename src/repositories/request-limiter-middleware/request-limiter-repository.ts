@@ -19,7 +19,7 @@ export const requestLimiterRepository = {
                 {routeUrl},
                 {timestamp: {$gte: timestamp}}
             ]
-        }
+        };
         const foundedData = await requestLimiterCollection.find(filter).toArray();
         console.log(foundedData);
         return foundedData.length;
@@ -27,5 +27,9 @@ export const requestLimiterRepository = {
     async findBannedIpAddress(data: BannedIpAddressType): Promise<boolean> {
         const foundedBannedIpAddress: null | BannedIpAddressType = await bannedIpAddressesCollection.findOne(data);
         return foundedBannedIpAddress ? true : false;
+    },
+    async deleteAllIpAddresses(): Promise<void> {
+        await requestLimiterCollection.deleteMany({});
+        await bannedIpAddressesCollection.deleteMany({});
     }
 }
