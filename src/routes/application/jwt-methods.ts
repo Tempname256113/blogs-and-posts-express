@@ -1,6 +1,9 @@
 import {Secret, sign, SignOptions, verify, VerifyOptions} from "jsonwebtoken";
 import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../../models/token-models";
 import {add} from "date-fns";
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const JWT_SECRET_REFRESH_TOKEN: string = process.env.JWT_SECRET_REFRESH_TOKEN!;
 const JWT_SECRET_ACCESS_TOKEN: string = process.env.JWT_SECRET_ACCESS_TOKEN!;

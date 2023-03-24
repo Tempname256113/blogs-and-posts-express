@@ -1,11 +1,13 @@
 import {sign, verify} from "jsonwebtoken";
 import {format, millisecondsToSeconds, toDate} from "date-fns";
-import {compare, hash} from "bcrypt";
+import {compare, hash, hashSync} from "bcrypt";
 import {RequestLimiterDataType} from "./middlewares/request-limiter-middleware";
 
-const payload = {payloadProp: 'is string'};
-const jwt = sign(payload, '123', {expiresIn: '1h'});
+// const payload = {payloadProp: 'is string'};
+// const jwt = sign(payload, '123', {expiresIn: '1h'});
 // console.log(jwt);
+
+// console.log(hashSync('admin', 10))
 
 // try {
 //     const jwtPayload = verify(jwt, '123') as { payloadProp: string, iat: number, exp: number };

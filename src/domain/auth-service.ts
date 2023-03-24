@@ -229,22 +229,10 @@ export const authService = {
         }
     },
     async changeUserPassword(newPassword: string, recoveryCode: string, user: UserTypeExtended): Promise<void> {
-        // const foundedUserByRecoveryCode: UserTypeExtended | null = await usersQueryRepository.getUserByPasswordRecoveryCode(recoveryCode);
-        // if (!foundedUserByRecoveryCode) return false;
         const updateUserPassword = async (): Promise<void> => {
             const passwordHash = await hash(newPassword, 10);
-            // const userId = foundedUserByRecoveryCode.id;
             const userId = user.id;
             const userUpdateData: UserTypeExtendedOptionalFields = {
-                // accountData: {
-                //     login: foundedUserByRecoveryCode.accountData.login,
-                //     email: foundedUserByRecoveryCode.accountData.email,
-                //     password: passwordHash,
-                //     createdAt: foundedUserByRecoveryCode.accountData.createdAt
-                // },
-                // passwordRecovery: {
-                //     recoveryCode: null
-                // }
                 accountData: {
                     login: user.accountData.login,
                     email: user.accountData.email,
@@ -258,7 +246,6 @@ export const authService = {
             await authRepository.updateUserByID(userId, userUpdateData);
         }
         updateUserPassword();
-        // return true;
     },
     async deleteAllSessions(): Promise<void> {
         await authRepository.deleteAllSessions();
