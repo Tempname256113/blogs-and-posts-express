@@ -148,15 +148,23 @@ authRouter.post('/password-recovery',
 authRouter.post('/new-password',
     requestLimiterMiddleware,
     body('newPassword').isString().trim().isLength({min: 6, max: 20}),
-    body('recoveryCode').isString().trim().isLength({min: 1}).custom(async value => {
+    body('recoveryCode').isString().trim().isLength({min: 1}).custom(async (value, {req}) => {
         const foundedUserByRecoveryCode: UserTypeExtended | null
             = await usersQueryRepository.getUserByPasswordRecoveryCode(value);
-        if (!foundedUserByRecoveryCode) return Promise.reject('Recovery code is incorrect or expired');
+        if (foundedUserByRecoveryCode === null) {
+            return Promise.reject('Recovery code is incorrect or expired');
+        } else {
+            req.context.userExtended = foundedUserByRecoveryCode;
+        }
     }),
     catchErrorsMiddleware,
     async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
+    // const validationErrors = validationResult(req);
+    // if (!validationErrors.isEmpty()) return res.sendStatus(400);
     const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) return res.sendStatus(400);
-    const updatePasswordStatus: boolean = await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode);
-    updatePasswordStatus ? res.sendStatus(204) : res.sendStatus(400);
+    if (!validationErrors.isEmpty()) return;
+    // const updatePasswordStatus: boolean = await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode);
+    // updatePasswordStatus ? res.sendStatus(204) : res.sendStatus(400);
+    authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
+    res.sendStatus(204);
 });

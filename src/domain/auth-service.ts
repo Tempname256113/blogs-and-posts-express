@@ -228,18 +228,28 @@ export const authService = {
             }
         }
     },
-    async changeUserPassword(newPassword: string, recoveryCode: string): Promise<boolean> {
-        const foundedUserByRecoveryCode: UserTypeExtended | null = await usersQueryRepository.getUserByPasswordRecoveryCode(recoveryCode);
-        if (!foundedUserByRecoveryCode) return false;
+    async changeUserPassword(newPassword: string, recoveryCode: string, user: UserTypeExtended): Promise<void> {
+        // const foundedUserByRecoveryCode: UserTypeExtended | null = await usersQueryRepository.getUserByPasswordRecoveryCode(recoveryCode);
+        // if (!foundedUserByRecoveryCode) return false;
         const updateUserPassword = async (): Promise<void> => {
             const passwordHash = await hash(newPassword, 10);
-            const userId = foundedUserByRecoveryCode.id;
+            // const userId = foundedUserByRecoveryCode.id;
+            const userId = user.id;
             const userUpdateData: UserTypeExtendedOptionalFields = {
+                // accountData: {
+                //     login: foundedUserByRecoveryCode.accountData.login,
+                //     email: foundedUserByRecoveryCode.accountData.email,
+                //     password: passwordHash,
+                //     createdAt: foundedUserByRecoveryCode.accountData.createdAt
+                // },
+                // passwordRecovery: {
+                //     recoveryCode: null
+                // }
                 accountData: {
-                    login: foundedUserByRecoveryCode.accountData.login,
-                    email: foundedUserByRecoveryCode.accountData.email,
+                    login: user.accountData.login,
+                    email: user.accountData.email,
                     password: passwordHash,
-                    createdAt: foundedUserByRecoveryCode.accountData.createdAt
+                    createdAt: user.accountData.createdAt
                 },
                 passwordRecovery: {
                     recoveryCode: null
@@ -247,8 +257,8 @@ export const authService = {
             };
             await authRepository.updateUserByID(userId, userUpdateData);
         }
-        await updateUserPassword();
-        return true;
+        updateUserPassword();
+        // return true;
     },
     async deleteAllSessions(): Promise<void> {
         await authRepository.deleteAllSessions();

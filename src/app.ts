@@ -42,6 +42,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 });
 
 // app.post('/test',
+//     requestLimiterMiddleware,
 //     // checkRequestRefreshTokenCookieMiddleware,
 //     body('email').isEmail(),
 //     catchErrorsMiddleware,
