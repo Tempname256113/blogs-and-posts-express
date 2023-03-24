@@ -13,7 +13,6 @@ export const usersService = {
                 login,
                 email,
                 password: passwordHashWithSalt,
-                previousPassword: null,
                 createdAt: new Date().toISOString()
             },
             emailConfirmation: {
