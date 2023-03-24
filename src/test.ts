@@ -2,6 +2,8 @@ import {sign, verify} from "jsonwebtoken";
 import {format, millisecondsToSeconds, toDate} from "date-fns";
 import {compare, hash, hashSync} from "bcrypt";
 import {RequestLimiterDataType} from "./middlewares/request-limiter-middleware";
+import {model, Schema} from "mongoose";
+import {UserModel} from "./mongoose-db-models/auth-db-models";
 
 // const payload = {payloadProp: 'is string'};
 // const jwt = sign(payload, '123', {expiresIn: '1h'});

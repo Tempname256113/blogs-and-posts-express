@@ -104,6 +104,7 @@ export const authService = {
                     login,
                     email,
                     password: passwordHash,
+                    previousPassword: null,
                     createdAt: new Date().toISOString()
                 },
                 emailConfirmation: {
@@ -169,7 +170,12 @@ export const authService = {
         Promise<{ accessToken: string, refreshToken: string } | null> {
         const foundedUserByLoginOrEmail: UserTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
         if (!foundedUserByLoginOrEmail) return null;
-        const comparePass = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
+        const previousUserPassword: string | null = foundedUserByLoginOrEmail.accountData.previousPassword;
+        if (previousUserPassword !== null) {
+            const comparePreviousUserPassword: boolean = await compare(userPassword, previousUserPassword);
+            if (comparePreviousUserPassword) return null;
+        }
+        const comparePass: boolean = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
         if (!comparePass) return null;
         const deviceId: string = uuidv4();
         const userId: string = foundedUserByLoginOrEmail.id;
@@ -232,11 +238,13 @@ export const authService = {
         const updateUserPassword = async (): Promise<void> => {
             const passwordHash = await hash(newPassword, 10);
             const userId = user.id;
+            const previousPassword = user.accountData.password!;
             const userUpdateData: UserTypeExtendedOptionalFields = {
                 accountData: {
                     login: user.accountData.login,
                     email: user.accountData.email,
                     password: passwordHash,
+                    previousPassword: previousPassword,
                     createdAt: user.accountData.createdAt
                 },
                 passwordRecovery: {

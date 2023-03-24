@@ -13,6 +13,7 @@ const userSchema = new Schema<UserTypeExtended>(
             login: String,
             email: String,
             password: String,
+            previousPassword: String,
             createdAt: String,
         },
         emailConfirmation: {

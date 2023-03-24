@@ -31,6 +31,7 @@ type UserTypeExtended = {
         login: string,
         email: string,
         password?: string,
+        previousPassword: string | null,
         createdAt: string
     },
     emailConfirmation: {
