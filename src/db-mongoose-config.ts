@@ -6,7 +6,7 @@ dotenv.config();
 const dbName = 'ht02DB';
 
 const mongoURI = process.env.MONGO_URL;
-// const mongoURI = `${process.env.MONGO_LOCAL}/${dbName}`;
+// const mongoURI = `${process.env.MONGO_LOCAL}/${dbName}`; //local
 
 if (!mongoURI) {
     throw new Error('Url doesn\'t found');

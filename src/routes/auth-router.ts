@@ -1,4 +1,4 @@
-import {body, validationResult} from "express-validator";
+import {body, matchedData, validationResult} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {RequestWithBody, ResponseWithBody} from "../models/req-res-models";
 import {Request, Response, Router} from "express";
@@ -148,15 +148,22 @@ authRouter.post('/password-recovery',
 authRouter.post('/new-password',
     requestLimiterMiddleware,
     body('newPassword').isString().trim().isLength({min: 6, max: 20}),
-    body('recoveryCode').isString().trim().isLength({min: 1}).custom(async (value, {req}) => {
-        const foundedUserByRecoveryCode: UserTypeExtended | null
-            = await usersQueryRepository.getUserByPasswordRecoveryCode(value);
-        if (foundedUserByRecoveryCode === null) {
-            return Promise.reject('Recovery code is incorrect or expired');
-        } else {
-            req.context.userExtended = foundedUserByRecoveryCode;
-        }
+    body('recoveryCode').isString().trim().isLength({min: 1}).custom((value, {req}) => {
+        // const foundedUserByRecoveryCode: UserTypeExtended | null
+        //     = await usersQueryRepository.getUserByPasswordRecoveryCode(value);
+        return new Promise((resolve, reject) => {
+            usersQueryRepository.getUserByPasswordRecoveryCode(value).then(foundedUserByRecoveryCode => {
+                // console.log(foundedUserByRecoveryCode)
+                if (foundedUserByRecoveryCode === null) {
+                    reject('Recovery code is incorrect or expired');
+                } else {
+                    req.context = {userExtended: foundedUserByRecoveryCode};
+                    resolve('');
+                }
+            })
+        });
     }),
+
     catchErrorsMiddleware,
     async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
     // const validationErrors = validationResult(req);
