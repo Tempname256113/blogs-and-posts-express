@@ -16,6 +16,7 @@ import {requestLimiterMiddleware} from "./middlewares/request-limiter-middleware
 import {requestLimiterRepository} from "./repositories/request-limiter-middleware/request-limiter-repository";
 import {body, validationResult} from "express-validator";
 import {checkRequestRefreshTokenCookieMiddleware} from "./middlewares/check-request-refreshToken-cookie-middleware";
+import {catchErrorsMiddleware} from "./middlewares/catch-errors-middleware";
 
 export const app = express();
 
@@ -41,8 +42,9 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 });
 
 // app.post('/test',
-//     checkRequestRefreshTokenCookieMiddleware,
+//     // checkRequestRefreshTokenCookieMiddleware,
 //     body('email').isEmail(),
+//     catchErrorsMiddleware,
 //     (req, res) => {
 //     const errors = validationResult(req);
 //     if (!errors.isEmpty()) return res.sendStatus(400);

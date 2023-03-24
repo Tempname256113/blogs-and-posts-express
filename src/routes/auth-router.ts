@@ -137,6 +137,7 @@ authRouter.post('/registration-email-resending',
 authRouter.post('/password-recovery',
     requestLimiterMiddleware,
     body('email').isEmail(),
+    catchErrorsMiddleware,
     async (req: RequestWithBody<{email: string}>, res: Response) => {
     const validationError = validationResult(req);
     if (!validationError.isEmpty()) return res.sendStatus(400);
@@ -152,9 +153,9 @@ authRouter.post('/new-password',
             = await usersQueryRepository.getUserByPasswordRecoveryCode(value);
         if (!foundedUserByRecoveryCode) return Promise.reject('Recovery code is incorrect or expired');
     }),
+    catchErrorsMiddleware,
     async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
     const validationErrors = validationResult(req);
-    console.log(validationErrors.array());
     if (!validationErrors.isEmpty()) return res.sendStatus(400);
     const updatePasswordStatus: boolean = await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode);
     updatePasswordStatus ? res.sendStatus(204) : res.sendStatus(400);
