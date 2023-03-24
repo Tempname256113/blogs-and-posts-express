@@ -1,9 +1,9 @@
-import {body} from "express-validator";
+import {body, validationResult} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {RequestWithBody, ResponseWithBody} from "../models/req-res-models";
 import {Request, Response, Router} from "express";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
-import {infoAboutUserType, requestUserType, userType, userTypeExtended} from "../models/user-models";
+import {InfoAboutUserType, RequestUserType, UserType, UserTypeExtended} from "../models/user-models";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {
     createNewUserValidationMiddlewaresArray
@@ -11,9 +11,9 @@ import {
 import {authService} from "../domain/auth-service";
 import {errorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
-import {accessTokenPayloadType, refreshTokenPayloadType} from "../models/token-models";
-import {createNewDefaultPairOfTokens} from "./application/jwt-methods";
-import {dataForUpdateSessionType} from "../models/session-models";
+import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../models/token-models";
+import {createNewPairOfTokens} from "./application/jwt-methods";
+import {DataForUpdateSessionType} from "../models/session-models";
 import {requestLimiterMiddleware} from "../middlewares/request-limiter-middleware";
 
 export const authRouter = Router();
@@ -30,7 +30,7 @@ authRouter.post('/login',
         const userPassword = req.body.password;
         const userIp = req.ip;
         const userDeviceName = req.headers["user-agent"];
-        const pairOfTokens: { accessToken: string, refreshToken: string } | null = await authService.createNewSession({
+        const pairOfTokens: { accessToken: string, refreshToken: string } | null = await authService.signIn({
             userLoginOrEmail,
             userPassword,
             userIp,
@@ -49,12 +49,12 @@ authRouter.post('/refresh-token',
     async (req: Request, res: ResponseWithBody<{ accessToken: string, refreshToken: string }>) => {
         const userIp = req.ip;
         const userDeviceName = req.headers["user-agent"];
-        const {userId, deviceId} = req.context.refreshTokenPayload as refreshTokenPayloadType;
-        const {accessToken, refreshToken: {refreshToken, issuedAt, expiresDate}} = createNewDefaultPairOfTokens({
+        const {userId, deviceId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
+        const {accessToken, refreshToken: {refreshToken, issuedAt, expiresDate}} = createNewPairOfTokens({
             userId,
             deviceId
         });
-        const dataForUpdateSession: dataForUpdateSessionType = {
+        const dataForUpdateSession: DataForUpdateSessionType = {
             issuedAt,
             expiresDate,
             userIp,
@@ -68,18 +68,18 @@ authRouter.post('/refresh-token',
 authRouter.post('/logout',
     checkRequestRefreshTokenCookieMiddleware,
     async (req: Request, res: Response) => {
-        const {deviceId} = req.context.refreshTokenPayload as refreshTokenPayloadType;
+        const {deviceId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
         await authService.deleteSessionByDeviceId(deviceId);
         res.sendStatus(204);
     });
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
-    async (req: Request, res: ResponseWithBody<infoAboutUserType>) => {
-        const {userId} = req.context.accessTokenPayload as accessTokenPayloadType;
-        const userFromDB: userTypeExtended | null = await usersQueryRepository.getUserById(userId);
+    async (req: Request, res: ResponseWithBody<InfoAboutUserType>) => {
+        const {userId} = req.context.accessTokenPayload as AccessTokenPayloadType;
+        const userFromDB: UserTypeExtended | null = await usersQueryRepository.getUserById(userId);
         if (!userFromDB) return res.sendStatus(401);
-        const informationAboutCurrentUser: infoAboutUserType = {
+        const informationAboutCurrentUser: InfoAboutUserType = {
             email: userFromDB.accountData.email,
             login: userFromDB.accountData.login,
             userId: userFromDB.id
@@ -90,8 +90,8 @@ authRouter.get('/me',
 authRouter.post('/registration',
     requestLimiterMiddleware,
     createNewUserValidationMiddlewaresArray,
-    async (req: RequestWithBody<requestUserType>, res: Response) => {
-        const userConfig: requestUserType = {
+    async (req: RequestWithBody<RequestUserType>, res: Response) => {
+        const userConfig: RequestUserType = {
             login: req.body.login,
             password: req.body.password,
             email: req.body.email
@@ -133,3 +133,29 @@ authRouter.post('/registration-email-resending',
         }
         res.status(400).send(errorObj);
     });
+
+authRouter.post('/password-recovery',
+    requestLimiterMiddleware,
+    body('email').isEmail(),
+    async (req: RequestWithBody<{email: string}>, res: Response) => {
+    const validationError = validationResult(req);
+    if (!validationError.isEmpty()) return res.sendStatus(400);
+    await authService.sendPasswordRecoveryCode(req.body.email);
+    res.sendStatus(204);
+});
+
+authRouter.post('/new-password',
+    requestLimiterMiddleware,
+    body('newPassword').isString().trim().isLength({min: 6, max: 20}),
+    body('recoveryCode').isString().trim().isLength({min: 1}).custom(async value => {
+        const foundedUserByRecoveryCode: UserTypeExtended | null
+            = await usersQueryRepository.getUserByPasswordRecoveryCode(value);
+        if (!foundedUserByRecoveryCode) return Promise.reject('Recovery code is incorrect or expired');
+    }),
+    async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
+    const validationErrors = validationResult(req);
+    console.log(validationErrors.array());
+    if (!validationErrors.isEmpty()) return res.sendStatus(400);
+    const updatePasswordStatus: boolean = await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode);
+    updatePasswordStatus ? res.sendStatus(204) : res.sendStatus(400);
+});

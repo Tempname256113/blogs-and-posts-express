@@ -1,12 +1,12 @@
-import {requestUserType, userTypeExtended} from "../models/user-models";
+import {RequestUserType, UserType, UserTypeExtended, UserTypeExtendedOptionalFields} from "../models/user-models";
 import {createTransport} from "nodemailer";
 import {v4 as uuidv4} from 'uuid';
 import {add} from 'date-fns';
 import {authRepository} from "../repositories/auth/auth-repository";
-import {compare, genSalt, hash} from "bcrypt";
+import {compare, hash} from "bcrypt";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
-import {createNewDefaultPairOfTokens} from "../routes/application/jwt-methods";
-import {dataForUpdateSessionType, sessionType} from "../models/session-models";
+import {createNewPairOfTokens} from "../routes/application/jwt-methods";
+import {DataForUpdateSessionType, SessionType} from "../models/session-models";
 import {authQueryRepository} from "../repositories/auth/auth-query-repository";
 
 const envVariables = {
@@ -38,7 +38,7 @@ const sendLinkWithSecretCodeToEmail = ({
                                                  subject = "Confirm registration please",
                                                  html
                                              }: mailOptions,
-                                             confirmationCode: string) => {
+                                             confirmationCode?: string): void => {
     const transporter = createTransport({
         host: 'smtp.mail.ru',
         port: 465,
@@ -66,12 +66,39 @@ const sendLinkWithSecretCodeToEmail = ({
     transporter.sendMail(mailOptions);
 }
 
+const mailer = {
+    sendLinkForCompleteRegistration(to: string, confirmationCode: string): void {
+        sendLinkWithSecretCodeToEmail(
+            {
+                to,
+                subject: 'Confirm registration please',
+                html: ` <h1>Thank for your registration</h1>
+                <p>To finish registration please follow the link below:
+                    <a href=https://somesite.com/confirm-email?code=${confirmationCode}>complete registration</a>
+                </p> `
+            }
+        );
+    },
+    sendLinkForPasswordRecovery(to: string, confirmationCode: string): void {
+        sendLinkWithSecretCodeToEmail(
+            {
+                to,
+                subject: 'Password recovery link',
+                html: ` <h1>Your link for password recovery is here</h1>
+                <p>To password recovery please follow the link below:
+                    <a href=https://somesite.com/password-recovery?recoveryCode=${confirmationCode}>recovery password</a>
+                </p> `
+            }
+        );
+    }
+}
+
 export const authService = {
-    async registrationNewUser({login, password, email}: requestUserType): Promise<boolean> {
+    async registrationNewUser({login, password, email}: RequestUserType): Promise<boolean> {
         const confirmationEmailCode: string = uuidv4();
         try {
             const passwordHash = await hash(password, 10);
-            const newUser: userTypeExtended = {
+            const newUser: UserTypeExtended = {
                 id: uuidv4(),
                 accountData: {
                     login,
@@ -83,87 +110,74 @@ export const authService = {
                     confirmationCode: confirmationEmailCode,
                     expirationDate: add(new Date, {days: 3}),
                     isConfirmed: false
+                },
+                passwordRecovery: {
+                    recoveryCode: 'none'
                 }
             }
             await authRepository.createNewUser(newUser);
-            sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
+            mailer.sendLinkForCompleteRegistration(email, confirmationEmailCode);
             return true;
         } catch (e) {
             return false;
         }
     },
-    async confirmRegistration(code: string): Promise<boolean> {
-        const foundedUserByConfirmationEmailCode: userTypeExtended | null = await usersQueryRepository.getUserByConfirmationEmailCode(code);
+    async confirmRegistration(emailConfirmCode: string): Promise<boolean> {
+        const foundedUserByConfirmationEmailCode: UserTypeExtended | null = await usersQueryRepository.getUserByConfirmationEmailCode(emailConfirmCode);
         if (!foundedUserByConfirmationEmailCode) return false;
         if (foundedUserByConfirmationEmailCode.emailConfirmation.isConfirmed) return false;
         if (new Date() > foundedUserByConfirmationEmailCode.emailConfirmation.expirationDate) return false;
         const updateUserEmailConfirmationStatus = async (): Promise<void> => {
-            const {
-                id,
-                accountData: {login, email, password, createdAt},
-                emailConfirmation: {confirmationCode, expirationDate}
-            } = foundedUserByConfirmationEmailCode;
-            const templateForUpdateUser: userTypeExtended = {
-                id,
-                accountData: {
-                    login,
-                    email,
-                    password,
-                    createdAt
-                },
+            const userId = foundedUserByConfirmationEmailCode.id;
+            const templateForUpdateUser: UserTypeExtendedOptionalFields = {
                 emailConfirmation: {
-                    confirmationCode,
-                    expirationDate,
+                    confirmationCode: null,
+                    expirationDate: foundedUserByConfirmationEmailCode.emailConfirmation.expirationDate,
                     isConfirmed: true
                 }
-            }
-            await authRepository.updateUser(templateForUpdateUser);
+            };
+            await authRepository.updateUserByID(userId, templateForUpdateUser);
         }
         await updateUserEmailConfirmationStatus();
         return true;
     },
     async resendSecretCodeToEmail(email: string): Promise<boolean> {
-        const foundedUserByEmail: userTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
+        const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
         if (!foundedUserByEmail) return false;
         if (foundedUserByEmail.emailConfirmation.isConfirmed) return false;
         try {
             const confirmationEmailCode: string = uuidv4();
-            const {id, accountData: {login, email, password, createdAt}} = foundedUserByEmail;
-            const templateForUpdateUser: userTypeExtended = {
-                id,
-                accountData: {
-                    login,
-                    email,
-                    password,
-                    createdAt
-                },
-                emailConfirmation: {
-                    confirmationCode: confirmationEmailCode,
-                    expirationDate: add(new Date(), {days: 3}),
-                    isConfirmed: false
-                }
+            const updateUserEmailConfirmationStatus = async (): Promise<void> => {
+                const userId = foundedUserByEmail.id;
+                const templateForUpdateUser: UserTypeExtendedOptionalFields = {
+                    emailConfirmation: {
+                        confirmationCode: confirmationEmailCode,
+                        expirationDate: add(new Date(), {days: 3}),
+                        isConfirmed: false
+                    }
+                };
+                await authRepository.updateUserByID(userId, templateForUpdateUser);
             }
-            const updateUserStatus = await authRepository.updateUser(templateForUpdateUser);
-            if (!updateUserStatus) return false;
-            sendLinkWithSecretCodeToEmail({to: email}, confirmationEmailCode);
+            await updateUserEmailConfirmationStatus();
+            mailer.sendLinkForCompleteRegistration(email, confirmationEmailCode);
             return true;
         } catch (e) {
             return false;
         }
     },
-    async createNewSession({userLoginOrEmail, userPassword, userIp, userDeviceName}: sessionDataType):
+    async signIn({userLoginOrEmail, userPassword, userIp, userDeviceName}: sessionDataType):
         Promise<{ accessToken: string, refreshToken: string } | null> {
-        const foundedUserByLoginOrEmail: userTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
+        const foundedUserByLoginOrEmail: UserTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
         if (!foundedUserByLoginOrEmail) return null;
         const comparePass = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
         if (!comparePass) return null;
         const deviceId: string = uuidv4();
         const userId: string = foundedUserByLoginOrEmail.id;
-        const {accessToken, refreshToken: {refreshToken, expiresDate, issuedAt}} = createNewDefaultPairOfTokens({
+        const {accessToken, refreshToken: {refreshToken, expiresDate, issuedAt}} = createNewPairOfTokens({
             userId,
             deviceId
         });
-        const newSession: sessionType = {
+        const newSession: SessionType = {
             issuedAt,
             expiresDate,
             deviceId,
@@ -171,13 +185,13 @@ export const authService = {
             userDeviceName,
             userId
         }
-        await authRepository.createNewSession(newSession);
+        await authRepository.addNewSession(newSession);
         return {
             accessToken,
             refreshToken
         }
     },
-    updateSession(deviceId: string, dataForUpdateSession: dataForUpdateSessionType): Promise<boolean> {
+    updateSession(deviceId: string, dataForUpdateSession: DataForUpdateSessionType): Promise<boolean> {
         return authRepository.updateSession(deviceId, dataForUpdateSession);
     },
     deleteSessionByDeviceId(deviceId: string): Promise<boolean> {
@@ -186,11 +200,55 @@ export const authService = {
     async deleteAllSessionsExceptCurrent(currentUserId: string, currentDeviceId: string): Promise<void> {
         type deviceId = string;
         const sessionsDeviceIdExceptCurrentArr: deviceId[] = [];
-        const sessionsHandler = (session: sessionType): void => {
+        const sessionsHandler = (session: SessionType): void => {
             if (session.deviceId !== currentDeviceId) sessionsDeviceIdExceptCurrentArr.push(session.deviceId);
         }
-        await authQueryRepository.getAllSessionsByUserId(currentUserId).forEach(sessionsHandler);
+        const sessionsArray = await authQueryRepository.getAllSessionsByUserId(currentUserId);
+        sessionsArray.forEach(sessionsHandler);
         authRepository.deleteManySessions(sessionsDeviceIdExceptCurrentArr);
+    },
+    async sendPasswordRecoveryCode(email: string): Promise<void> {
+        const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
+        if (foundedUserByEmail) {
+            try {
+                const userId = foundedUserByEmail.id;
+                const confirmationCode: string = uuidv4();
+                const updateUserPasswordRecoveryCode = async (): Promise<void> => {
+                    const userUpdateData: UserTypeExtendedOptionalFields = {
+                        passwordRecovery: {
+                            recoveryCode: confirmationCode
+                        }
+                    };
+                    await authRepository.updateUserByID(userId,userUpdateData);
+                }
+                await updateUserPasswordRecoveryCode();
+                mailer.sendLinkForPasswordRecovery(email, confirmationCode);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+    },
+    async changeUserPassword(newPassword: string, recoveryCode: string): Promise<boolean> {
+        const foundedUserByRecoveryCode: UserTypeExtended | null = await usersQueryRepository.getUserByPasswordRecoveryCode(recoveryCode);
+        if (!foundedUserByRecoveryCode) return false;
+        const updateUserPassword = async (): Promise<void> => {
+            const passwordHash = await hash(newPassword, 10);
+            const userId = foundedUserByRecoveryCode.id;
+            const userUpdateData: UserTypeExtendedOptionalFields = {
+                accountData: {
+                    login: foundedUserByRecoveryCode.accountData.login,
+                    email: foundedUserByRecoveryCode.accountData.email,
+                    password: passwordHash,
+                    createdAt: foundedUserByRecoveryCode.accountData.createdAt
+                },
+                passwordRecovery: {
+                    recoveryCode: null
+                }
+            };
+            await authRepository.updateUserByID(userId, userUpdateData);
+        }
+        await updateUserPassword();
+        return true;
     },
     async deleteAllSessions(): Promise<void> {
         await authRepository.deleteAllSessions();

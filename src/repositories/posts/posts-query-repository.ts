@@ -1,13 +1,19 @@
-
-import {client} from "../../db";
-import {postType} from "../../models/post-models";
-import {paginationPostsByQueryParams} from "../mongoDBFeatures/pagination-by-query-params-functions";
+import {PostType} from "../../models/post-models";
+import {
+    paginationPostsByQueryParams,
+    ResultOfPaginationPostsByQueryType
+} from "../mongo-DB-features/pagination-by-query-params-functions";
 import {queryPaginationType} from "../../models/query-models";
-
-const postsCollection = client.db('ht02DB').collection('posts');
+import {PostModel} from "../../mongoose-db-models/posts-db-model";
 
 export const postsQueryRepository = {
-    async getPostsWithSortAndPagination({sortBy, sortDirection, pageNumber, pageSize}: queryPaginationType) {
+    async getPostsWithSortAndPagination(
+        {
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }: queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
         const queryPaginationTypeWithSearchConfig = {
             searchConfig: {},
             sortBy: sortBy,
@@ -17,20 +23,7 @@ export const postsQueryRepository = {
         }
         return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig);
     },
-    async getPostByID(id: string): Promise<postType | null> {
-        const foundedPost = await postsCollection.findOne({id});
-        if (foundedPost) {
-            const copyFoundedPost: postType = {
-                id: foundedPost.id,
-                title: foundedPost.title,
-                shortDescription: foundedPost.shortDescription,
-                content: foundedPost.content,
-                blogId: foundedPost.blogId,
-                blogName: foundedPost.blogName,
-                createdAt: foundedPost.createdAt
-            }
-            return copyFoundedPost;
-        }
-        return null;
+    async getPostByID(id: string): Promise<PostType | null> {
+        return PostModel.findOne({id}, {_id: false});
     }
 }

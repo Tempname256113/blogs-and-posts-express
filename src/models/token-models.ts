@@ -1,11 +1,11 @@
 
-export type accessTokenPayloadType = {
+export type AccessTokenPayloadType = {
     userId: string,
     iat?: number,
     exp?: number
 }
 
-export type refreshTokenPayloadType = {
+export type RefreshTokenPayloadType = {
     userId: string,
     deviceId: string,
     iat?: number,

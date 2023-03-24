@@ -1,8 +1,8 @@
 import {Request, Response, NextFunction} from "express";
-import {refreshTokenPayloadType} from "../models/token-models";
+import {RefreshTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "../routes/application/jwt-methods";
 import {authQueryRepository} from "../repositories/auth/auth-query-repository";
-import {sessionType} from "../models/session-models";
+import {SessionType} from "../models/session-models";
 
 const refreshTokenPropTitle: string = 'refreshToken';
 
@@ -19,40 +19,43 @@ const refreshTokenPropTitle: string = 'refreshToken';
     } */
 export const checkRequestRefreshTokenCookieMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const refreshTokenFromCookie: string | undefined = req.cookies[refreshTokenPropTitle];
-    if (!refreshTokenFromCookie) return res.sendStatus(401);
-    const verifyRefreshToken = (refreshToken: string): refreshTokenPayloadType | null => {
-        return jwtMethods.compareToken.refreshToken(refreshToken);
-    };
-    const checkRefreshTokenValidity = (): boolean => {
-        const refreshTokenPayload: refreshTokenPayloadType | null = verifyRefreshToken(refreshTokenFromCookie);
-        return refreshTokenPayload ? true : false;
+    const checkRefreshTokenExistence = (): true | undefined => {
+        if (!refreshTokenFromCookie) return true;
     }
-    const refreshTokenIsValid: boolean = checkRefreshTokenValidity();
-    if (!refreshTokenIsValid) return res.sendStatus(401);
-    const {
-        userId,
-        deviceId,
-        iat,
-        exp
-    } = verifyRefreshToken(refreshTokenFromCookie) as refreshTokenPayloadType;
-    const findSessionByDeviceId = (): Promise<sessionType | null> => {
-        return authQueryRepository.getSessionByDeviceId(deviceId);
+    if (checkRefreshTokenExistence()) return res.sendStatus(401)
+
+    const compareRefreshToken: (refreshTokenFromCookie: string) => RefreshTokenPayloadType | null
+        = jwtMethods.compareToken.refreshToken;
+
+    const verifyRefreshToken = (): true | undefined => {
+        const refreshTokenIsValid: boolean = !!compareRefreshToken(refreshTokenFromCookie!);
+        if (!refreshTokenIsValid) return true;
     }
-    const foundedSessionByDeviceIdFromDB: sessionType | null = await findSessionByDeviceId();
-    if (!foundedSessionByDeviceIdFromDB) return res.sendStatus(401);
-    const compareVersionsOfRefreshTokens = (): boolean => {
-        const requestRefreshTokenVersion = iat;
-        const DBRefreshTokenVersion = foundedSessionByDeviceIdFromDB.issuedAt;
-        return DBRefreshTokenVersion === requestRefreshTokenVersion;
+    if (verifyRefreshToken()) return res.sendStatus(401);
+
+    const refreshTokenPayload: RefreshTokenPayloadType = compareRefreshToken(refreshTokenFromCookie!)!;
+
+    const findRefreshTokenInDBByDeviceId = async (): Promise<true | undefined> => {
+        const foundedTokenByDeviceIdFromDB: SessionType | null = await authQueryRepository.getSessionByDeviceId(refreshTokenPayload.deviceId);
+        if (!foundedTokenByDeviceIdFromDB) return true;
     }
-    const compareRefreshTokensVersionsStatus: boolean = compareVersionsOfRefreshTokens();
-    if (!compareRefreshTokensVersionsStatus) return res.sendStatus(401);
+    if (await findRefreshTokenInDBByDeviceId()) return res.sendStatus(401);
+
+    const compareVersionsOfRefreshTokens = async (): Promise<true | undefined> => {
+        const foundedSessionByDeviceIdFromDB: SessionType | null = await authQueryRepository.getSessionByDeviceId(refreshTokenPayload.deviceId);
+        const requestRefreshTokenVersion = refreshTokenPayload.iat;
+        const DBRefreshTokenVersion = foundedSessionByDeviceIdFromDB!.issuedAt;
+        const compareRefreshTokensVersionsStatus: boolean = DBRefreshTokenVersion === requestRefreshTokenVersion;
+        if (!compareRefreshTokensVersionsStatus) return true;
+    }
+    if (await compareVersionsOfRefreshTokens()) return res.sendStatus(401);
+
     req.context = {
         refreshTokenPayload: {
-            userId,
-            deviceId,
-            iat,
-            exp
+            userId: refreshTokenPayload.userId,
+            deviceId: refreshTokenPayload.deviceId,
+            iat: refreshTokenPayload.iat,
+            exp: refreshTokenPayload.exp
         }
     }
     next();

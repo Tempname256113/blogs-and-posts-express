@@ -8,13 +8,13 @@ import {
 } from "../models/req-res-models";
 import {blogsService} from "../domain/blogs-service";
 import {blogsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/blogs-validation-middlewares-array";
-import {blogType, requestBlogType} from "../models/blog-models";
+import {BlogType, RequestBlogType} from "../models/blog-models";
 import {blogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {blogIdUriParamCheckMiddleware} from "../middlewares/blogId-uri-param-check-middleware";
 import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
 } from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
-import {requestPostType} from "../models/post-models";
+import {RequestPostType} from "../models/post-models";
 import {queryPaginationType} from "../models/query-models";
 
 export const blogsRouter = Router();
@@ -33,7 +33,7 @@ blogsRouter.get('/',
 });
 
 blogsRouter.get('/:id', async (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const blog: blogType | null = await blogsQueryRepository.getBlogByID(req.params.id);
+    const blog: BlogType | null = await blogsQueryRepository.getBlogByID(req.params.id);
     if (blog !== null) {
         res.status(200).send(blog);
     } else {
@@ -58,8 +58,8 @@ blogsRouter.get('/:blogId/posts',
 blogsRouter.post('/',
     basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
-    async (req: RequestWithBody<requestBlogType>, res: Response) => {
-    const newBlogTemplate: requestBlogType = {
+    async (req: RequestWithBody<RequestBlogType>, res: Response) => {
+    const newBlogTemplate: RequestBlogType = {
         name: req.body.name,
         description: req.body.description,
         websiteUrl: req.body.websiteUrl
@@ -71,8 +71,8 @@ blogsRouter.post('/',
 blogsRouter.post('/:blogId/posts',
     basicAuthorizationCheckMiddleware,
     postsValidationMiddlewaresArrayWithUriBlogIdCheck,
-    async (req: RequestWithURIParamsAndBody<{blogId: string}, requestPostType>, res: Response) => {
-    const newPostTemplate: requestPostType = {
+    async (req: RequestWithURIParamsAndBody<{blogId: string}, RequestPostType>, res: Response) => {
+    const newPostTemplate: RequestPostType = {
         title: req.body.title,
         shortDescription: req.body.shortDescription,
         content: req.body.content,
@@ -85,8 +85,8 @@ blogsRouter.post('/:blogId/posts',
 blogsRouter.put('/:id',
     basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
-    async (req: RequestWithURIParamsAndBody<{id: string}, requestBlogType>, res: Response) => {
-    const updateBlogTemplate: requestBlogType = {
+    async (req: RequestWithURIParamsAndBody<{id: string}, RequestBlogType>, res: Response) => {
+    const updateBlogTemplate: RequestBlogType = {
         name: req.body.name,
         description: req.body.description,
         websiteUrl: req.body.websiteUrl

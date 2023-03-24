@@ -1,5 +1,5 @@
 import {Secret, sign, SignOptions, verify, VerifyOptions} from "jsonwebtoken";
-import {accessTokenPayloadType, refreshTokenPayloadType} from "../../models/token-models";
+import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../../models/token-models";
 import {add} from "date-fns";
 
 const JWT_SECRET_REFRESH_TOKEN: string = process.env.JWT_SECRET_REFRESH_TOKEN!;
@@ -12,26 +12,39 @@ const createNewToken = (payload: string | object | Buffer, secretKey: Secret, op
     return sign(payload, secretKey);
 }
 
-const compareToken = (requestToken: string, secretKey: Secret, options?: (VerifyOptions & { complete?: false })): accessTokenPayloadType | refreshTokenPayloadType | null => {
-    const separatedRequestToken = requestToken.split(' ');
-    if (separatedRequestToken.length < 2) {
-        requestToken = separatedRequestToken[0];
-    } else {
-        requestToken = separatedRequestToken[1];
+const compareToken = (requestToken: string, secretKey: Secret, options?: (VerifyOptions & { complete?: false })): AccessTokenPayloadType | RefreshTokenPayloadType | null => {
+    const getRequestToken = (): void => {
+        if (!requestToken) requestToken = 'none';
+        const separatedRequestToken = requestToken.split(' ');
+        if (separatedRequestToken.length < 2) {
+            requestToken = separatedRequestToken[0];
+        } else {
+            requestToken = separatedRequestToken[1];
+        }
+        // если передана строка без Bearer (только токен) то с этой проверкой все будет нормально
     }
-    // если передана строка без Bearer (только токен) то с этой проверкой все будет нормально
+    getRequestToken();
+
+    const verifyWithProvidedOptions = (): AccessTokenPayloadType | RefreshTokenPayloadType | null => {
+        try {
+            return verify(requestToken, secretKey, options) as AccessTokenPayloadType | RefreshTokenPayloadType;
+        } catch (err) {
+            return null;
+        }
+    };
+
+    const verifyWithoutProvidedOptions = (): AccessTokenPayloadType | RefreshTokenPayloadType | null => {
+        try {
+            return verify(requestToken, secretKey) as AccessTokenPayloadType | RefreshTokenPayloadType;
+        } catch (err) {
+            return null;
+        }
+    };
+
     if (options) {
-        try {
-            return verify(requestToken, secretKey, options) as accessTokenPayloadType | refreshTokenPayloadType;
-        } catch (err) {
-            return null;
-        }
+        return verifyWithProvidedOptions();
     } else {
-        try {
-            return verify(requestToken, secretKey) as accessTokenPayloadType | refreshTokenPayloadType;
-        } catch (err) {
-            return null;
-        }
+        return verifyWithoutProvidedOptions();
     }
 }
 
@@ -45,16 +58,16 @@ export const jwtMethods = {
         },
     },
     compareToken: {
-        accessToken(requestToken: string, options?: (VerifyOptions & { complete?: false | undefined })): accessTokenPayloadType | null {
-            return compareToken(requestToken, JWT_SECRET_ACCESS_TOKEN, options) as accessTokenPayloadType | null;
+        accessToken(requestToken: string, options?: (VerifyOptions & { complete?: false | undefined })): AccessTokenPayloadType | null {
+            return compareToken(requestToken, JWT_SECRET_ACCESS_TOKEN, options) as AccessTokenPayloadType | null;
         },
-        refreshToken(requestToken: string, options?: (VerifyOptions & { complete?: false | undefined })): refreshTokenPayloadType | null {
-            return compareToken(requestToken, JWT_SECRET_REFRESH_TOKEN, options) as refreshTokenPayloadType | null;
+        refreshToken(requestToken: string, options?: (VerifyOptions & { complete?: false | undefined })): RefreshTokenPayloadType | null {
+            return compareToken(requestToken, JWT_SECRET_REFRESH_TOKEN, options) as RefreshTokenPayloadType | null;
         },
     }
 }
 
-export const createNewDefaultPairOfTokens = ({userId, deviceId}: refreshTokenPayloadType) => {
+export const createNewPairOfTokens = ({userId, deviceId}: RefreshTokenPayloadType) => {
     const issuedAt: number = Math.floor(new Date().getTime() / 1000);
     const expiresDate: number = Math.floor(add(new Date(), {seconds: 20}).getTime() / 1000); //20s //2years for tests
     const accessToken: string = jwtMethods.createToken.accessToken({userId}, {expiresIn: '10s'}); //10s //2years for tests

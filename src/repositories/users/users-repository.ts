@@ -1,11 +1,9 @@
-import {userType, userTypeExtended} from "../../models/user-models";
-import {client} from "../../db";
-
-const usersCollection = client.db('ht02DB').collection('users');
+import {UserType, UserTypeExtended} from "../../models/user-models";
+import {UserModel} from "../../mongoose-db-models/auth-db-models";
 
 export const usersRepository = {
-    async createUser(newUserTemplate: userTypeExtended): Promise<userType> {
-        await usersCollection.insertOne(newUserTemplate);
+    async createUser(newUserTemplate: UserTypeExtended): Promise<UserType> {
+        await new UserModel(newUserTemplate).save();
         const {id, accountData: {login, email, createdAt}} = newUserTemplate;
         return {
             id,
@@ -15,13 +13,10 @@ export const usersRepository = {
         }
     },
     async deleteUser(userId: string): Promise<boolean> {
-        const deletedUserStatus = await usersCollection.deleteOne({id: userId});
+        const deletedUserStatus = await UserModel.deleteOne({id: userId});
         return deletedUserStatus.deletedCount > 0;
     },
     async deleteAllData(): Promise<void> {
-        await usersCollection.deleteMany({});
-    },
-    async updateUser() {
-
+        await UserModel.deleteMany();
     }
 }

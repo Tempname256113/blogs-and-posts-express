@@ -1,6 +1,6 @@
 import {Router, Response} from "express";
 import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
-import {commentType} from "../models/comment-model";
+import {CommentType} from "../models/comment-model";
 import {commentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {checkForChangeCommentMiddleware} from "../middlewares/check-for-change-comment-middleware";
@@ -11,7 +11,7 @@ import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 export const commentsRouter = Router();
 
 commentsRouter.get('/:id',
-    async (req: RequestWithURIParams<{id: string}>, res: ResponseWithBody<commentType>) => {
+    async (req: RequestWithURIParams<{id: string}>, res: ResponseWithBody<CommentType>) => {
     const foundedComment = await commentsQueryRepository.getCommentByID(req.params.id);
     if (foundedComment) return res.status(200).send(foundedComment);
     res.sendStatus(404);

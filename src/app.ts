@@ -14,6 +14,8 @@ import {securityDevicesRouter} from "./routes/security-devices-router";
 import {jwtMethods} from "./routes/application/jwt-methods";
 import {requestLimiterMiddleware} from "./middlewares/request-limiter-middleware";
 import {requestLimiterRepository} from "./repositories/request-limiter-middleware/request-limiter-repository";
+import {body, validationResult} from "express-validator";
+import {checkRequestRefreshTokenCookieMiddleware} from "./middlewares/check-request-refreshToken-cookie-middleware";
 
 export const app = express();
 
@@ -38,6 +40,15 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
     res.sendStatus(204);
 });
 
+// app.post('/test',
+//     checkRequestRefreshTokenCookieMiddleware,
+//     body('email').isEmail(),
+//     (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) return res.sendStatus(400);
+//     res.send('test route');
+// })
+
 // app.get('/auth/login',
 //     counterOfRequestsByASingleIpMiddleware,
 //     (req, res) => {
@@ -46,13 +57,13 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
 //     res.sendStatus(200)
 // })
 
-app.get('/test-route',
-    requestLimiterMiddleware,
-    (req, res) => {
-    console.log(req.query);
-    console.log(req.headers["user-agent"]);
-    console.log(new Date().toISOString());
-    console.log(req.originalUrl);
-    const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
-    res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
-})
+// app.get('/test-route',
+//     requestLimiterMiddleware,
+//     (req, res) => {
+//     console.log(req.query);
+//     console.log(req.headers["user-agent"]);
+//     console.log(new Date().toISOString());
+//     console.log(req.originalUrl);
+//     const refreshToken = jwtMethods.createToken.refreshToken({refreshTokenProp: 'this is refresh token, ok'});
+//     res.cookie('testCookieProp', refreshToken, {httpOnly: true, secure: true}).status(200).send('ready or not');
+// })

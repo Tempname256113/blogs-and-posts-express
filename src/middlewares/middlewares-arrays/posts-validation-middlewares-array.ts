@@ -1,5 +1,4 @@
 import {body} from "express-validator";
-import {basicAuthorizationCheckMiddleware} from "../basic-authorization-check-middleware";
 import {catchErrorsMiddleware} from "../catch-errors-middleware";
 import {blogsQueryRepository} from "../../repositories/blogs/blogs-query-repository";
 import {blogIdUriParamCheckMiddleware} from "../blogId-uri-param-check-middleware";

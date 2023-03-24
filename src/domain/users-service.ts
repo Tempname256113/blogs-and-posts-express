@@ -1,24 +1,27 @@
-import {requestUserType, userType, userTypeExtended} from "../models/user-models";
+import {RequestUserType, UserType, UserTypeExtended} from "../models/user-models";
 import {genSalt, hash} from "bcrypt";
 import {usersRepository} from "../repositories/users/users-repository";
 import {v4 as uuidv4} from 'uuid';
 
 export const usersService = {
-    async createUser({login,password,email}: requestUserType): Promise<userType>{
+    async createUser({login,password,email}: RequestUserType): Promise<UserType>{
         const salt: string = await genSalt(10);
-        const passwordToHashWithSalt: string = await hash(password, salt);
-        const newUserTemplate: userTypeExtended = {
+        const passwordHashWithSalt: string = await hash(password, salt);
+        const newUserTemplate: UserTypeExtended = {
             id: uuidv4(),
             accountData: {
                 login,
                 email,
-                password: passwordToHashWithSalt,
+                password: passwordHashWithSalt,
                 createdAt: new Date().toISOString()
             },
             emailConfirmation: {
                 confirmationCode: 'none',
                 expirationDate: new Date(),
                 isConfirmed: true
+            },
+            passwordRecovery: {
+                recoveryCode: 'none'
             }
         }
         return usersRepository.createUser(newUserTemplate);

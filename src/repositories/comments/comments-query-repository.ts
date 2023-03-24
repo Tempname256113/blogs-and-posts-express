@@ -1,16 +1,22 @@
 import {queryPaginationType} from "../../models/query-models";
 import {
     paginationCommentsByQueryParams,
-    queryPaginationTypeWithSearchConfig
-} from "../mongoDBFeatures/pagination-by-query-params-functions";
-import {client} from "../../db";
-import {commentType} from "../../models/comment-model";
-
-const commentsCollection = client.db('ht02DB').collection('comments');
+    QueryPaginationWithSearchConfigType,
+    ResultOfPaginationCommentsByQueryType
+} from "../mongo-DB-features/pagination-by-query-params-functions";
+import {CommentType} from "../../models/comment-model";
+import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
 export const commentsQueryRepository = {
-    async getCommentsWithPagination({postId, sortBy, sortDirection, pageNumber, pageSize}: {postId: string} & queryPaginationType){
-        const paginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+    async getCommentsWithPagination(
+        {
+            postId,
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }: { postId: string } & queryPaginationType): Promise<ResultOfPaginationCommentsByQueryType> {
+        const paginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
             searchConfig: {postId},
             sortBy,
             sortDirection,
@@ -19,18 +25,7 @@ export const commentsQueryRepository = {
         }
         return paginationCommentsByQueryParams(paginationWithSearchConfig);
     },
-    async getCommentByID(id: string): Promise<commentType | null>{
-        const foundedComment = await commentsCollection.findOne({id});
-        if (foundedComment) {
-            const comment: commentType = {
-                id: foundedComment.id,
-                content: foundedComment.content,
-                userId: foundedComment.userId,
-                userLogin: foundedComment.userLogin,
-                createdAt: foundedComment.createdAt
-            }
-            return comment;
-        }
-        return null;
+    async getCommentByID(id: string): Promise<CommentType | null> {
+        return CommentModel.findOne({id}, {_id: false});
     }
 }

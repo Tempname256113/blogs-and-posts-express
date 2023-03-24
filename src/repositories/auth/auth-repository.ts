@@ -1,40 +1,14 @@
-import {userTypeExtended} from "../../models/user-models";
-import {client} from "../../db";
-import {dataForUpdateSessionType, sessionType} from "../../models/session-models";
-
-const db = client.db('ht02DB');
-const usersCollection = db.collection<userTypeExtended>('users');
-const sessionsCollection = db.collection<sessionType>('sessions');
+import {UserTypeExtended, UserTypeExtendedOptionalFields} from "../../models/user-models";
+import {DataForUpdateSessionType, SessionType} from "../../models/session-models";
+import {SessionModel, UserModel} from "../../mongoose-db-models/auth-db-models";
 
 export const authRepository = {
-    async createNewUser(newUser: userTypeExtended): Promise<void> {
-        await usersCollection.insertOne(newUser);
+    async createNewUser(newUser: UserTypeExtended): Promise<void> {
+        await new UserModel(newUser).save();
     },
     // принимает параметром объект юзера и полностью его обновляет в соответствии с приходящимим объектом
-    async updateUser(
-        {
-            id,
-            accountData: {login, email, password, createdAt},
-            emailConfirmation: {confirmationCode, expirationDate, isConfirmed}
-        }: userTypeExtended): Promise<boolean> {
-        const filter = {id};
-        const updateUserData: { $set: userTypeExtended } = {
-            $set: {
-                id,
-                accountData: {
-                    login,
-                    email,
-                    password,
-                    createdAt
-                },
-                emailConfirmation: {
-                    confirmationCode,
-                    expirationDate,
-                    isConfirmed
-                }
-            }
-        };
-        const updatedUser = await usersCollection.updateOne(filter,updateUserData);
+    async updateUserByID(userId: string, updateUserData: UserTypeExtendedOptionalFields): Promise<boolean> {
+        const updatedUser = await UserModel.updateOne({id: userId}, updateUserData);
         return updatedUser.matchedCount > 0;
     },
     async updateSession(deviceId: string, {
@@ -42,31 +16,29 @@ export const authRepository = {
         expiresDate,
         userIp,
         userDeviceName
-    }: dataForUpdateSessionType): Promise<boolean> {
+    }: DataForUpdateSessionType): Promise<boolean> {
         const filter = {deviceId};
-        const updateSession: { $set: dataForUpdateSessionType } = {
-            $set: {
-                issuedAt,
-                expiresDate,
-                userIp,
-                userDeviceName
-            }
+        const updateSession: DataForUpdateSessionType = {
+            issuedAt,
+            expiresDate,
+            userIp,
+            userDeviceName
         };
-        const matchedSession = await sessionsCollection.updateOne(filter, updateSession);
+        const matchedSession = await SessionModel.updateOne(filter, updateSession);
         return matchedSession.matchedCount > 0;
     },
-    async createNewSession(newSession: sessionType): Promise<void> {
-        await sessionsCollection.insertOne(newSession);
+    async addNewSession(newSession: SessionType): Promise<void> {
+        await new SessionModel(newSession).save();
     },
     async deleteSessionByDeviceId(deviceId: string): Promise<boolean> {
-        const deletedSession = await sessionsCollection.deleteOne({deviceId});
+        const deletedSession = await SessionModel.deleteOne({deviceId});
         return deletedSession.deletedCount > 0;
     },
     async deleteManySessions(deviceIdArray: string[]): Promise<void> {
         const filter = {deviceId: {$in: deviceIdArray}};
-        await sessionsCollection.deleteMany(filter);
+        await SessionModel.deleteMany(filter);
     },
     async deleteAllSessions(): Promise<void> {
-        await sessionsCollection.deleteMany({});
+        await SessionModel.deleteMany();
     }
 }

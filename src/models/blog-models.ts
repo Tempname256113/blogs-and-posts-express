@@ -1,6 +1,6 @@
 
 // такие объекты лежат в базе данных blogs
-export type blogType = {
+type BlogType = {
     id: string,
     name: string,
     description: string,
@@ -10,8 +10,13 @@ export type blogType = {
 
 // такие объекты приходят в POST и PUT запросах для создания нового блога
 // createBlogDto
-export type requestBlogType = {
+type RequestBlogType = {
     name: string;
     description: string;
     websiteUrl: string;
+}
+
+export {
+    BlogType,
+    RequestBlogType
 }

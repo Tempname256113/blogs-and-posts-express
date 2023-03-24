@@ -1,32 +1,27 @@
-import {client} from "../../db";
-import {blogType, requestBlogType} from "../../models/blog-models";
-
-const blogsCollection = client.db('ht02DB').collection('blogs');
+import {BlogType, RequestBlogType} from "../../models/blog-models";
+import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 
 export const blogsRepository = {
-    async createNewBlog(newBlogTemplate: blogType): Promise<blogType> {
-        await blogsCollection.insertOne({...newBlogTemplate});
+    async createNewBlog(newBlogTemplate: BlogType): Promise<BlogType> {
+        await new BlogModel(newBlogTemplate).save();
         return newBlogTemplate;
     },
-    async updateBlogByID(id: string, {name, description, websiteUrl}: requestBlogType): Promise<void> {
-        await blogsCollection.updateOne(
+    async updateBlogByID(id: string, {name, description, websiteUrl}: RequestBlogType): Promise<void> {
+        await BlogModel.updateOne(
             {id},
             {
-                $set: {
-                    name,
-                    description,
-                    websiteUrl
-                }
-            }
-        )
+                name,
+                description,
+                websiteUrl
+            })
     },
     // возвращает false если такого объекта нет в базе данных
     // и true если успешно прошла операция
     async deleteBlogByID(id: string): Promise<boolean> {
-        const deletedBlog = await blogsCollection.deleteOne({id: id});
+        const deletedBlog = await BlogModel.deleteOne({id: id});
         return deletedBlog.deletedCount > 0;
     },
     async deleteAllData(): Promise<void> {
-        await blogsCollection.deleteMany({});
+        await BlogModel.deleteMany();
     }
 }

@@ -1,28 +1,11 @@
-
-import {client} from "../../db";
-import {sessionType} from "../../models/session-models";
-
-const db = client.db('ht02DB');
-const sessionsCollection = db.collection<sessionType>('sessions');
+import {SessionType} from "../../models/session-models";
+import {SessionModel} from "../../mongoose-db-models/auth-db-models";
 
 export const authQueryRepository = {
-    async getSessionByDeviceId(deviceId: string): Promise<sessionType | null> {
-        const foundedSessionByDeviceId = await sessionsCollection.findOne({deviceId});
-        if (foundedSessionByDeviceId) {
-            const session: sessionType = {
-                issuedAt: foundedSessionByDeviceId.issuedAt,
-                expiresDate: foundedSessionByDeviceId.expiresDate,
-                deviceId: foundedSessionByDeviceId.deviceId,
-                userIp: foundedSessionByDeviceId.userIp,
-                userDeviceName: foundedSessionByDeviceId.userDeviceName,
-                userId: foundedSessionByDeviceId.userId
-            }
-            return session;
-        } else {
-            return null;
-        }
+    async getSessionByDeviceId(deviceId: string): Promise<SessionType | null> {
+        return SessionModel.findOne({deviceId}, {_id: false});
     },
-     getAllSessionsByUserId(userId: string) {
-        return sessionsCollection.find({userId});
+     getAllSessionsByUserId(userId: string): Promise<SessionType[]> {
+        return SessionModel.find({userId}, {_id: false});
     }
 }

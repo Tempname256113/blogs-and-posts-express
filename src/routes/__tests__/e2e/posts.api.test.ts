@@ -2,8 +2,8 @@
 import request from "supertest"
 import {app} from "../../../app";
 import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
-import {postType, requestPostType} from "../../../models/post-models";
-import {blogType} from "../../../models/blog-models";
+import {PostType, RequestPostType} from "../../../models/post-models";
+import {BlogType} from "../../../models/blog-models";
 import {postsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
 
@@ -30,12 +30,12 @@ const errorsTemplate = {
     }
 }
 
-const createNewPostWithoutErrors = async (scenario: number = 1): Promise<postType> => {
-    const newBlog: blogType = await createNewBlogWithoutErrors();
+const createNewPostWithoutErrors = async (scenario: number = 1): Promise<PostType> => {
+    const newBlog: BlogType = await createNewBlogWithoutErrors();
     interface INewPostTemplate {
         [scenario: string]: {
-            reqBody: requestPostType;
-            resBody: postType;
+            reqBody: RequestPostType;
+            resBody: PostType;
         }
     }
     const newPostTemplate: INewPostTemplate = {
@@ -69,12 +69,12 @@ const createNewPostWithoutErrors = async (scenario: number = 1): Promise<postTyp
     return response.body;
 }
 
-const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<postType> => {
+const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<PostType> => {
     const newPost = await createNewPostWithoutErrors();
     interface IUpdatePostTemplate {
         [scenario: string]: {
-            reqBody: requestPostType
-            resBody: postType
+            reqBody: RequestPostType
+            resBody: PostType
         }
     }
     const updatePostTemplate: IUpdatePostTemplate = {

@@ -1,21 +1,27 @@
-
-import {client} from "../../db";
-import {blogType} from "../../models/blog-models";
+import {BlogType} from "../../models/blog-models";
 import {
     paginationBlogsByQueryParams,
-    paginationPostsByQueryParams, queryPaginationTypeWithSearchConfig,
-    searchTemplate
-} from "../mongoDBFeatures/pagination-by-query-params-functions";
+    paginationPostsByQueryParams,
+    QueryPaginationWithSearchConfigType,
+    ResultOfPaginationBlogsByQueryType,
+    ResultOfPaginationPostsByQueryType,
+    SearchTemplateType
+} from "../mongo-DB-features/pagination-by-query-params-functions";
 import {queryPaginationType} from "../../models/query-models";
-
-const blogsCollection = client.db('ht02DB').collection('blogs');
+import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 
 export const blogsQueryRepository = {
     async getBlogsWithSortAndPagination(
-        {searchNameTerm, sortBy, sortDirection, pageNumber, pageSize}: {searchNameTerm: string | undefined} & queryPaginationType) {
-        let searchConfig: searchTemplate = {};
+        {
+            searchNameTerm,
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }: { searchNameTerm: string | undefined } & queryPaginationType): Promise<ResultOfPaginationBlogsByQueryType> {
+        let searchConfig: SearchTemplateType = {};
         if (searchNameTerm) searchConfig = {name: {$regex: searchNameTerm, $options: 'i'}};
-        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+        const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
             searchConfig,
             sortBy,
             sortDirection,
@@ -25,8 +31,14 @@ export const blogsQueryRepository = {
         return paginationBlogsByQueryParams(queryPaginationWithSearchConfig);
     },
     async getAllPostsForSpecifiedBlog(
-        {blogId, sortBy, sortDirection, pageNumber, pageSize}: {blogId: string} & queryPaginationType) {
-        const queryPaginationWithSearchConfig: queryPaginationTypeWithSearchConfig = {
+        {
+            blogId,
+            sortBy,
+            sortDirection,
+            pageNumber,
+            pageSize
+        }: { blogId: string } & queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
+        const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
             searchConfig: {blogId},
             sortBy,
             sortDirection,
@@ -35,18 +47,7 @@ export const blogsQueryRepository = {
         }
         return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
     },
-    async getBlogByID(id: string) {
-        const foundedBlog = await blogsCollection.findOne({id});
-        if (foundedBlog) {
-            const foundedBlogCopy: blogType = {
-                id: foundedBlog.id,
-                name: foundedBlog.name,
-                description: foundedBlog.description,
-                websiteUrl: foundedBlog.websiteUrl,
-                createdAt: foundedBlog.createdAt
-            };
-            return foundedBlogCopy;
-        }
-        return null;
+    async getBlogByID(id: string): Promise<BlogType | null> {
+        return BlogModel.findOne({id}, {_id: false});
     }
 }

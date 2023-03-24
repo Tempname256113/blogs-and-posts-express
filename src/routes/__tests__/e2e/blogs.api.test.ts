@@ -2,7 +2,7 @@
 import request from "supertest";
 
 import {app} from "../../../app";
-import {blogType, requestBlogType} from "../../../models/blog-models";
+import {BlogType, RequestBlogType} from "../../../models/blog-models";
 import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
 import {postsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
@@ -59,12 +59,12 @@ const errorsTemplate = {
     },
 }
 
-const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<blogType> => {
+const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<BlogType> => {
     const createdBlog = await createNewBlogWithoutErrors();
     interface IUpdateBlogTemplate {
         [scenario: string]: {
-            reqBody: requestBlogType
-            resBody: blogType
+            reqBody: RequestBlogType
+            resBody: BlogType
         }
     }
     const updateBlogTemplate: IUpdateBlogTemplate = {
@@ -89,20 +89,20 @@ const createUpdateNewBlogWithoutErrors = async (scenario: number = 1): Promise<b
         .auth('admin', 'qwerty')
         .send(updateBlogTemplate[`case${scenario}`].reqBody)
         .expect(204)
-    const updatedBlog: blogType = updateBlogTemplate[`case${scenario}`].resBody;
+    const updatedBlog: BlogType = updateBlogTemplate[`case${scenario}`].resBody;
     await request(app)
         .get(`/blogs/${updatedBlog.id}`)
         .expect(200, updatedBlog)
     return updatedBlog
 }
 
-const updateExistingBlogWithoutErrors = async (existingBlog: blogType, reqBody: requestBlogType): Promise<blogType> => {
+const updateExistingBlogWithoutErrors = async (existingBlog: BlogType, reqBody: RequestBlogType): Promise<BlogType> => {
     await request(app)
         .put(`/blogs/${existingBlog.id}`)
         .auth('admin', 'qwerty')
         .send(reqBody)
         .expect(204)
-    const updatedBlog: blogType = {
+    const updatedBlog: BlogType = {
         id: existingBlog.id,
         name: reqBody.name,
         description: reqBody.description,

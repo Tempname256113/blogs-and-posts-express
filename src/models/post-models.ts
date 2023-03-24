@@ -1,6 +1,6 @@
 
 // такие объекты лежат в базе данных posts
-export type postType = {
+type PostType = {
     id: string,
     title: string,
     shortDescription: string,
@@ -11,9 +11,14 @@ export type postType = {
 }
 
 // такие объекты приходят в POST и PUT запросах для создания нового поста
-export type requestPostType = {
+type RequestPostType = {
     title: string,
     shortDescription: string,
     content: string,
     blogId: string
+}
+
+export {
+    PostType,
+    RequestPostType
 }

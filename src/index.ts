@@ -1,10 +1,9 @@
-
 import {app} from "./app";
-import {connectionToDB} from "./db";
+import {mongooseConnectToDB} from "./db-mongoose-config";
 
-const port: number = 3000 || process.env.PORT;
+const port: number = 5000 || process.env.PORT;
 
 app.listen(port, async () => {
-    await connectionToDB();
+    await mongooseConnectToDB();
     console.log(`app listening on port: ${port}`);
 });

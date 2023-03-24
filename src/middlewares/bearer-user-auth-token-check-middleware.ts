@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {jwtMethods} from "../routes/application/jwt-methods";
-import {accessTokenPayloadType} from "../models/token-models";
+import {AccessTokenPayloadType} from "../models/token-models";
 
 /* добавляет к объекту запроса context где context = {
 accessTokenPayload: {userId: string, iat: number, exp: number}
@@ -9,7 +9,7 @@ accessTokenPayload: {userId: string, iat: number, exp: number}
 export const bearerUserAuthTokenCheckMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const reqToken: string | undefined = req.headers.authorization;
     if (!reqToken) return res.sendStatus(401);
-    const accessTokenPayload: accessTokenPayloadType | null = jwtMethods.compareToken.accessToken(reqToken);
+    const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(reqToken);
     if (!accessTokenPayload) return res.sendStatus(401);
     req.context = {
         accessTokenPayload

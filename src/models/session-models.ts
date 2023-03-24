@@ -1,23 +1,25 @@
 
-export type sessionType = {
+type SessionType = {
     issuedAt: number,
     expiresDate: number,
     deviceId: string,
     userIp: string,
     userDeviceName: string,
     userId: string
-}
+};
 
-export type dataForUpdateSessionType = {
+type DataForUpdateSessionType = {
     issuedAt: number,
     expiresDate: number,
     userIp: string,
     userDeviceName: string
-}
+};
 
-export type userSessionsDataType = {
+type UserSessionsDataType = {
     ip: string,
     title: string,
     lastActiveDate: string,
     deviceId: string
-}
+};
+
+export {SessionType, DataForUpdateSessionType, UserSessionsDataType};

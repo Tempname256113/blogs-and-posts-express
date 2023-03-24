@@ -1,13 +1,13 @@
 import {blogsRepository} from "../repositories/blogs/blogs-repository";
-import {blogType, requestBlogType} from "../models/blog-models";
-import {requestPostType} from "../models/post-models";
+import {BlogType, RequestBlogType} from "../models/blog-models";
+import {RequestPostType} from "../models/post-models";
 import {postsService} from "./posts-service";
 import {v4 as uuid4} from 'uuid';
 import {blogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 
 export const blogsService = {
-    async createNewBlog(newBlog: requestBlogType): Promise<blogType> {
-        const newBlogTemplate: blogType = {
+    async createNewBlog(newBlog: RequestBlogType): Promise<BlogType> {
+        const newBlogTemplate: BlogType = {
             id: uuid4(),
             name: newBlog.name,
             description: newBlog.description,
@@ -16,13 +16,13 @@ export const blogsService = {
         };
         return blogsRepository.createNewBlog(newBlogTemplate);
     },
-    async createNewPostForSpecificBlog(newPost: requestPostType) {
+    async createNewPostForSpecificBlog(newPost: RequestPostType) {
         return postsService.createNewPost(newPost);
     },
     // возвращает false если такого объекта в базе данных нет
     // и true если операция прошла успешно
-    async updateBlogByID(id: string, requestBlog: requestBlogType): Promise<boolean> {
-        const foundedBlog: blogType | null = await blogsQueryRepository.getBlogByID(id);
+    async updateBlogByID(id: string, requestBlog: RequestBlogType): Promise<boolean> {
+        const foundedBlog: BlogType | null = await blogsQueryRepository.getBlogByID(id);
         if (!foundedBlog) return  false;
         await blogsRepository.updateBlogByID(id, requestBlog);
         return true;

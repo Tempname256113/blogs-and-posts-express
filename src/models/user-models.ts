@@ -1,17 +1,17 @@
 import {queryPaginationType} from "./query-models";
 
-export type usersQueryPaginationType = queryPaginationType & {
+type UsersQueryPaginationType = queryPaginationType & {
     searchLoginTerm: string | undefined,
     searchEmailTerm: string | undefined
 }
 
-export type requestUserType = {
+type RequestUserType = {
     login: string,
     password: string,
     email: string
 }
 
-export type userType = {
+type UserType = {
     id: string,
     login: string,
     email: string,
@@ -19,13 +19,13 @@ export type userType = {
     createdAt: string
 }
 
-export type infoAboutUserType = {
+type InfoAboutUserType = {
     email: string,
     login: string,
     userId: string
 }
 
-export type userTypeExtended = {
+type UserTypeExtended = {
     id: string,
     accountData: {
         login: string,
@@ -34,8 +34,27 @@ export type userTypeExtended = {
         createdAt: string
     },
     emailConfirmation: {
-        confirmationCode: string,
+        confirmationCode: string | null,
         expirationDate: Date,
         isConfirmed: boolean
+    },
+    passwordRecovery: {
+        recoveryCode: string | null
     }
+}
+
+type UserTypeExtendedOptionalFields = {
+    id?: string,
+    accountData?: UserTypeExtended['accountData'],
+    emailConfirmation?: UserTypeExtended["emailConfirmation"],
+    passwordRecovery?: UserTypeExtended["passwordRecovery"]
+}
+
+export {
+    UsersQueryPaginationType,
+    RequestUserType,
+    UserType,
+    InfoAboutUserType,
+    UserTypeExtended,
+    UserTypeExtendedOptionalFields
 }

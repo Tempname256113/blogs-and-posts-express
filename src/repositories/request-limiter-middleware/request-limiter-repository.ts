@@ -1,22 +1,29 @@
-import {client} from "../../db";
-import {BannedIpAddressType, RequestLimiterDataType} from "../../middlewares/request-limiter-middleware";
+import {RequestLimiterDataType} from "../../middlewares/request-limiter-middleware";
+import {model, Schema} from "mongoose";
 
-const db = client.db('ht02DB');
-const requestLimiterCollection = db.collection<RequestLimiterDataType>('request-limiter-data');
+const requestLimiterSchema = new Schema<RequestLimiterDataType>(
+    {
+        ip: String,
+        routeUrl: String,
+        time: Date
+    }, {strict: true, versionKey: false, collection: 'request-limiter-data'}
+);
+
+const RequestLimiterModel = model<RequestLimiterDataType>('request-limiter-data', requestLimiterSchema);
 
 export const requestLimiterRepository = {
     async addRequestData(reqData: RequestLimiterDataType): Promise<void> {
-        await requestLimiterCollection.insertOne(reqData);
+        await new RequestLimiterModel(reqData).save();
     },
-    async findBannedIpAddress(data: BannedIpAddressType): Promise<number> {
-        const foundedBannedIpAddress: number  = await requestLimiterCollection.countDocuments({
+    async checkCountOfRequests(data: RequestLimiterDataType): Promise<number> {
+        const countOfRequests: number  = await RequestLimiterModel.countDocuments({
             ip: data.ip,
             routeUrl: data.routeUrl,
             time: {$gt: data.time}
         });
-        return foundedBannedIpAddress;
+        return countOfRequests;
     },
     async deleteAllIpAddresses(): Promise<void> {
-        await requestLimiterCollection.deleteMany({});
+        await RequestLimiterModel.deleteMany();
     }
 }

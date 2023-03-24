@@ -1,7 +1,6 @@
 import {sign, verify} from "jsonwebtoken";
 import {format, millisecondsToSeconds, toDate} from "date-fns";
 import {compare, hash} from "bcrypt";
-import {client} from "./db";
 import {RequestLimiterDataType} from "./middlewares/request-limiter-middleware";
 
 const payload = {payloadProp: 'is string'};
@@ -36,7 +35,6 @@ const jwt = sign(payload, '123', {expiresIn: '1h'});
 //
 // console.log(format(new Date(1676820306193), 'PPpp'))
 
-const db = client.db('ht02DB');
 // const usersCollection = db.collection('sessions');
 // const t = async () => {
 //     const updatedSession = await usersCollection.updateOne(

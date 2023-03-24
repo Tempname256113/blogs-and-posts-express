@@ -6,7 +6,7 @@ import {
     RequestWithURIParams,
     ResponseWithBody
 } from "../models/req-res-models";
-import {requestUserType, usersQueryPaginationType, userType} from "../models/user-models";
+import {RequestUserType, UsersQueryPaginationType, UserType} from "../models/user-models";
 import {basicAuthorizationCheckMiddleware} from "../middlewares/basic-authorization-check-middleware";
 import {usersQueryRepository} from "../repositories/users/users-query-repository";
 import {body} from "express-validator";
@@ -18,7 +18,7 @@ export const usersRouter = Router();
 usersRouter.get('/',
     basicAuthorizationCheckMiddleware,
     async (req: RequestWithQuery<reqQueryPagination & {searchLoginTerm?: string, searchEmailTerm?: string}>, res: Response) => {
-    const paginationConfig: usersQueryPaginationType = {
+    const paginationConfig: UsersQueryPaginationType = {
         sortBy: req.query.sortBy ?? 'createdAt',
         sortDirection: req.query.sortDirection ?? 'desc',
         pageNumber: req.query.pageNumber ?? 1,
@@ -36,8 +36,8 @@ usersRouter.post('/',
     body('password').isString().trim().isLength({min: 6, max: 20}),
     body('email').isString().trim().matches('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$').isLength({min: 5}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<requestUserType>, res: ResponseWithBody<userType>) => {
-    const requestUser: requestUserType = {
+    async (req: RequestWithBody<RequestUserType>, res: ResponseWithBody<UserType>) => {
+    const requestUser: RequestUserType = {
         login: req.body.login,
         password: req.body.password,
         email: req.body.email
