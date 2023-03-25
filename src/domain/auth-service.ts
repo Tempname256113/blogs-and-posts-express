@@ -252,7 +252,7 @@ export const authService = {
             };
             await authRepository.updateUserByID(userId, userUpdateData);
         }
-        updateUserPassword();
+        await updateUserPassword();
     },
     async deleteAllSessions(): Promise<void> {
         await authRepository.deleteAllSessions();
