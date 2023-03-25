@@ -166,6 +166,6 @@ authRouter.post('/new-password',
     async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) return;
-    authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
+    await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
     res.sendStatus(204);
 });
