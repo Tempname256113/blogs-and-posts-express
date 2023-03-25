@@ -169,6 +169,7 @@ export const authService = {
         Promise<{ accessToken: string, refreshToken: string } | null> {
         const foundedUserByLoginOrEmail: UserTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
         if (!foundedUserByLoginOrEmail) return null;
+        if (foundedUserByLoginOrEmail.accountData.password === null) return null;
         const comparePass = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
         if (!comparePass) return null;
         const deviceId: string = uuidv4();
@@ -215,6 +216,12 @@ export const authService = {
                 const confirmationCode: string = uuidv4();
                 const updateUserPasswordRecoveryCode = async (): Promise<void> => {
                     const userUpdateData: UserTypeExtendedOptionalFields = {
+                        accountData: {
+                            login: foundedUserByEmail.accountData.login,
+                            email: foundedUserByEmail.accountData.email,
+                            password: null,
+                            createdAt: foundedUserByEmail.accountData.createdAt
+                        },
                         passwordRecovery: {
                             recoveryCode: confirmationCode
                         }

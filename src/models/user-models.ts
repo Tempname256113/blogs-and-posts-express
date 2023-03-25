@@ -30,7 +30,7 @@ type UserTypeExtended = {
     accountData: {
         login: string,
         email: string,
-        password?: string,
+        password?: string | null,
         createdAt: string
     },
     emailConfirmation: {
