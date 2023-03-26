@@ -47,12 +47,12 @@ class UsersController {
     }
 }
 
-const usersController = new UsersController();
+const usersControllerInstance = new UsersController();
 export const usersRouter = Router();
 
 usersRouter.get('/',
     basicAuthorizationCheckMiddleware,
-    usersController.getAllUsersWithPagination
+    usersControllerInstance.getAllUsersWithPagination
 );
 
 usersRouter.post('/',
@@ -61,10 +61,10 @@ usersRouter.post('/',
     body('password').isString().trim().isLength({min: 6, max: 20}),
     body('email').isString().trim().matches('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$').isLength({min: 5}),
     catchErrorsMiddleware,
-    usersController.createNewUser
+    usersControllerInstance.createNewUser
 );
 
 usersRouter.delete('/:id',
     basicAuthorizationCheckMiddleware,
-    usersController.deleteUser
+    usersControllerInstance.deleteUser
 );

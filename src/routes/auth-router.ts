@@ -9,7 +9,7 @@ import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewares-arrays/create-new-user-validation-middlewares-array";
 import {authService} from "../domain/auth-service";
-import {errorObjType} from "../models/errorObj-model";
+import {ErrorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
 import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../models/token-models";
 import {createNewPairOfTokens} from "./application/jwt-methods";
@@ -102,7 +102,7 @@ authRouter.post('/registration',
         }
         /* отправляется в случае ошибки только поле email.
         если другие поля не пройдут массив проверочных middleware отправит ошибку сам */
-        const errorObj: errorObjType = {
+        const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }
         res.status(400).send(errorObj);
@@ -115,7 +115,7 @@ authRouter.post('/registration-confirmation',
     async (req: RequestWithBody<{ code: string }>, res: Response) => {
         const confirmRegistrationStatus: boolean = await authService.confirmRegistration(req.body.code);
         if (confirmRegistrationStatus) return res.sendStatus(204);
-        const errorObj: errorObjType = {
+        const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
         }
         res.status(400).send(errorObj);
@@ -128,7 +128,7 @@ authRouter.post('/registration-email-resending',
     async (req: RequestWithBody<{ email: string }>, res: Response) => {
         const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
         if (emailSecretCodeResendingStatus) return res.sendStatus(204);
-        const errorObj: errorObjType = {
+        const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }
         res.status(400).send(errorObj);

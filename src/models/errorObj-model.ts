@@ -1,10 +1,10 @@
 
 // такие объекты приходят в случае ошибок
-export type insideErrorObjType = {
+export type InsideErrorObjType = {
     message: string,
     field: string
 }
 
-export type errorObjType = {
-    errorsMessages: insideErrorObjType[];
+export type ErrorObjType = {
+    errorsMessages: InsideErrorObjType[];
 }

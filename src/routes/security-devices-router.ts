@@ -35,35 +35,34 @@ class SecurityDevicesController {
         await authService.deleteAllSessionsExceptCurrent(userId, deviceId);
         res.sendStatus(204);
     };
+    async deleteSessionByDeviceId(req: RequestWithURIParams<{deviceId: string}>, res: Response){
+        const refreshTokenPayload: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
+        const foundedSessionByDeviceId: SessionType | null = await authQueryRepository.getSessionByDeviceId(req.params.deviceId);
+        if (!foundedSessionByDeviceId) return res.sendStatus(404);
+        const checkOwnershipSession = (): boolean => {
+            return foundedSessionByDeviceId.userId === refreshTokenPayload.userId;
+        };
+        const ownershipSessionStatus: boolean = checkOwnershipSession();
+        if (!ownershipSessionStatus) return res.sendStatus(403);
+        await authService.deleteSessionByDeviceId(req.params.deviceId);
+        res.sendStatus(204);
+    }
 }
 
-const securityDevicesController = new SecurityDevicesController();
+const securityDevicesControllerInstance = new SecurityDevicesController();
 export const securityDevicesRouter = Router();
 
 securityDevicesRouter.get('/',
     checkRequestRefreshTokenCookieMiddleware,
-    securityDevicesController.getAllUserSessions
+    securityDevicesControllerInstance.getAllUserSessions
 );
 
 securityDevicesRouter.delete('/', 
     checkRequestRefreshTokenCookieMiddleware,
-    async (req: Request, res: Response) => {
-    const {userId, deviceId}: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
-    await authService.deleteAllSessionsExceptCurrent(userId, deviceId);
-    res.sendStatus(204);
-});
+    securityDevicesControllerInstance.deleteAllSessionsExceptCurrent
+);
 
 securityDevicesRouter.delete('/:deviceId',
     checkRequestRefreshTokenCookieMiddleware,
-    async (req: RequestWithURIParams<{deviceId: string}>, res: Response) => {
-    const {userId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
-    const foundedSessionByDeviceId: SessionType | null = await authQueryRepository.getSessionByDeviceId(req.params.deviceId);
-    if (!foundedSessionByDeviceId) return res.sendStatus(404);
-    const checkOwnershipSession = (): boolean => {
-        return foundedSessionByDeviceId.userId === userId;
-    };
-    const ownershipSessionStatus: boolean = checkOwnershipSession();
-    if (!ownershipSessionStatus) return res.sendStatus(403);
-    await authService.deleteSessionByDeviceId(req.params.deviceId);
-    res.sendStatus(204);
-});
+    securityDevicesControllerInstance.deleteSessionByDeviceId
+);
