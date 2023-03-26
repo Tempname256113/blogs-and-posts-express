@@ -6,38 +6,49 @@ import {UserSessionsDataType, SessionType} from "../models/session-models";
 import {RequestWithURIParams, ResponseWithBody} from "../models/req-res-models";
 import {authService} from "../domain/auth-service";
 
+class SecurityDevicesController {
+    async getAllUserSessions(req: Request, res: ResponseWithBody<UserSessionsDataType[]>){
+        const {userId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
+        const sessionsArrayOfCurrentUser: UserSessionsDataType[] = [];
+        const sessionsHandler = (session: SessionType): void => {
+            const converterSecondsToStringDate = (seconds: number): string => {
+                const milliseconds: number = seconds * 1000;
+                const date: Date = new Date(milliseconds);
+                return date.toISOString();
+            };
+            const {userIp, userDeviceName, issuedAt, deviceId} = session;
+            const lastActiveDate = converterSecondsToStringDate(issuedAt);
+            const userSessionData: UserSessionsDataType = {
+                ip: userIp,
+                title: userDeviceName,
+                lastActiveDate,
+                deviceId
+            }
+            sessionsArrayOfCurrentUser.push(userSessionData);
+        }
+        const sessionsArray = await authQueryRepository.getAllSessionsByUserId(userId);
+        sessionsArray.forEach(sessionsHandler);
+        res.status(200).send(sessionsArrayOfCurrentUser);
+    };
+    async deleteAllSessionsExceptCurrent(req: Request, res: Response){
+        const {userId, deviceId}: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
+        await authService.deleteAllSessionsExceptCurrent(userId, deviceId);
+        res.sendStatus(204);
+    };
+}
+
+const securityDevicesController = new SecurityDevicesController();
 export const securityDevicesRouter = Router();
 
 securityDevicesRouter.get('/',
     checkRequestRefreshTokenCookieMiddleware,
-    async (req: Request, res: ResponseWithBody<UserSessionsDataType[]>) => {
-    const {userId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
-    const sessionsArrayOfCurrentUser: UserSessionsDataType[] = [];
-    const sessionsHandler = (session: SessionType): void => {
-        const converterSecondsToStringDate = (seconds: number): string => {
-            const milliseconds = seconds * 1000;
-            const date = new Date(milliseconds);
-            return date.toISOString();
-        };
-        const {userIp, userDeviceName, issuedAt, deviceId} = session;
-        const lastActiveDate = converterSecondsToStringDate(issuedAt);
-        const userSessionData: UserSessionsDataType = {
-            ip: userIp,
-            title: userDeviceName,
-            lastActiveDate,
-            deviceId
-        }
-        sessionsArrayOfCurrentUser.push(userSessionData);
-    }
-    const sessionsArray = await authQueryRepository.getAllSessionsByUserId(userId);
-    sessionsArray.forEach(sessionsHandler);
-    res.status(200).send(sessionsArrayOfCurrentUser);
-});
+    securityDevicesController.getAllUserSessions
+);
 
 securityDevicesRouter.delete('/', 
     checkRequestRefreshTokenCookieMiddleware,
     async (req: Request, res: Response) => {
-    const {userId, deviceId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
+    const {userId, deviceId}: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
     await authService.deleteAllSessionsExceptCurrent(userId, deviceId);
     res.sendStatus(204);
 });

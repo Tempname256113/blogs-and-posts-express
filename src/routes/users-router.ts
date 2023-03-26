@@ -12,23 +12,48 @@ import {usersQueryRepository} from "../repositories/users/users-query-repository
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {usersService} from "../domain/users-service";
+import {
+    ResultOfPaginationUsersByQueryType
+} from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 
+class UsersController {
+    async getAllUsersWithPagination(
+        req: RequestWithQuery<reqQueryPagination & {searchLoginTerm?: string, searchEmailTerm?: string}>,
+        res: Response
+    ){
+        const paginationConfig: UsersQueryPaginationType = {
+            sortBy: req.query.sortBy ?? 'createdAt',
+            sortDirection: req.query.sortDirection ?? 'desc',
+            pageNumber: req.query.pageNumber ?? 1,
+            pageSize: req.query.pageSize ?? 10,
+            searchLoginTerm: req.query.searchLoginTerm,
+            searchEmailTerm: req.query.searchEmailTerm
+        }
+        const paginationResponse: ResultOfPaginationUsersByQueryType = await usersQueryRepository.getAllUsersWithPagination(paginationConfig);
+        res.status(200).send(paginationResponse);
+    };
+    async createNewUser(req: RequestWithBody<RequestUserType>, res: ResponseWithBody<UserType>){
+        const requestUser: RequestUserType = {
+            login: req.body.login,
+            password: req.body.password,
+            email: req.body.email
+        }
+        const createdUser: UserType = await usersService.createUser(requestUser);
+        res.status(201).send(createdUser);
+    };
+    async deleteUser(req: RequestWithURIParams<{id: string}>, res: Response){
+        const deletedUserStatus: boolean = await usersService.deleteUser(req.params.id);
+        deletedUserStatus ? res.sendStatus(204) : res.sendStatus(404);
+    }
+}
+
+const usersController = new UsersController();
 export const usersRouter = Router();
 
 usersRouter.get('/',
     basicAuthorizationCheckMiddleware,
-    async (req: RequestWithQuery<reqQueryPagination & {searchLoginTerm?: string, searchEmailTerm?: string}>, res: Response) => {
-    const paginationConfig: UsersQueryPaginationType = {
-        sortBy: req.query.sortBy ?? 'createdAt',
-        sortDirection: req.query.sortDirection ?? 'desc',
-        pageNumber: req.query.pageNumber ?? 1,
-        pageSize: req.query.pageSize ?? 10,
-        searchLoginTerm: req.query.searchLoginTerm,
-        searchEmailTerm: req.query.searchEmailTerm
-    }
-    const paginationResponse = await usersQueryRepository.getAllUsersWithPagination(paginationConfig);
-    res.status(200).send(paginationResponse);
-})
+    usersController.getAllUsersWithPagination
+);
 
 usersRouter.post('/',
     basicAuthorizationCheckMiddleware,
@@ -36,20 +61,10 @@ usersRouter.post('/',
     body('password').isString().trim().isLength({min: 6, max: 20}),
     body('email').isString().trim().matches('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$').isLength({min: 5}),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<RequestUserType>, res: ResponseWithBody<UserType>) => {
-    const requestUser: RequestUserType = {
-        login: req.body.login,
-        password: req.body.password,
-        email: req.body.email
-    }
-    const createdUser = await usersService.createUser(requestUser);
-    res.status(201).send(createdUser);
-})
+    usersController.createNewUser
+);
 
 usersRouter.delete('/:id',
     basicAuthorizationCheckMiddleware,
-    async (req: RequestWithURIParams<{id: string}>, res: Response) => {
-    const deletedUserStatus = await usersService.deleteUser(req.params.id);
-    if (deletedUserStatus) return res.sendStatus(204);
-    res.sendStatus(404);
-})
+    usersController.deleteUser
+);
