@@ -7,36 +7,45 @@ import {checkForChangeCommentMiddleware} from "../middlewares/check-for-change-c
 import {commentsService} from "../domain/comments-service";
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
+import {ErrorObjType} from "../models/errorObj-model";
 
+class CommentsController {
+    async getCommentById(req: RequestWithURIParams<{id: string}>, res: ResponseWithBody<CommentType>){
+        const foundedCommentById = await commentsQueryRepository.getCommentByID(req.params.id);
+        foundedCommentById ? res.status(200).send(foundedCommentById) : res.sendStatus(404);
+    };
+    async deleteCommentById(req: RequestWithURIParams<{commentId: string}>, res: Response){
+        const deletedCommentStatus: boolean = await commentsService.deleteCommentByID(req.params.commentId);
+        deletedCommentStatus ? res.sendStatus(204) : res.sendStatus(404);
+    };
+    async updateCommentById(
+        req: RequestWithURIParamsAndBody<{commentId: string}, {content: string}>,
+        res: Response<ErrorObjType>
+    ){
+        const dataForUpdateComment = {
+            content: req.body.content,
+            commentID: req.params.commentId
+        }
+        const updatedCommentStatus: boolean = await commentsService.updateComment(dataForUpdateComment);
+        updatedCommentStatus ? res.sendStatus(204) : res.sendStatus(404);
+    }
+}
+
+const commentsControllerInstance = new CommentsController();
 export const commentsRouter = Router();
 
-commentsRouter.get('/:id',
-    async (req: RequestWithURIParams<{id: string}>, res: ResponseWithBody<CommentType>) => {
-    const foundedComment = await commentsQueryRepository.getCommentByID(req.params.id);
-    if (foundedComment) return res.status(200).send(foundedComment);
-    res.sendStatus(404);
-});
+commentsRouter.get('/:id', commentsControllerInstance.getCommentById);
 
 commentsRouter.delete('/:commentId',
     bearerUserAuthTokenCheckMiddleware,
     checkForChangeCommentMiddleware,
-    async (req: RequestWithURIParams<{commentId: string}>, res: Response) => {
-    const deletedCommentStatus = await commentsService.deleteCommentByID(req.params.commentId);
-    if (deletedCommentStatus) return res.sendStatus(204);
-    res.sendStatus(404);
-});
+    commentsControllerInstance.deleteCommentById
+);
 
 commentsRouter.put('/:commentId',
     bearerUserAuthTokenCheckMiddleware,
     checkForChangeCommentMiddleware,
     body('content').isString().trim().isLength({min: 20, max: 300}),
     catchErrorsMiddleware,
-    async (req: RequestWithURIParamsAndBody<{commentId: string}, {content: string}>, res: Response) => {
-    const dataForUpdateComment = {
-        content: req.body.content,
-        commentID: req.params.commentId
-    }
-    const updatedCommentStatus = await commentsService.updateComment(dataForUpdateComment);
-    if (updatedCommentStatus) return res.sendStatus(204);
-    res.sendStatus(404);
-});
+    commentsControllerInstance.updateCommentById
+);

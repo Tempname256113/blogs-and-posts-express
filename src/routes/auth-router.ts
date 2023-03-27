@@ -16,20 +16,17 @@ import {createNewPairOfTokens} from "./application/jwt-methods";
 import {DataForUpdateSessionType} from "../models/session-models";
 import {requestLimiterMiddleware} from "../middlewares/request-limiter-middleware";
 
-export const authRouter = Router();
-
 const refreshTokenPropTitle: string = 'refreshToken';
 
-authRouter.post('/login',
-    requestLimiterMiddleware,
-    body('loginOrEmail').isString().trim().isLength({min: 1}),
-    body('password').isString().trim().isLength({min: 1}),
-    catchErrorsMiddleware,
-    async (req: RequestWithBody<{ loginOrEmail: string, password: string }>, res: ResponseWithBody<{ accessToken: string }>) => {
-        const userLoginOrEmail = req.body.loginOrEmail;
-        const userPassword = req.body.password;
-        const userIp = req.ip;
-        const userDeviceName = req.headers["user-agent"];
+class AuthController {
+    async login(
+        req: RequestWithBody<{ loginOrEmail: string, password: string }>,
+        res: ResponseWithBody<{ accessToken: string } | ErrorObjType>
+    ){
+        const userLoginOrEmail: string = req.body.loginOrEmail;
+        const userPassword: string = req.body.password;
+        const userIp: string = req.ip;
+        const userDeviceName: string | undefined = req.headers["user-agent"];
         const pairOfTokens: { accessToken: string, refreshToken: string } | null = await authService.signIn({
             userLoginOrEmail,
             userPassword,
@@ -37,46 +34,41 @@ authRouter.post('/login',
             userDeviceName: userDeviceName ?? 'unknown device name'
         });
         if (!pairOfTokens) return res.sendStatus(401);
-        const {accessToken, refreshToken} = pairOfTokens;
         res
-            .cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
+            .cookie(refreshTokenPropTitle, pairOfTokens.refreshToken, {httpOnly: true, secure: true})
             .status(200)
-            .send({accessToken});
-    });
-
-authRouter.post('/refresh-token',
-    checkRequestRefreshTokenCookieMiddleware,
-    async (req: Request, res: ResponseWithBody<{ accessToken: string, refreshToken: string }>) => {
-        const userIp = req.ip;
-        const userDeviceName = req.headers["user-agent"];
-        const {userId, deviceId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
-        const {accessToken, refreshToken: {refreshToken, issuedAt, expiresDate}} = createNewPairOfTokens({
-            userId,
-            deviceId
+            .send({accessToken: pairOfTokens.accessToken});
+    };
+    async getNewPairOfTokens(req: Request, res: ResponseWithBody<{ accessToken: string }>){
+        const userIp: string = req.ip;
+        const userDeviceName: string | undefined = req.headers["user-agent"];
+        const reqRefreshTokenPayload: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
+        const currentDeviceId: string = reqRefreshTokenPayload.deviceId;
+        const newPairOfTokens = createNewPairOfTokens({
+            userId: reqRefreshTokenPayload.userId,
+            deviceId: currentDeviceId
         });
         const dataForUpdateSession: DataForUpdateSessionType = {
-            issuedAt,
-            expiresDate,
+            issuedAt: newPairOfTokens.refreshToken.issuedAt,
+            expiresDate: newPairOfTokens.refreshToken.expiresDate,
             userIp,
             userDeviceName: userDeviceName ?? 'unknown device name'
         };
-        await authService.updateSession(deviceId, dataForUpdateSession);
-        res.cookie(refreshTokenPropTitle, refreshToken, {httpOnly: true, secure: true})
-            .status(200).send({accessToken, refreshToken});
-    });
-
-authRouter.post('/logout',
-    checkRequestRefreshTokenCookieMiddleware,
-    async (req: Request, res: Response) => {
-        const {deviceId} = req.context.refreshTokenPayload as RefreshTokenPayloadType;
+        const newRefreshToken: string = newPairOfTokens.refreshToken.refreshToken;
+        const newAccessToken: string = newPairOfTokens.accessToken;
+        await authService.updateSession(currentDeviceId, dataForUpdateSession);
+        res
+            .cookie(refreshTokenPropTitle, newRefreshToken, {httpOnly: true, secure: true})
+            .status(200)
+            .send({accessToken: newAccessToken});
+    };
+    async logout(req: Request, res: Response){
+        const {deviceId}: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
         await authService.deleteSessionByDeviceId(deviceId);
         res.sendStatus(204);
-    });
-
-authRouter.get('/me',
-    bearerUserAuthTokenCheckMiddleware,
-    async (req: Request, res: ResponseWithBody<InfoAboutUserType>) => {
-        const {userId} = req.context.accessTokenPayload as AccessTokenPayloadType;
+    };
+    async getInfoAboutMe(req: Request, res: ResponseWithBody<InfoAboutUserType>){
+        const {userId}: AccessTokenPayloadType = req.context.accessTokenPayload!;
         const userFromDB: UserTypeExtended | null = await usersQueryRepository.getUserById(userId);
         if (!userFromDB) return res.sendStatus(401);
         const informationAboutCurrentUser: InfoAboutUserType = {
@@ -85,18 +77,14 @@ authRouter.get('/me',
             userId: userFromDB.id
         }
         res.status(200).send(informationAboutCurrentUser);
-    });
-
-authRouter.post('/registration',
-    requestLimiterMiddleware,
-    createNewUserValidationMiddlewaresArray,
-    async (req: RequestWithBody<RequestUserType>, res: Response) => {
+    };
+    async registrationNewUser(req: RequestWithBody<RequestUserType>, res: Response){
         const userConfig: RequestUserType = {
             login: req.body.login,
             password: req.body.password,
             email: req.body.email
         }
-        const registrationStatus = await authService.registrationNewUser(userConfig);
+        const registrationStatus: boolean = await authService.registrationNewUser(userConfig);
         if (registrationStatus) {
             return res.sendStatus(204);
         }
@@ -106,44 +94,89 @@ authRouter.post('/registration',
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }
         res.status(400).send(errorObj);
-    });
-
-authRouter.post('/registration-confirmation',
-    requestLimiterMiddleware,
-    body('code').isString().trim().isLength({min: 1}),
-    catchErrorsMiddleware,
-    async (req: RequestWithBody<{ code: string }>, res: Response) => {
+    };
+    async registrationConfirm(req: RequestWithBody<{ code: string }>, res: Response){
         const confirmRegistrationStatus: boolean = await authService.confirmRegistration(req.body.code);
         if (confirmRegistrationStatus) return res.sendStatus(204);
         const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
         }
         res.status(400).send(errorObj);
-    });
-
-authRouter.post('/registration-email-resending',
-    requestLimiterMiddleware,
-    body('email').isEmail(),
-    catchErrorsMiddleware,
-    async (req: RequestWithBody<{ email: string }>, res: Response) => {
-        const emailSecretCodeResendingStatus = await authService.resendSecretCodeToEmail(req.body.email);
+    };
+    async registrationEmailCodeResending(req: RequestWithBody<{ email: string }>, res: Response){
+        const emailSecretCodeResendingStatus: boolean = await authService.resendSecretCodeToEmail(req.body.email);
         if (emailSecretCodeResendingStatus) return res.sendStatus(204);
         const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
         }
         res.status(400).send(errorObj);
-    });
+    };
+    async sendPasswordRecoveryCode(req: RequestWithBody<{email: string}>, res: Response){
+        const validationError = validationResult(req);
+        if (!validationError.isEmpty()) return res.sendStatus(400);
+        await authService.sendPasswordRecoveryCode(req.body.email);
+        res.sendStatus(204);
+    };
+    async createNewUserPassword(req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response){
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) return;
+        await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
+        res.sendStatus(204);
+    }
+}
+
+const authControllerInstance = new AuthController();
+export const authRouter = Router();
+
+authRouter.post('/login',
+    requestLimiterMiddleware,
+    body('loginOrEmail').isString().trim().isLength({min: 1}),
+    body('password').isString().trim().isLength({min: 1}),
+    catchErrorsMiddleware,
+    authControllerInstance.login
+);
+
+authRouter.post('/refresh-token',
+    checkRequestRefreshTokenCookieMiddleware,
+    authControllerInstance.getNewPairOfTokens
+);
+
+authRouter.post('/logout',
+    checkRequestRefreshTokenCookieMiddleware,
+    authControllerInstance.logout
+);
+
+authRouter.get('/me',
+    bearerUserAuthTokenCheckMiddleware,
+    authControllerInstance.getInfoAboutMe
+);
+
+authRouter.post('/registration',
+    requestLimiterMiddleware,
+    createNewUserValidationMiddlewaresArray,
+    authControllerInstance.registrationNewUser
+);
+
+authRouter.post('/registration-confirmation',
+    requestLimiterMiddleware,
+    body('code').isString().trim().isLength({min: 1}),
+    catchErrorsMiddleware,
+    authControllerInstance.registrationConfirm
+);
+
+authRouter.post('/registration-email-resending',
+    requestLimiterMiddleware,
+    body('email').isEmail(),
+    catchErrorsMiddleware,
+    authControllerInstance.registrationEmailCodeResending
+);
 
 authRouter.post('/password-recovery',
     requestLimiterMiddleware,
     body('email').isEmail(),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{email: string}>, res: Response) => {
-    const validationError = validationResult(req);
-    if (!validationError.isEmpty()) return res.sendStatus(400);
-    await authService.sendPasswordRecoveryCode(req.body.email);
-    res.sendStatus(204);
-});
+    authControllerInstance.sendPasswordRecoveryCode
+);
 
 authRouter.post('/new-password',
     requestLimiterMiddleware,
@@ -163,9 +196,5 @@ authRouter.post('/new-password',
         });
     }),
     catchErrorsMiddleware,
-    async (req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response) => {
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) return;
-    await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
-    res.sendStatus(204);
-});
+    authControllerInstance.createNewUserPassword
+);
