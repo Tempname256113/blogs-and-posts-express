@@ -1,11 +1,11 @@
 import {PostType, RequestPostType} from "../../models/post-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 
-export const postsRepository = {
+class PostsRepository {
     async createNewPost(newPostTemplate: PostType): Promise<PostType> {
         await new PostModel(newPostTemplate).save();
         return newPostTemplate;
-    },
+    };
     // возвращает true в случае удачного изменения объекта
     // или false в случае неудачного
     async updatePostByID(id: string,
@@ -25,13 +25,15 @@ export const postsRepository = {
             }
         );
         return updatedPostStatus.matchedCount > 0;
-    },
+    };
     // если нашел и удалил элемент - возвращает true. если элемента нет - false
     async deletePostByID(id: string): Promise<boolean> {
         const deletedElem = await PostModel.deleteOne({id});
         return deletedElem.deletedCount > 0;
-    },
+    };
     async deleteAllData(): Promise<void> {
         await PostModel.deleteMany();
     }
 }
+
+export const postsRepository = new PostsRepository();

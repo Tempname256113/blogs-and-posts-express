@@ -10,7 +10,7 @@ import {
 import {queryPaginationType} from "../../models/query-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 
-export const blogsQueryRepository = {
+class BlogsQueryRepository {
     async getBlogsWithSortAndPagination(
         {
             searchNameTerm,
@@ -29,7 +29,7 @@ export const blogsQueryRepository = {
             pageSize
         }
         return paginationBlogsByQueryParams(queryPaginationWithSearchConfig);
-    },
+    };
     async getAllPostsForSpecifiedBlog(
         {
             blogId,
@@ -46,8 +46,10 @@ export const blogsQueryRepository = {
             pageSize
         }
         return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
-    },
+    };
     async getBlogByID(id: string): Promise<BlogType | null> {
         return BlogModel.findOne({id}, {_id: false});
     }
 }
+
+export const blogsQueryRepository = new BlogsQueryRepository();

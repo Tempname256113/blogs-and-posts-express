@@ -6,7 +6,7 @@ import {
 import {queryPaginationType} from "../../models/query-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 
-export const postsQueryRepository = {
+class PostsQueryRepository {
     async getPostsWithSortAndPagination(
         {
             sortBy,
@@ -22,8 +22,10 @@ export const postsQueryRepository = {
             pageSize: pageSize
         }
         return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig);
-    },
+    };
     async getPostByID(id: string): Promise<PostType | null> {
         return PostModel.findOne({id}, {_id: false});
     }
 }
+
+export const postsQueryRepository = new PostsQueryRepository();

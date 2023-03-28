@@ -11,10 +11,10 @@ const requestLimiterSchema = new Schema<RequestLimiterDataType>(
 
 const RequestLimiterModel = model<RequestLimiterDataType>('request-limiter-data', requestLimiterSchema);
 
-export const requestLimiterRepository = {
+class RequestLimiterRepository {
     async addRequestData(reqData: RequestLimiterDataType): Promise<void> {
         await new RequestLimiterModel(reqData).save();
-    },
+    };
     async checkCountOfRequests(data: RequestLimiterDataType): Promise<number> {
         const countOfRequests: number  = await RequestLimiterModel.countDocuments({
             ip: data.ip,
@@ -22,8 +22,10 @@ export const requestLimiterRepository = {
             time: {$gt: data.time}
         });
         return countOfRequests;
-    },
+    };
     async deleteAllIpAddresses(): Promise<void> {
         await RequestLimiterModel.deleteMany();
     }
 }
+
+export const requestLimiterRepository = new RequestLimiterRepository();

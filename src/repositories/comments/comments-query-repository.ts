@@ -7,7 +7,7 @@ import {
 import {CommentType} from "../../models/comment-model";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
-export const commentsQueryRepository = {
+class CommentsQueryRepository {
     async getCommentsWithPagination(
         {
             postId,
@@ -24,8 +24,10 @@ export const commentsQueryRepository = {
             pageSize
         }
         return paginationCommentsByQueryParams(paginationWithSearchConfig);
-    },
+    };
     async getCommentByID(id: string): Promise<CommentType | null> {
         return CommentModel.findOne({id}, {_id: false});
     }
 }
+
+export const commentsQueryRepository = new CommentsQueryRepository();
