@@ -6,7 +6,7 @@ import {
 import {queryPaginationType} from "../../models/query-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 
-class PostsQueryRepository {
+export class PostsQueryRepository {
     async getPostsWithSortAndPagination(
         {
             sortBy,

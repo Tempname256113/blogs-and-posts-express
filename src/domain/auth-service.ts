@@ -93,7 +93,7 @@ const mailer = {
     }
 }
 
-export const authService = {
+export class AuthService {
     async registrationNewUser({login, password, email}: RequestUserType): Promise<boolean> {
         const confirmationEmailCode: string = uuidv4();
         try {
@@ -121,7 +121,7 @@ export const authService = {
         } catch (e) {
             return false;
         }
-    },
+    };
     async confirmRegistration(emailConfirmCode: string): Promise<boolean> {
         const foundedUserByConfirmationEmailCode: UserTypeExtended | null = await usersQueryRepository.getUserByConfirmationEmailCode(emailConfirmCode);
         if (!foundedUserByConfirmationEmailCode) return false;
@@ -140,7 +140,7 @@ export const authService = {
         }
         await updateUserEmailConfirmationStatus();
         return true;
-    },
+    };
     async resendSecretCodeToEmail(email: string): Promise<boolean> {
         const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
         if (!foundedUserByEmail) return false;
@@ -164,7 +164,7 @@ export const authService = {
         } catch (e) {
             return false;
         }
-    },
+    };
     async signIn({userLoginOrEmail, userPassword, userIp, userDeviceName}: sessionDataType):
         Promise<{ accessToken: string, refreshToken: string } | null> {
         const foundedUserByLoginOrEmail: UserTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
@@ -191,13 +191,13 @@ export const authService = {
             accessToken,
             refreshToken
         }
-    },
+    };
     updateSession(deviceId: string, dataForUpdateSession: DataForUpdateSessionType): Promise<boolean> {
         return authRepository.updateSession(deviceId, dataForUpdateSession);
-    },
+    };
     deleteSessionByDeviceId(deviceId: string): Promise<boolean> {
         return authRepository.deleteSessionByDeviceId(deviceId);
-    },
+    };
     async deleteAllSessionsExceptCurrent(currentUserId: string, currentDeviceId: string): Promise<void> {
         type deviceId = string;
         const sessionsDeviceIdExceptCurrentArr: deviceId[] = [];
@@ -207,7 +207,7 @@ export const authService = {
         const sessionsArray = await authQueryRepository.getAllSessionsByUserId(currentUserId);
         sessionsArray.forEach(sessionsHandler);
         authRepository.deleteManySessions(sessionsDeviceIdExceptCurrentArr);
-    },
+    };
     async sendPasswordRecoveryCode(email: string): Promise<void> {
         const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
         if (foundedUserByEmail) {
@@ -234,7 +234,7 @@ export const authService = {
                 console.log(e);
             }
         }
-    },
+    };
     async changeUserPassword(newPassword: string, recoveryCode: string, user: UserTypeExtended): Promise<void> {
         const updateUserPassword = async (): Promise<void> => {
             const passwordHash = await hash(newPassword, 10);
@@ -253,8 +253,10 @@ export const authService = {
             await authRepository.updateUserByID(userId, userUpdateData);
         }
         await updateUserPassword();
-    },
+    };
     async deleteAllSessions(): Promise<void> {
         await authRepository.deleteAllSessions();
     }
 }
+
+export const authService = new AuthService();

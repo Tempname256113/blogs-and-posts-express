@@ -7,7 +7,7 @@ import {
 import {CommentType} from "../../models/comment-model";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
-class CommentsQueryRepository {
+export class CommentsQueryRepository {
     async getCommentsWithPagination(
         {
             postId,

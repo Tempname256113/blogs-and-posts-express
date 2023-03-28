@@ -3,7 +3,7 @@ import {usersQueryRepository} from "../repositories/users/users-query-repository
 import {UserTypeExtended} from "../models/user-models";
 import {commentsRepository} from "../repositories/comments/comments-repository";
 
-export const commentsService = {
+export class CommentsService {
     // создает комментарий. нужно передать содержание комментария, id пользователя и id поста к которому был написан комментарий.
     // возвращает комментарий с видом нужным клиенту
     async createComment({content, userId, postId}: {content: string, userId: string, postId: string}): Promise<CommentType>{
@@ -28,18 +28,20 @@ export const commentsService = {
         }
         await commentsRepository.createComment(commentInTheDBTemplate);
         return commentToClient;
-    },
+    };
     async deleteCommentByID(commentId: string): Promise<boolean>{
         return commentsRepository.deleteCommentByID(commentId);
-    },
+    };
     async updateComment({content, commentID}: {content: string, commentID: string}){
         const templateForUpdateComment = {
             content,
             commentID
         }
         return commentsRepository.updateComment(templateForUpdateComment);
-    },
+    };
     async deleteAllData(){
         await commentsRepository.deleteAllData();
     }
 }
+
+export const commentsService = new CommentsService();

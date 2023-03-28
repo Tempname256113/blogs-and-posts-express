@@ -3,7 +3,7 @@ import {genSalt, hash} from "bcrypt";
 import {usersRepository} from "../repositories/users/users-repository";
 import {v4 as uuidv4} from 'uuid';
 
-export const usersService = {
+export class UsersService {
     async createUser({login,password,email}: RequestUserType): Promise<UserType>{
         const salt: string = await genSalt(10);
         const passwordHashWithSalt: string = await hash(password, salt);
@@ -25,11 +25,13 @@ export const usersService = {
             }
         }
         return usersRepository.createUser(newUserTemplate);
-    },
+    };
     async deleteUser(userId: string): Promise<boolean> {
         return usersRepository.deleteUser(userId);
-    },
+    };
     async deleteAllData(): Promise<void>{
         await usersRepository.deleteAllData();
     }
 }
+
+export const usersService = new UsersService();

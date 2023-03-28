@@ -6,7 +6,7 @@ import {
 } from "../mongo-DB-features/pagination-by-query-params-functions";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
 
-class UsersQueryRepository {
+export class UsersQueryRepository {
     async getAllUsersWithPagination(
         {
             sortBy,
