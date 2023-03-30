@@ -1,14 +1,14 @@
-import {body, matchedData, validationResult} from "express-validator";
+import {body, validationResult} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {RequestWithBody, ResponseWithBody} from "../models/req-res-models";
 import {Request, Response, Router} from "express";
-import {usersQueryRepository} from "../repositories/users/users-query-repository";
-import {InfoAboutUserType, RequestUserType, UserType, UserTypeExtended} from "../models/user-models";
+import {usersQueryRepository, UsersQueryRepository} from "../repositories/users/users-query-repository";
+import {InfoAboutUserType, RequestUserType, UserTypeExtended} from "../models/user-models";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewares-arrays/create-new-user-validation-middlewares-array";
-import {authService} from "../domain/auth-service";
+import {AuthService} from "../domain/auth-service";
 import {ErrorObjType} from "../models/errorObj-model";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
 import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../models/token-models";
@@ -19,6 +19,12 @@ import {requestLimiterMiddleware} from "../middlewares/request-limiter-middlewar
 const refreshTokenPropTitle: string = 'refreshToken';
 
 class AuthController {
+    private authService: AuthService;
+    private usersQueryRepository: UsersQueryRepository;
+    constructor() {
+        this.authService = new AuthService();
+        this.usersQueryRepository = new UsersQueryRepository();
+    }
     async login(
         req: RequestWithBody<{ loginOrEmail: string, password: string }>,
         res: ResponseWithBody<{ accessToken: string } | ErrorObjType>
@@ -27,7 +33,7 @@ class AuthController {
         const userPassword: string = req.body.password;
         const userIp: string = req.ip;
         const userDeviceName: string | undefined = req.headers["user-agent"];
-        const pairOfTokens: { accessToken: string, refreshToken: string } | null = await authService.signIn({
+        const pairOfTokens: { accessToken: string, refreshToken: string } | null = await this.authService.signIn({
             userLoginOrEmail,
             userPassword,
             userIp,
@@ -56,7 +62,7 @@ class AuthController {
         };
         const newRefreshToken: string = newPairOfTokens.refreshToken.refreshToken;
         const newAccessToken: string = newPairOfTokens.accessToken;
-        await authService.updateSession(currentDeviceId, dataForUpdateSession);
+        await this.authService.updateSession(currentDeviceId, dataForUpdateSession);
         res
             .cookie(refreshTokenPropTitle, newRefreshToken, {httpOnly: true, secure: true})
             .status(200)
@@ -64,12 +70,12 @@ class AuthController {
     };
     async logout(req: Request, res: Response){
         const {deviceId}: RefreshTokenPayloadType = req.context.refreshTokenPayload!;
-        await authService.deleteSessionByDeviceId(deviceId);
+        await this.authService.deleteSessionByDeviceId(deviceId);
         res.sendStatus(204);
     };
     async getInfoAboutMe(req: Request, res: ResponseWithBody<InfoAboutUserType>){
         const {userId}: AccessTokenPayloadType = req.context.accessTokenPayload!;
-        const userFromDB: UserTypeExtended | null = await usersQueryRepository.getUserById(userId);
+        const userFromDB: UserTypeExtended | null = await this.usersQueryRepository.getUserById(userId);
         if (!userFromDB) return res.sendStatus(401);
         const informationAboutCurrentUser: InfoAboutUserType = {
             email: userFromDB.accountData.email,
@@ -84,7 +90,7 @@ class AuthController {
             password: req.body.password,
             email: req.body.email
         }
-        const registrationStatus: boolean = await authService.registrationNewUser(userConfig);
+        const registrationStatus: boolean = await this.authService.registrationNewUser(userConfig);
         if (registrationStatus) {
             return res.sendStatus(204);
         }
@@ -96,7 +102,7 @@ class AuthController {
         res.status(400).send(errorObj);
     };
     async registrationConfirm(req: RequestWithBody<{ code: string }>, res: Response){
-        const confirmRegistrationStatus: boolean = await authService.confirmRegistration(req.body.code);
+        const confirmRegistrationStatus: boolean = await this.authService.confirmRegistration(req.body.code);
         if (confirmRegistrationStatus) return res.sendStatus(204);
         const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid confirmation code', field: 'code'}]
@@ -104,7 +110,7 @@ class AuthController {
         res.status(400).send(errorObj);
     };
     async registrationEmailCodeResending(req: RequestWithBody<{ email: string }>, res: Response){
-        const emailSecretCodeResendingStatus: boolean = await authService.resendSecretCodeToEmail(req.body.email);
+        const emailSecretCodeResendingStatus: boolean = await this.authService.resendSecretCodeToEmail(req.body.email);
         if (emailSecretCodeResendingStatus) return res.sendStatus(204);
         const errorObj: ErrorObjType = {
             errorsMessages: [{message: 'invalid email or we have technical problems', field: 'email'}]
@@ -114,13 +120,13 @@ class AuthController {
     async sendPasswordRecoveryCode(req: RequestWithBody<{email: string}>, res: Response){
         const validationError = validationResult(req);
         if (!validationError.isEmpty()) return res.sendStatus(400);
-        await authService.sendPasswordRecoveryCode(req.body.email);
+        await this.authService.sendPasswordRecoveryCode(req.body.email);
         res.sendStatus(204);
     };
     async createNewUserPassword(req: RequestWithBody<{newPassword: string, recoveryCode: string}>, res: Response){
         const validationErrors = validationResult(req);
         if (!validationErrors.isEmpty()) return;
-        await authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
+        await this.authService.changeUserPassword(req.body.newPassword, req.body.recoveryCode, req.context.userExtended!);
         res.sendStatus(204);
     }
 }

@@ -6,10 +6,10 @@ import {
     RequestWithURIParams,
     RequestWithURIParamsAndBody, reqQueryPagination
 } from "../models/req-res-models";
-import {blogsService} from "../domain/blogs-service";
+import {BlogsService} from "../domain/blogs-service";
 import {blogsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/blogs-validation-middlewares-array";
 import {BlogType, RequestBlogType} from "../models/blog-models";
-import {blogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
+import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {blogIdUriParamCheckMiddleware} from "../middlewares/blogId-uri-param-check-middleware";
 import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
@@ -21,6 +21,12 @@ import {
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 
 class BlogsController {
+    private blogsQueryRepository: BlogsQueryRepository;
+    private blogsService: BlogsService;
+    constructor() {
+        this.blogsQueryRepository = new BlogsQueryRepository();
+        this.blogsService = new BlogsService();
+    }
     async getAllBlogsWithSortAndPagination(
         req: RequestWithQuery<{searchNameTerm: string | undefined} & reqQueryPagination>,
         res: Response
@@ -32,11 +38,11 @@ class BlogsController {
             pageNumber: req.query.pageNumber ?? 1,
             pageSize: req.query.pageSize ?? 10
         }
-        const receivedBlogs: ResultOfPaginationBlogsByQueryType = await blogsQueryRepository.getBlogsWithSortAndPagination(paginationConfig);
+        const receivedBlogs: ResultOfPaginationBlogsByQueryType = await this.blogsQueryRepository.getBlogsWithSortAndPagination(paginationConfig);
         res.status(200).send(receivedBlogs);
     };
     async getBlogById(req: RequestWithURIParams<{id: string}>, res: Response<BlogType>){
-        const blog: BlogType | null = await blogsQueryRepository.getBlogByID(req.params.id);
+        const blog: BlogType | null = await this.blogsQueryRepository.getBlogByID(req.params.id);
         blog ? res.status(200).send(blog) : res.sendStatus(404);
     };
     async getAllPostsByBlogId(
@@ -50,7 +56,7 @@ class BlogsController {
             pageNumber: req.query.pageNumber ?? 1,
             pageSize: req.query.pageSize ?? 10,
         }
-        const posts: ResultOfPaginationPostsByQueryType = await blogsQueryRepository.getAllPostsForSpecifiedBlog(paginationConfig);
+        const posts: ResultOfPaginationPostsByQueryType = await this.blogsQueryRepository.getAllPostsForSpecifiedBlog(paginationConfig);
         res.status(200).send(posts);
     };
     async createNewBlog(req: RequestWithBody<RequestBlogType>, res: Response<BlogType>){
@@ -59,7 +65,7 @@ class BlogsController {
             description: req.body.description,
             websiteUrl: req.body.websiteUrl
         };
-        const createdBlog: BlogType = await blogsService.createNewBlog(newBlogTemplate);
+        const createdBlog: BlogType = await this.blogsService.createNewBlog(newBlogTemplate);
         res.status(201).send(createdBlog);
     };
     async createNewPostByBlogId(req: RequestWithURIParamsAndBody<{blogId: string}, RequestPostType>, res: Response<PostType>){
@@ -69,7 +75,7 @@ class BlogsController {
             content: req.body.content,
             blogId: req.params.blogId
         };
-        const createdPost: PostType = await blogsService.createNewPostForSpecificBlog(newPostTemplate);
+        const createdPost: PostType = await this.blogsService.createNewPostForSpecificBlog(newPostTemplate);
         res.status(201).send(createdPost);
     };
     async updateBlogById(req: RequestWithURIParamsAndBody<{id: string}, RequestBlogType>, res: Response){
@@ -78,11 +84,11 @@ class BlogsController {
             description: req.body.description,
             websiteUrl: req.body.websiteUrl
         };
-        const blogUpdateStatus: boolean = await blogsService.updateBlogByID(req.params.id, updateBlogTemplate);
+        const blogUpdateStatus: boolean = await this.blogsService.updateBlogByID(req.params.id, updateBlogTemplate);
         blogUpdateStatus ? res.sendStatus(204) : res.sendStatus(404);
     };
     async deleteBlogById(req: RequestWithURIParams<{id: string}>, res: Response){
-        const deletedBlogStatus: boolean = await blogsService.deleteBlogByID(req.params.id);
+        const deletedBlogStatus: boolean = await this.blogsService.deleteBlogByID(req.params.id);
         deletedBlogStatus ? res.sendStatus(204) : res.sendStatus(404);
     }
 }
@@ -90,34 +96,34 @@ class BlogsController {
 const blogsControllerInstance = new BlogsController();
 export const blogsRouter = Router();
 
-blogsRouter.get('/', blogsControllerInstance.getAllBlogsWithSortAndPagination);
+blogsRouter.get('/', blogsControllerInstance.getAllBlogsWithSortAndPagination.bind(blogsControllerInstance));
 
-blogsRouter.get('/:id', blogsControllerInstance.getBlogById);
+blogsRouter.get('/:id', blogsControllerInstance.getBlogById.bind(blogsControllerInstance));
 
 blogsRouter.get('/:blogId/posts',
     blogIdUriParamCheckMiddleware,
-    blogsControllerInstance.getAllPostsByBlogId
+    blogsControllerInstance.getAllPostsByBlogId.bind(blogsControllerInstance)
 );
 
 blogsRouter.post('/',
     basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
-    blogsControllerInstance.createNewBlog
+    blogsControllerInstance.createNewBlog.bind(blogsControllerInstance)
 );
 
 blogsRouter.post('/:blogId/posts',
     basicAuthorizationCheckMiddleware,
     postsValidationMiddlewaresArrayWithUriBlogIdCheck,
-    blogsControllerInstance.createNewPostByBlogId
+    blogsControllerInstance.createNewPostByBlogId.bind(blogsControllerInstance)
 );
 
 blogsRouter.put('/:id',
     basicAuthorizationCheckMiddleware,
     blogsValidationMiddlewaresArray,
-    blogsControllerInstance.updateBlogById
+    blogsControllerInstance.updateBlogById.bind(blogsControllerInstance)
 );
 
 blogsRouter.delete('/:id',
     basicAuthorizationCheckMiddleware,
-    blogsControllerInstance.deleteBlogById
+    blogsControllerInstance.deleteBlogById.bind(blogsControllerInstance)
 );

@@ -5,7 +5,7 @@ import {postsService} from "./posts-service";
 import {v4 as uuid4} from 'uuid';
 import {blogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 
-class BlogsService {
+export class BlogsService {
     async createNewBlog(newBlog: RequestBlogType): Promise<BlogType> {
         const newBlogTemplate: BlogType = {
             id: uuid4(),

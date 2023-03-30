@@ -10,7 +10,7 @@ import {
 import {queryPaginationType} from "../../models/query-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 
-class BlogsQueryRepository {
+export class BlogsQueryRepository {
     async getBlogsWithSortAndPagination(
         {
             searchNameTerm,

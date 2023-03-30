@@ -1,7 +1,7 @@
 import {Router, Response} from "express";
 import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
 import {CommentType} from "../models/comment-model";
-import {CommentsQueryRepository, commentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {checkForChangeCommentMiddleware} from "../middlewares/check-for-change-comment-middleware";
 import {CommentsService, commentsService} from "../domain/comments-service";
