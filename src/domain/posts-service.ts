@@ -5,12 +5,10 @@ import {BlogType} from "../models/blog-models";
 import {v4 as uuid4} from "uuid";
 
 export class PostsService {
-    private blogsQueryRepository: BlogsQueryRepository;
-    private postsRepository: PostsRepository;
-    constructor() {
-        this.blogsQueryRepository = new BlogsQueryRepository();
-        this.postsRepository = new PostsRepository();
-    }
+    constructor(
+        protected blogsQueryRepository: BlogsQueryRepository,
+        protected postsRepository: PostsRepository
+    ) {}
     async createNewPost(newPost: RequestPostType): Promise<PostType> {
         /* blog придет потому что роут который обращается к этому сервису на уровне представления с помощью middleware
         уже проверил существует этот blog в базе данных или нет. если запрос дошел сюда, то он существует.
@@ -38,5 +36,3 @@ export class PostsService {
         await this.postsRepository.deleteAllData();
     }
 }
-
-export const postsService = new PostsService();

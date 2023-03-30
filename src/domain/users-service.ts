@@ -4,10 +4,7 @@ import {UsersRepository} from "../repositories/users/users-repository";
 import {v4 as uuidv4} from 'uuid';
 
 export class UsersService {
-    private usersRepository: UsersRepository;
-    constructor() {
-        this.usersRepository = new UsersRepository();
-    }
+    constructor(protected usersRepository: UsersRepository) {}
     async createUser({login,password,email}: RequestUserType): Promise<UserType>{
         const salt: string = await genSalt(10);
         const passwordHashWithSalt: string = await hash(password, salt);
@@ -37,5 +34,3 @@ export class UsersService {
         await this.usersRepository.deleteAllData();
     }
 }
-
-export const usersService = new UsersService();

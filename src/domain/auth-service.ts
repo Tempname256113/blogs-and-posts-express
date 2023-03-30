@@ -94,14 +94,11 @@ const mailer = {
 }
 
 export class AuthService {
-    private authRepository: AuthRepository;
-    private usersQueryRepository: UsersQueryRepository;
-    private authQueryRepository: AuthQueryRepository;
-    constructor() {
-        this.authRepository = new AuthRepository();
-        this.usersQueryRepository = new UsersQueryRepository();
-        this.authQueryRepository = new AuthQueryRepository();
-    }
+    constructor(
+        protected authRepository: AuthRepository,
+        protected usersQueryRepository: UsersQueryRepository,
+        protected authQueryRepository: AuthQueryRepository
+    ) {}
     async registrationNewUser({login, password, email}: RequestUserType): Promise<boolean> {
         const confirmationEmailCode: string = uuidv4();
         try {
@@ -266,5 +263,3 @@ export class AuthService {
         await this.authRepository.deleteAllSessions();
     }
 }
-
-export const authService = new AuthService();

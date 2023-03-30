@@ -6,14 +6,11 @@ import {v4 as uuid4} from 'uuid';
 import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 
 export class BlogsService {
-    private blogsRepository: BlogsRepository;
-    private postsService: PostsService;
-    private blogsQueryRepository: BlogsQueryRepository;
-    constructor() {
-        this.blogsRepository = new BlogsRepository();
-        this.postsService = new PostsService();
-        this.blogsQueryRepository = new BlogsQueryRepository();
-    }
+    constructor(
+        protected blogsRepository: BlogsRepository,
+        protected postsService: PostsService,
+        protected blogsQueryRepository: BlogsQueryRepository
+    ) {}
     async createNewBlog(newBlog: RequestBlogType): Promise<BlogType> {
         const newBlogTemplate: BlogType = {
             id: uuid4(),
@@ -42,5 +39,3 @@ export class BlogsService {
         await this.blogsRepository.deleteAllData();
     }
 }
-
-export const blogsService = new BlogsService();

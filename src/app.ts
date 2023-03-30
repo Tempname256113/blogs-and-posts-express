@@ -1,15 +1,10 @@
 import express, {Request, Response} from "express";
 import {blogsRouter} from "./routes/blogs-router";
 import {postsRouter} from "./routes/posts-router";
-import {postsService} from "./domain/posts-service";
-import {blogsService} from "./domain/blogs-service";
 import {usersRouter} from "./routes/users-router";
-import {usersService} from "./domain/users-service";
 import {authRouter} from "./routes/auth-router";
 import {commentsRouter} from "./routes/comments-router";
-import {commentsService} from "./domain/comments-service";
 import cookieParser from "cookie-parser";
-import {authService} from "./domain/auth-service";
 import {securityDevicesRouter} from "./routes/security-devices-router";
 import {jwtMethods} from "./routes/application/jwt-methods";
 import {requestLimiterMiddleware} from "./middlewares/request-limiter-middleware";
@@ -17,6 +12,7 @@ import {requestLimiterRepository} from "./repositories/request-limiter-middlewar
 import {body, validationResult} from "express-validator";
 import {checkRequestRefreshTokenCookieMiddleware} from "./middlewares/check-request-refreshToken-cookie-middleware";
 import {catchErrorsMiddleware} from "./middlewares/catch-errors-middleware";
+import {authService, blogsService, commentsService, postsService, usersService} from "./composition-root";
 
 export const app = express();
 
