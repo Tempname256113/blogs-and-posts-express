@@ -1,7 +1,7 @@
 import {CommentInTheDBType} from "../../models/comment-model";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
-class CommentsRepository {
+export class CommentsRepository {
     // создает комментарий в базе данных, нужно передать шаблон для создания комментария.
     // такие шаблоны будут находиться в базе данных.
     // ничего не возвращает
@@ -20,5 +20,3 @@ class CommentsRepository {
         await CommentModel.deleteMany();
     }
 }
-
-export const commentsRepository = new CommentsRepository();

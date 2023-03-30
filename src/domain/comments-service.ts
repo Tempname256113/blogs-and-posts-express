@@ -1,13 +1,19 @@
 import {CommentInTheDBType, CommentType} from "../models/comment-model";
-import {usersQueryRepository} from "../repositories/users/users-query-repository";
+import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {UserTypeExtended} from "../models/user-models";
-import {commentsRepository} from "../repositories/comments/comments-repository";
+import {CommentsRepository} from "../repositories/comments/comments-repository";
 
 export class CommentsService {
+    private usersQueryRepository: UsersQueryRepository;
+    private commentsRepository: CommentsRepository;
+    constructor() {
+        this.usersQueryRepository = new UsersQueryRepository();
+        this.commentsRepository = new CommentsRepository();
+    }
     // создает комментарий. нужно передать содержание комментария, id пользователя и id поста к которому был написан комментарий.
     // возвращает комментарий с видом нужным клиенту
     async createComment({content, userId, postId}: {content: string, userId: string, postId: string}): Promise<CommentType>{
-        const userFromDB: UserTypeExtended | null = await usersQueryRepository.getUserById(userId);
+        const userFromDB: UserTypeExtended | null = await this.usersQueryRepository.getUserById(userId);
         const userLogin: string = userFromDB!.accountData.login;
         const createdAt = new Date().toISOString();
         const myUniqueId = 'id' + new Date().getTime();
@@ -26,21 +32,21 @@ export class CommentsService {
             userLogin,
             createdAt
         }
-        await commentsRepository.createComment(commentInTheDBTemplate);
+        await this.commentsRepository.createComment(commentInTheDBTemplate);
         return commentToClient;
     };
     async deleteCommentByID(commentId: string): Promise<boolean>{
-        return commentsRepository.deleteCommentByID(commentId);
+        return this.commentsRepository.deleteCommentByID(commentId);
     };
     async updateComment({content, commentID}: {content: string, commentID: string}){
         const templateForUpdateComment = {
             content,
             commentID
         }
-        return commentsRepository.updateComment(templateForUpdateComment);
+        return this.commentsRepository.updateComment(templateForUpdateComment);
     };
     async deleteAllData(){
-        await commentsRepository.deleteAllData();
+        await this.commentsRepository.deleteAllData();
     }
 }
 

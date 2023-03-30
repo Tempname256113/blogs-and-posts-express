@@ -1,7 +1,7 @@
 import {UserType, UserTypeExtended} from "../../models/user-models";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
 
-class UsersRepository {
+export class UsersRepository {
     async createUser(newUserTemplate: UserTypeExtended): Promise<UserType> {
         await new UserModel(newUserTemplate).save();
         const {id, accountData: {login, email, createdAt}} = newUserTemplate;
@@ -20,5 +20,3 @@ class UsersRepository {
         await UserModel.deleteMany();
     }
 }
-
-export const usersRepository = new UsersRepository();

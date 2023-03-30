@@ -1,13 +1,13 @@
-import {RequestUserType, UserType, UserTypeExtended, UserTypeExtendedOptionalFields} from "../models/user-models";
+import {RequestUserType, UserTypeExtended, UserTypeExtendedOptionalFields} from "../models/user-models";
 import {createTransport} from "nodemailer";
 import {v4 as uuidv4} from 'uuid';
 import {add} from 'date-fns';
-import {authRepository} from "../repositories/auth/auth-repository";
+import {AuthRepository} from "../repositories/auth/auth-repository";
 import {compare, hash} from "bcrypt";
-import {usersQueryRepository} from "../repositories/users/users-query-repository";
+import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {createNewPairOfTokens} from "../routes/application/jwt-methods";
 import {DataForUpdateSessionType, SessionType} from "../models/session-models";
-import {authQueryRepository} from "../repositories/auth/auth-query-repository";
+import {AuthQueryRepository} from "../repositories/auth/auth-query-repository";
 
 const envVariables = {
     mailUser: process.env.MAIL_USER,
@@ -94,6 +94,14 @@ const mailer = {
 }
 
 export class AuthService {
+    private authRepository: AuthRepository;
+    private usersQueryRepository: UsersQueryRepository;
+    private authQueryRepository: AuthQueryRepository;
+    constructor() {
+        this.authRepository = new AuthRepository();
+        this.usersQueryRepository = new UsersQueryRepository();
+        this.authQueryRepository = new AuthQueryRepository();
+    }
     async registrationNewUser({login, password, email}: RequestUserType): Promise<boolean> {
         const confirmationEmailCode: string = uuidv4();
         try {
@@ -115,7 +123,7 @@ export class AuthService {
                     recoveryCode: 'none'
                 }
             }
-            await authRepository.createNewUser(newUser);
+            await this.authRepository.createNewUser(newUser);
             mailer.sendLinkForCompleteRegistration(email, confirmationEmailCode);
             return true;
         } catch (e) {
@@ -123,7 +131,7 @@ export class AuthService {
         }
     };
     async confirmRegistration(emailConfirmCode: string): Promise<boolean> {
-        const foundedUserByConfirmationEmailCode: UserTypeExtended | null = await usersQueryRepository.getUserByConfirmationEmailCode(emailConfirmCode);
+        const foundedUserByConfirmationEmailCode: UserTypeExtended | null = await this.usersQueryRepository.getUserByConfirmationEmailCode(emailConfirmCode);
         if (!foundedUserByConfirmationEmailCode) return false;
         if (foundedUserByConfirmationEmailCode.emailConfirmation.isConfirmed) return false;
         if (new Date() > foundedUserByConfirmationEmailCode.emailConfirmation.expirationDate) return false;
@@ -136,13 +144,13 @@ export class AuthService {
                     isConfirmed: true
                 }
             };
-            await authRepository.updateUserByID(userId, templateForUpdateUser);
+            await this.authRepository.updateUserByID(userId, templateForUpdateUser);
         }
         await updateUserEmailConfirmationStatus();
         return true;
     };
     async resendSecretCodeToEmail(email: string): Promise<boolean> {
-        const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
+        const foundedUserByEmail: UserTypeExtended | null = await this.usersQueryRepository.getUserByEmail(email);
         if (!foundedUserByEmail) return false;
         if (foundedUserByEmail.emailConfirmation.isConfirmed) return false;
         try {
@@ -156,7 +164,7 @@ export class AuthService {
                         isConfirmed: false
                     }
                 };
-                await authRepository.updateUserByID(userId, templateForUpdateUser);
+                await this.authRepository.updateUserByID(userId, templateForUpdateUser);
             }
             await updateUserEmailConfirmationStatus();
             mailer.sendLinkForCompleteRegistration(email, confirmationEmailCode);
@@ -167,7 +175,7 @@ export class AuthService {
     };
     async signIn({userLoginOrEmail, userPassword, userIp, userDeviceName}: sessionDataType):
         Promise<{ accessToken: string, refreshToken: string } | null> {
-        const foundedUserByLoginOrEmail: UserTypeExtended | null = await usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
+        const foundedUserByLoginOrEmail: UserTypeExtended | null = await this.usersQueryRepository.getUserByLoginOrEmail(userLoginOrEmail);
         if (!foundedUserByLoginOrEmail) return null;
         if (foundedUserByLoginOrEmail.accountData.password === null) return null;
         const comparePass = await compare(userPassword, foundedUserByLoginOrEmail.accountData.password!);
@@ -186,17 +194,17 @@ export class AuthService {
             userDeviceName,
             userId
         }
-        await authRepository.addNewSession(newSession);
+        await this.authRepository.addNewSession(newSession);
         return {
             accessToken,
             refreshToken
         }
     };
     updateSession(deviceId: string, dataForUpdateSession: DataForUpdateSessionType): Promise<boolean> {
-        return authRepository.updateSession(deviceId, dataForUpdateSession);
+        return this.authRepository.updateSession(deviceId, dataForUpdateSession);
     };
     deleteSessionByDeviceId(deviceId: string): Promise<boolean> {
-        return authRepository.deleteSessionByDeviceId(deviceId);
+        return this.authRepository.deleteSessionByDeviceId(deviceId);
     };
     async deleteAllSessionsExceptCurrent(currentUserId: string, currentDeviceId: string): Promise<void> {
         type deviceId = string;
@@ -204,12 +212,12 @@ export class AuthService {
         const sessionsHandler = (session: SessionType): void => {
             if (session.deviceId !== currentDeviceId) sessionsDeviceIdExceptCurrentArr.push(session.deviceId);
         }
-        const sessionsArray = await authQueryRepository.getAllSessionsByUserId(currentUserId);
+        const sessionsArray = await this.authQueryRepository.getAllSessionsByUserId(currentUserId);
         sessionsArray.forEach(sessionsHandler);
-        authRepository.deleteManySessions(sessionsDeviceIdExceptCurrentArr);
+        this.authRepository.deleteManySessions(sessionsDeviceIdExceptCurrentArr);
     };
     async sendPasswordRecoveryCode(email: string): Promise<void> {
-        const foundedUserByEmail: UserTypeExtended | null = await usersQueryRepository.getUserByEmail(email);
+        const foundedUserByEmail: UserTypeExtended | null = await this.usersQueryRepository.getUserByEmail(email);
         if (foundedUserByEmail) {
             try {
                 const userId = foundedUserByEmail.id;
@@ -226,7 +234,7 @@ export class AuthService {
                             recoveryCode: confirmationCode
                         }
                     };
-                    await authRepository.updateUserByID(userId,userUpdateData);
+                    await this.authRepository.updateUserByID(userId,userUpdateData);
                 }
                 await updateUserPasswordRecoveryCode();
                 mailer.sendLinkForPasswordRecovery(email, confirmationCode);
@@ -250,12 +258,12 @@ export class AuthService {
                     recoveryCode: null
                 }
             };
-            await authRepository.updateUserByID(userId, userUpdateData);
+            await this.authRepository.updateUserByID(userId, userUpdateData);
         }
         await updateUserPassword();
     };
     async deleteAllSessions(): Promise<void> {
-        await authRepository.deleteAllSessions();
+        await this.authRepository.deleteAllSessions();
     }
 }
 

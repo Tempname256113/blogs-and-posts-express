@@ -2,7 +2,7 @@ import {UserTypeExtended, UserTypeExtendedOptionalFields} from "../../models/use
 import {DataForUpdateSessionType, SessionType} from "../../models/session-models";
 import {SessionModel, UserModel} from "../../mongoose-db-models/auth-db-models";
 
-class AuthRepository {
+export class AuthRepository {
     async createNewUser(newUser: UserTypeExtended): Promise<void> {
         await new UserModel(newUser).save();
     };
@@ -42,5 +42,3 @@ class AuthRepository {
         await SessionModel.deleteMany();
     }
 }
-
-export const authRepository = new AuthRepository();

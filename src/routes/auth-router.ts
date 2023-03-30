@@ -139,49 +139,49 @@ authRouter.post('/login',
     body('loginOrEmail').isString().trim().isLength({min: 1}),
     body('password').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    authControllerInstance.login
+    authControllerInstance.login.bind(authControllerInstance)
 );
 
 authRouter.post('/refresh-token',
     checkRequestRefreshTokenCookieMiddleware,
-    authControllerInstance.getNewPairOfTokens
+    authControllerInstance.getNewPairOfTokens.bind(authControllerInstance)
 );
 
 authRouter.post('/logout',
     checkRequestRefreshTokenCookieMiddleware,
-    authControllerInstance.logout
+    authControllerInstance.logout.bind(authControllerInstance)
 );
 
 authRouter.get('/me',
     bearerUserAuthTokenCheckMiddleware,
-    authControllerInstance.getInfoAboutMe
+    authControllerInstance.getInfoAboutMe.bind(authControllerInstance)
 );
 
 authRouter.post('/registration',
     requestLimiterMiddleware,
     createNewUserValidationMiddlewaresArray,
-    authControllerInstance.registrationNewUser
+    authControllerInstance.registrationNewUser.bind(authControllerInstance)
 );
 
 authRouter.post('/registration-confirmation',
     requestLimiterMiddleware,
     body('code').isString().trim().isLength({min: 1}),
     catchErrorsMiddleware,
-    authControllerInstance.registrationConfirm
+    authControllerInstance.registrationConfirm.bind(authControllerInstance)
 );
 
 authRouter.post('/registration-email-resending',
     requestLimiterMiddleware,
     body('email').isEmail(),
     catchErrorsMiddleware,
-    authControllerInstance.registrationEmailCodeResending
+    authControllerInstance.registrationEmailCodeResending.bind(authControllerInstance)
 );
 
 authRouter.post('/password-recovery',
     requestLimiterMiddleware,
     body('email').isEmail(),
     catchErrorsMiddleware,
-    authControllerInstance.sendPasswordRecoveryCode
+    authControllerInstance.sendPasswordRecoveryCode.bind(authControllerInstance)
 );
 
 authRouter.post('/new-password',
@@ -202,5 +202,5 @@ authRouter.post('/new-password',
         });
     }),
     catchErrorsMiddleware,
-    authControllerInstance.createNewUserPassword
+    authControllerInstance.createNewUserPassword.bind(authControllerInstance)
 );

@@ -1,7 +1,7 @@
 import {BlogType, RequestBlogType} from "../../models/blog-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 
-class BlogsRepository {
+export class BlogsRepository {
     async createNewBlog(newBlogTemplate: BlogType): Promise<BlogType> {
         await new BlogModel(newBlogTemplate).save();
         return newBlogTemplate;

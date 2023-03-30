@@ -1,9 +1,13 @@
 import {RequestUserType, UserType, UserTypeExtended} from "../models/user-models";
 import {genSalt, hash} from "bcrypt";
-import {usersRepository} from "../repositories/users/users-repository";
+import {UsersRepository} from "../repositories/users/users-repository";
 import {v4 as uuidv4} from 'uuid';
 
 export class UsersService {
+    private usersRepository: UsersRepository;
+    constructor() {
+        this.usersRepository = new UsersRepository();
+    }
     async createUser({login,password,email}: RequestUserType): Promise<UserType>{
         const salt: string = await genSalt(10);
         const passwordHashWithSalt: string = await hash(password, salt);
@@ -24,13 +28,13 @@ export class UsersService {
                 recoveryCode: 'none'
             }
         }
-        return usersRepository.createUser(newUserTemplate);
+        return this.usersRepository.createUser(newUserTemplate);
     };
     async deleteUser(userId: string): Promise<boolean> {
-        return usersRepository.deleteUser(userId);
+        return this.usersRepository.deleteUser(userId);
     };
     async deleteAllData(): Promise<void>{
-        await usersRepository.deleteAllData();
+        await this.usersRepository.deleteAllData();
     }
 }
 
