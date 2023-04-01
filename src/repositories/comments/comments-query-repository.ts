@@ -4,7 +4,9 @@ import {
     QueryPaginationWithSearchConfigType,
     ResultOfPaginationCommentsByQueryType
 } from "../mongo-DB-features/pagination-by-query-params-functions";
-import {CommentType} from "../../models/comment-model";
+import {
+    CommentDocumentMongooseType,
+} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
 export class CommentsQueryRepository {
@@ -25,8 +27,8 @@ export class CommentsQueryRepository {
         }
         return paginationCommentsByQueryParams(paginationWithSearchConfig);
     };
-    async getCommentByID(id: string): Promise<CommentType | null> {
-        return CommentModel.findOne({id}, {_id: false});
+    async getCommentByID(id: string): Promise<CommentDocumentMongooseType | null> {
+        return CommentModel.findOne({commentId: id}, {_id: false});
     }
 }
 

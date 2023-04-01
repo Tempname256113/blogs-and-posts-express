@@ -7,9 +7,9 @@ accessTokenPayload: {userId: string, iat: number, exp: number}
 }
 также если находит ошибки в присылаемом токене отправляет 401 статус */
 export const bearerUserAuthTokenCheckMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const reqToken: string | undefined = req.headers.authorization;
-    if (!reqToken) return res.sendStatus(401);
-    const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(reqToken);
+    const accessToken: string | undefined = req.headers.authorization;
+    if (!accessToken) return res.sendStatus(401);
+    const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(accessToken);
     if (!accessTokenPayload) return res.sendStatus(401);
     req.context = {
         accessTokenPayload

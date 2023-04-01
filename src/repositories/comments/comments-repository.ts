@@ -1,4 +1,4 @@
-import {CommentInTheDBType} from "../../models/comment-model";
+import {CommentInTheDBType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
 export class CommentsRepository {
@@ -9,11 +9,11 @@ export class CommentsRepository {
         await new CommentModel(commentInTheDBTemplate).save();
     };
     async deleteCommentByID(commentId: string): Promise<boolean> {
-        const deletedCommentStatus = await CommentModel.deleteOne({id: commentId});
+        const deletedCommentStatus = await CommentModel.deleteOne({commentId: commentId});
         return deletedCommentStatus.deletedCount > 0;
     };
     async updateComment({content, commentID}: {content: string, commentID: string}): Promise<boolean> {
-        const updatedCommentStatus = await CommentModel.updateOne({id: commentID}, {content});
+        const updatedCommentStatus = await CommentModel.updateOne({commentId: commentID}, {content});
         return updatedCommentStatus.matchedCount > 0;
     };
     async deleteAllData(): Promise<void>{

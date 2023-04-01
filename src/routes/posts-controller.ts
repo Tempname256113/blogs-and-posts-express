@@ -19,7 +19,7 @@ import {
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 import {PostType, RequestPostType} from "../models/post-models";
 import {ErrorObjType} from "../models/errorObj-model";
-import {CommentType} from "../models/comment-model";
+import {CommentType} from "../models/comment-models";
 
 export class PostsController {
     constructor(

@@ -1,4 +1,4 @@
-import {CommentInTheDBType, CommentType} from "../models/comment-model";
+import {CommentInTheDBType, CommentType} from "../models/comment-models";
 import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {UserTypeExtended} from "../models/user-models";
 import {CommentsRepository} from "../repositories/comments/comments-repository";
@@ -16,15 +16,22 @@ export class CommentsService {
         const createdAt = new Date().toISOString();
         const myUniqueId = 'id' + new Date().getTime();
         const commentToClient: CommentType = {
-            id: myUniqueId,
+            commentId: myUniqueId,
             content,
-            userId,
-            userLogin,
-            createdAt
+            commentatorInfo: {
+                userId,
+                userLogin
+            },
+            createdAt,
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None'
+            }
         }
         const commentInTheDBTemplate: CommentInTheDBType = {
             postId,
-            id: myUniqueId,
+            commentId: myUniqueId,
             content,
             userId,
             userLogin,

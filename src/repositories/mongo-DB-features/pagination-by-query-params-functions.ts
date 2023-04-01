@@ -6,7 +6,7 @@ import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 import {SortOrder} from "mongoose";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
-import {CommentInTheDBType} from "../../models/comment-model";
+import {CommentInTheDBType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 
 type ResultOfPaginationBlogsByQueryType = {
