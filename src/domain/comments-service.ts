@@ -2,6 +2,7 @@ import {CommentInTheDBType, CommentType} from "../models/comment-models";
 import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {UserTypeExtended} from "../models/user-models";
 import {CommentsRepository} from "../repositories/comments/comments-repository";
+import {CommentsLikesModel} from "../mongoose-db-models/likes-db-model";
 
 export class CommentsService {
     constructor(
@@ -60,5 +61,8 @@ export class CommentsService {
             userId: changeLikeStatusData.userId,
             likeStatus: changeLikeStatusData.likeStatus
         })
+    };
+    async deleteAllCommentsLikes(): Promise<void>{
+        await this.commentsRepository.deleteAllCommentsLikes();
     }
 }

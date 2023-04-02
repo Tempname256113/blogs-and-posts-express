@@ -31,5 +31,8 @@ export class CommentsRepository {
             commentId: likeData.commentId,
             likeStatus: likeData.likeStatus
         }).save()
+    };
+    async deleteAllCommentsLikes(): Promise<void>{
+        await CommentsLikesModel.deleteMany();
     }
 }
