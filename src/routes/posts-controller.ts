@@ -20,6 +20,8 @@ import {
 import {PostType, RequestPostType} from "../models/post-models";
 import {ErrorObjType} from "../models/errorObj-model";
 import {CommentType} from "../models/comment-models";
+import {AccessTokenPayloadType} from "../models/token-models";
+import {jwtMethods} from "./application/jwt-methods";
 
 export class PostsController {
     constructor(
@@ -50,14 +52,23 @@ export class PostsController {
         req: RequestWithURIParamsAndQuery<{ id: string }, queryPaginationType>,
         res: ResponseWithBody<ResultOfPaginationCommentsByQueryType>
     ) {
+        const getUserId = (): string | null => {
+            const accessToken: string | undefined = req.headers.authorization;
+            if (!accessToken) return null;
+            const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(accessToken);
+            if (!accessTokenPayload) return null;
+            return accessTokenPayload.userId;
+        };
+        const userId: string | null = getUserId();
         const foundedPostById: PostType | null = await this.postsQueryRepository.getPostByID(req.params.id);
         if (!foundedPostById) return res.sendStatus(404);
-        const paginationQueryConfig: { postId: string } & queryPaginationType = {
+        const paginationQueryConfig: { postId: string, userId: string | null } & queryPaginationType = {
             postId: req.params.id,
             sortBy: req.query.sortBy ?? 'createdAt',
             sortDirection: req.query.sortDirection ?? 'desc',
             pageNumber: req.query.pageNumber ?? 1,
-            pageSize: req.query.pageSize ?? 10
+            pageSize: req.query.pageSize ?? 10,
+            userId
         }
         const commentsWithPagination: ResultOfPaginationCommentsByQueryType = await this.commentsQueryRepository.getCommentsWithPagination(paginationQueryConfig);
         res.status(200).send(commentsWithPagination);

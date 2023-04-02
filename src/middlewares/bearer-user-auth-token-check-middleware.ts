@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from "express";
 import {jwtMethods} from "../routes/application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
 
-/* добавляет к объекту запроса context где context = {
+/* добавляет к объекту запроса новый объект context где context = {
 accessTokenPayload: {userId: string, iat: number, exp: number}
 }
 также если находит ошибки в присылаемом токене отправляет 401 статус */

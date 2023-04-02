@@ -16,16 +16,17 @@ export class CommentsQueryRepository {
             sortBy,
             sortDirection,
             pageNumber,
-            pageSize
-        }: { postId: string } & queryPaginationType): Promise<ResultOfPaginationCommentsByQueryType> {
+            pageSize,
+            userId
+        }: { postId: string, userId: string | null } & queryPaginationType): Promise<ResultOfPaginationCommentsByQueryType> {
         const paginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
-            searchConfig: {postId},
+            searchFilter: {postId},
             sortBy,
             sortDirection,
             pageNumber,
             pageSize
         }
-        return paginationCommentsByQueryParams(paginationWithSearchConfig);
+        return paginationCommentsByQueryParams(paginationWithSearchConfig, userId);
     };
     async getCommentByID(id: string): Promise<CommentDocumentMongooseType | null> {
         return CommentModel.findOne({commentId: id}, {_id: false});

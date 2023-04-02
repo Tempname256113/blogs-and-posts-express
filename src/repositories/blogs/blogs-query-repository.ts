@@ -22,7 +22,7 @@ export class BlogsQueryRepository {
         let searchConfig: SearchTemplateType = {};
         if (searchNameTerm) searchConfig = {name: {$regex: searchNameTerm, $options: 'i'}};
         const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
-            searchConfig,
+            searchFilter: searchConfig,
             sortBy,
             sortDirection,
             pageNumber,
@@ -39,7 +39,7 @@ export class BlogsQueryRepository {
             pageSize
         }: { blogId: string } & queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
         const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
-            searchConfig: {blogId},
+            searchFilter: {blogId},
             sortBy,
             sortDirection,
             pageNumber,

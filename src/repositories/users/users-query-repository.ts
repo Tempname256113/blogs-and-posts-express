@@ -16,7 +16,7 @@ export class UsersQueryRepository {
             searchLoginTerm = '',
             searchEmailTerm = ''}: UsersQueryPaginationType): Promise<ResultOfPaginationUsersByQueryType> {
         const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
-            searchConfig: {$or: [
+            searchFilter: {$or: [
                     {'accountData.login': {$regex: searchLoginTerm, $options: 'i'}},
                     {'accountData.email': {$regex: searchEmailTerm, $options: 'i'}}
                 ]},

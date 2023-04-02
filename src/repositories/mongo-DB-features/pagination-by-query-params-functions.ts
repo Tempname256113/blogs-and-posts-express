@@ -6,8 +6,9 @@ import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
 import {SortOrder} from "mongoose";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
-import {CommentInTheDBType} from "../../models/comment-models";
+import {CommentDocumentMongooseType, CommentInTheDBType, CommentType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
+import {LikesInfoType} from "../../models/comment-likes-model";
 
 type ResultOfPaginationBlogsByQueryType = {
     pagesCount: number,
@@ -38,7 +39,7 @@ type ResultOfPaginationCommentsByQueryType = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: CommentInTheDBType[]
+    items: CommentType[]
 }
 
 type SearchTemplateType = {
@@ -51,12 +52,12 @@ type FewSearchTemplatesType = {
 }
 
 type QueryPaginationWithSearchConfigType =
-    { searchConfig: SearchTemplateType | FewSearchTemplatesType }
+    { searchFilter: SearchTemplateType | FewSearchTemplatesType }
     & queryPaginationType;
 
 const paginationBlogsByQueryParams = async (
     {
-        searchConfig,
+        searchFilter,
         sortBy,
         sortDirection,
         pageNumber,
@@ -68,11 +69,11 @@ const paginationBlogsByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir};
     const arrayOfReturnedWithPaginationBlogs: BlogType[] = await BlogModel
-        .find(searchConfig, {_id: false})
+        .find(searchFilter, {_id: false})
         .sort(sortConfig)
         .limit(Number(pageSize))
         .skip(howMuchToSkip);
-    const allBlogsFromDB: BlogType[] = await BlogModel.find(searchConfig);
+    const allBlogsFromDB: BlogType[] = await BlogModel.find(searchFilter);
     const totalCount: number = allBlogsFromDB.length;
     const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -86,7 +87,7 @@ const paginationBlogsByQueryParams = async (
 
 const paginationPostsByQueryParams = async (
     {
-        searchConfig,
+        searchFilter,
         sortBy,
         sortDirection,
         pageNumber,
@@ -98,11 +99,11 @@ const paginationPostsByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir};
     const arrayOfReturnedWithPaginationPosts: PostType[] = await PostModel
-        .find(searchConfig, {_id: false})
+        .find(searchFilter, {_id: false})
         .sort(sortConfig)
         .limit(Number(pageSize))
         .skip(howMuchToSkip);
-    const allPostsFromDB: PostType[] = await PostModel.find(searchConfig);
+    const allPostsFromDB: PostType[] = await PostModel.find(searchFilter);
     const totalCount: number = allPostsFromDB.length;
     const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -116,7 +117,7 @@ const paginationPostsByQueryParams = async (
 
 const paginationUsersByQueryParams = async (
     {
-        searchConfig,
+        searchFilter,
         sortBy,
         sortDirection,
         pageNumber,
@@ -128,11 +129,11 @@ const paginationUsersByQueryParams = async (
 
     const sortConfig = {[sortBy]: sortDir};
     const arrayOfReturnedWithPaginationUsers: UserTypeExtended[] = await UserModel
-        .find(searchConfig, {_id: false, 'accountData.password': false})
+        .find(searchFilter, {_id: false, 'accountData.password': false})
         .sort(sortConfig)
         .limit(Number(pageSize))
         .skip(howMuchToSkip);
-    const allUsersFromDB: UserTypeExtended[] = await UserModel.find(searchConfig);
+    const allUsersFromDB: UserTypeExtended[] = await UserModel.find(searchFilter);
     const totalCount: number = allUsersFromDB.length;
     const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -146,31 +147,52 @@ const paginationUsersByQueryParams = async (
 
 const paginationCommentsByQueryParams = async (
     {
-        searchConfig,
+        searchFilter,
         sortBy,
         sortDirection,
         pageNumber,
         pageSize
-    }: QueryPaginationWithSearchConfigType): Promise<ResultOfPaginationCommentsByQueryType> => {
+    }: QueryPaginationWithSearchConfigType, userId: string | null): Promise<ResultOfPaginationCommentsByQueryType> => {
     const howMuchToSkip: number = (Number(pageNumber) - 1) * Number(pageSize);
     let sortDir: SortOrder;
     sortDirection === 'asc' ? sortDir = 1 : sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir};
-    const arrayOfReturnedWithPaginationComments: CommentInTheDBType[] = await CommentModel
-        .find(searchConfig, {_id: false, postId: false})
-        .sort(sortConfig)
-        .limit(Number(pageSize))
-        .skip(howMuchToSkip);
-    const allCommentsFromDB: CommentInTheDBType[] = await CommentModel.find(searchConfig);
-    const totalCount: number = allCommentsFromDB.length;
-    const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
+    const arrayOfReturnedWithPaginationComments: CommentDocumentMongooseType[] = await CommentModel
+        .find(searchFilter,
+            {_id: false, postId: false},
+            {
+                sort: sortConfig,
+                limit: Number(pageSize),
+                skip: howMuchToSkip
+            })
+    let commentsArray: CommentType[] = [];
+    for (const commentFromDB of arrayOfReturnedWithPaginationComments) {
+        const commentLikesInfo: LikesInfoType = await commentFromDB.getLikesInfo(userId);
+        const compileComment: CommentType = {
+            id: commentFromDB.commentId,
+            content: commentFromDB.content,
+            commentatorInfo: {
+                userId: commentFromDB.userId,
+                userLogin: commentFromDB.userLogin
+            },
+            createdAt: commentFromDB.createdAt,
+            likesInfo: {
+                likesCount: commentLikesInfo.likesCount,
+                dislikesCount: commentLikesInfo.dislikesCount,
+                myStatus: commentLikesInfo.myLikeStatus
+            }
+        }
+        commentsArray.push(compileComment);
+    };
+    const allCommentsFromDB: number = await CommentModel.countDocuments(searchFilter);
+    const pagesCount: number = Math.ceil(allCommentsFromDB / Number(pageSize));
     return {
         pagesCount,
         page: Number(pageNumber),
         pageSize: Number(pageSize),
-        totalCount,
-        items: arrayOfReturnedWithPaginationComments
+        totalCount: allCommentsFromDB,
+        items: commentsArray
     }
 }
 

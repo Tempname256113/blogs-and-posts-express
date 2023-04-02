@@ -12,8 +12,8 @@ const commentsLikesSchema = new Schema<CommentLikesModel>(
         collection: 'comments-likes'
     });
 
-const commentsLikesModel = model<CommentLikesModel>('comments-likes', commentsLikesSchema);
+const CommentsLikesModel = model<CommentLikesModel>('comments-likes', commentsLikesSchema);
 
 export {
-    commentsLikesModel
+    CommentsLikesModel
 }

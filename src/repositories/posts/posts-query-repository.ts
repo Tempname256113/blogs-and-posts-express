@@ -15,7 +15,7 @@ export class PostsQueryRepository {
             pageSize
         }: queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
         const queryPaginationTypeWithSearchConfig = {
-            searchConfig: {},
+            searchFilter: {},
             sortBy: sortBy,
             sortDirection: sortDirection,
             pageNumber: pageNumber,

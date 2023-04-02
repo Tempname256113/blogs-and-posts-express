@@ -1,5 +1,7 @@
 import {CommentInTheDBType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
+import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
+import {CommentLikesModel} from "../../models/comment-likes-model";
 
 export class CommentsRepository {
     // создает комментарий в базе данных, нужно передать шаблон для создания комментария.
@@ -18,5 +20,16 @@ export class CommentsRepository {
     };
     async deleteAllData(): Promise<void>{
         await CommentModel.deleteMany();
+    };
+    async deleteLikeStatusByUserId(userId: string): Promise<boolean>{
+        const deleteStatus = await CommentsLikesModel.deleteOne();
+        return deleteStatus.deletedCount > 0;
+    };
+    async addLikeStatus(likeData: CommentLikesModel): Promise<void>{
+        await new CommentsLikesModel({
+            userId: likeData.userId,
+            commentId: likeData.commentId,
+            likeStatus: likeData.likeStatus
+        }).save()
     }
 }

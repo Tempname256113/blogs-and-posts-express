@@ -1,4 +1,4 @@
-import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {commentsQueryRepository, CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
 import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
 import {CommentDocumentMongooseType, CommentType} from "../models/comment-models";
@@ -25,7 +25,7 @@ export class CommentsController {
         if (!foundedCommentById) return res.sendStatus(404);
         const commentLikesInfo: LikesInfoType = await foundedCommentById.getLikesInfo(userId);
         const commentToClient: CommentType = {
-            commentId: foundedCommentById.commentId,
+            id: foundedCommentById.commentId,
             content: foundedCommentById.content,
             commentatorInfo: {
                 userId: foundedCommentById.userId,
@@ -56,5 +56,16 @@ export class CommentsController {
         }
         const updatedCommentStatus: boolean = await this.commentsService.updateComment(dataForUpdateComment);
         updatedCommentStatus ? res.sendStatus(204) : res.sendStatus(404);
+    };
+
+    async changeLikeStatus(
+        req: RequestWithURIParamsAndBody<{commentId: string}, {likeStatus: 'None' | 'Like' | 'Dislike'}>,
+        res: Response
+    ){
+        const foundedCommentById: CommentDocumentMongooseType | null = await commentsQueryRepository.getCommentByID(req.params.commentId);
+        if (!foundedCommentById) return res.sendStatus(404);
+        const userId: string = req.context.accessTokenPayload!.userId;
+        await this.commentsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, commentId: req.params.commentId});
+        res.sendStatus(204);
     }
 }

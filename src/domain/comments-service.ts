@@ -16,7 +16,7 @@ export class CommentsService {
         const createdAt = new Date().toISOString();
         const myUniqueId = 'id' + new Date().getTime();
         const commentToClient: CommentType = {
-            commentId: myUniqueId,
+            id: myUniqueId,
             content,
             commentatorInfo: {
                 userId,
@@ -52,5 +52,13 @@ export class CommentsService {
     };
     async deleteAllData(){
         await this.commentsRepository.deleteAllData();
+    };
+    async changeLikeStatus(changeLikeStatusData: {likeStatus: 'None' | 'Like' | 'Dislike', userId: string, commentId: string}): Promise<void>{
+        await this.commentsRepository.deleteLikeStatusByUserId(changeLikeStatusData.userId);
+        if (changeLikeStatusData.likeStatus !== 'None') await this.commentsRepository.addLikeStatus({
+            commentId: changeLikeStatusData.commentId,
+            userId: changeLikeStatusData.userId,
+            likeStatus: changeLikeStatusData.likeStatus
+        })
     }
 }

@@ -11,7 +11,7 @@ type CommentInTheDBType = {
 }
 
 type CommentType = {
-    commentId: string,
+    id: string,
     content: string,
     commentatorInfo: {
         userId: string,
