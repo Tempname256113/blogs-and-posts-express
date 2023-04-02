@@ -22,7 +22,7 @@ export class CommentsRepository {
         await CommentModel.deleteMany();
     };
     async deleteLikeStatusByUserId(userId: string): Promise<boolean>{
-        const deleteStatus = await CommentsLikesModel.deleteOne();
+        const deleteStatus = await CommentsLikesModel.deleteOne({userId});
         return deleteStatus.deletedCount > 0;
     };
     async addLikeStatus(likeData: CommentLikesModel): Promise<void>{
