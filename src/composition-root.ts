@@ -35,7 +35,7 @@ const blogsRepository = new BlogsRepository();
 export const usersService = new UsersService(usersRepository);
 export const authService = new AuthService(authRepository, usersQueryRepository, authQueryRepository);
 export const postsService = new PostsService(blogsQueryRepository, postsRepository);
-export const commentsService = new CommentsService(usersQueryRepository, commentsRepository);
+export const commentsService = new CommentsService(usersQueryRepository, commentsRepository, commentsQueryRepository);
 export const blogsService = new BlogsService(blogsRepository, postsService, blogsQueryRepository);
 
 

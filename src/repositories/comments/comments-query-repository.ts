@@ -8,6 +8,8 @@ import {
     CommentDocumentMongooseType,
 } from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
+import {CommentLikesModel} from "../../models/comment-likes-model";
+import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
 
 export class CommentsQueryRepository {
     async getCommentsWithPagination(
@@ -30,6 +32,10 @@ export class CommentsQueryRepository {
     };
     async getCommentByID(id: string): Promise<CommentDocumentMongooseType | null> {
         return CommentModel.findOne({commentId: id}, {_id: false});
+    };
+    async getLike(userId: string, commentId: string) : Promise <CommentLikesModel | null> {
+        const filter = {$and: [{userId}, {commentId}]};
+        return CommentsLikesModel.findOne(filter);
     }
 }
 

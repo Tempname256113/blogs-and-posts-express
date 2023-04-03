@@ -21,8 +21,9 @@ export class CommentsRepository {
     async deleteAllData(): Promise<void>{
         await CommentModel.deleteMany();
     };
-    async deleteLikeStatusByUserId(userId: string): Promise<boolean>{
-        const deleteStatus = await CommentsLikesModel.deleteOne({userId});
+    async deleteLikeStatus(userId: string, commentId: string): Promise<boolean>{
+        const filter = {$and: [{userId}, {commentId}]};
+        const deleteStatus = await CommentsLikesModel.deleteOne(filter);
         return deleteStatus.deletedCount > 0;
     };
     async addLikeStatus(likeData: CommentLikesModel): Promise<void>{
@@ -32,6 +33,10 @@ export class CommentsRepository {
             likeStatus: likeData.likeStatus
         }).save()
     };
+    async updateLikeStatus(userId: string, commentId: string, likeStatus: 'Like' | 'Dislike'){
+        const filter = {$and: [{userId}, {commentId}]};
+        await CommentsLikesModel.updateOne(filter, {likeStatus});
+    }
     async deleteAllCommentsLikes(): Promise<void>{
         await CommentsLikesModel.deleteMany();
     }

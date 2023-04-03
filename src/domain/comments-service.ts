@@ -2,12 +2,14 @@ import {CommentInTheDBType, CommentType} from "../models/comment-models";
 import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {UserTypeExtended} from "../models/user-models";
 import {CommentsRepository} from "../repositories/comments/comments-repository";
-import {CommentsLikesModel} from "../mongoose-db-models/likes-db-model";
+import {CommentLikesModel} from "../models/comment-likes-model";
+import {CommentsQueryRepository, commentsQueryRepository} from "../repositories/comments/comments-query-repository";
 
 export class CommentsService {
     constructor(
         protected usersQueryRepository: UsersQueryRepository,
-        protected commentsRepository: CommentsRepository
+        protected commentsRepository: CommentsRepository,
+        protected commentsQueryRepository: CommentsQueryRepository
     ) {}
     // создает комментарий. нужно передать содержание комментария, id пользователя и id поста к которому был написан комментарий.
     // возвращает комментарий с видом нужным клиенту
@@ -55,12 +57,20 @@ export class CommentsService {
         await this.commentsRepository.deleteAllData();
     };
     async changeLikeStatus(changeLikeStatusData: {likeStatus: 'None' | 'Like' | 'Dislike', userId: string, commentId: string}): Promise<void>{
-        await this.commentsRepository.deleteLikeStatusByUserId(changeLikeStatusData.userId);
-        if (changeLikeStatusData.likeStatus !== 'None') await this.commentsRepository.addLikeStatus({
-            commentId: changeLikeStatusData.commentId,
-            userId: changeLikeStatusData.userId,
-            likeStatus: changeLikeStatusData.likeStatus
-        })
+        if (changeLikeStatusData.likeStatus === 'None') {
+            await this.commentsRepository.deleteLikeStatus(changeLikeStatusData.userId, changeLikeStatusData.commentId);
+        } else {
+            const foundedLike: CommentLikesModel | null = await this.commentsQueryRepository.getLike(changeLikeStatusData.userId, changeLikeStatusData.commentId);
+            if (!foundedLike) {
+                await this.commentsRepository.addLikeStatus({
+                    commentId: changeLikeStatusData.commentId,
+                    userId: changeLikeStatusData.userId,
+                    likeStatus: changeLikeStatusData.likeStatus
+                })
+            } else {
+                await this.commentsRepository.updateLikeStatus(changeLikeStatusData.userId, changeLikeStatusData.commentId, changeLikeStatusData.likeStatus);
+            }
+        }
     };
     async deleteAllCommentsLikes(): Promise<void>{
         await this.commentsRepository.deleteAllCommentsLikes();
