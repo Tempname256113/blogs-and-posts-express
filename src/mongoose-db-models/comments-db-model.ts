@@ -19,13 +19,15 @@ const commentSchema = new Schema<CommentDocumentMongooseType>(
 
 commentSchema.methods = {
     async getLikesInfo(currentUserId: string | null = null): Promise<LikesInfoType>{
-        const likesFilter = {$and: [{commentId: this.commentId}, {likeStatus: 'Like'}]};
-        const dislikesFilter = {$and: [{commentId: this.commentId}, {likeStatus: 'Dislike'}]};
+        const commentId = this.commentId;
+        const likesFilter = {$and: [{commentId}, {likeStatus: 'Like'}]};
+        const dislikesFilter = {$and: [{commentId}, {likeStatus: 'Dislike'}]};
         const likesByCommentId: number = await CommentsLikesModel.countDocuments(likesFilter);
         const dislikesByCommentId: number = await CommentsLikesModel.countDocuments(dislikesFilter);
         let myLikeStatus: 'Like' | 'Dislike' | 'None' = 'None';
         if (currentUserId) {
-            const foundedLikeByUserId: CommentLikesModel | null = await CommentsLikesModel.findOne({userId: currentUserId}).lean();
+            const filter = {$and: [{userId: currentUserId}, {commentId}]};
+            const foundedLikeByUserId: CommentLikesModel | null = await CommentsLikesModel.findOne(filter).lean();
             if (foundedLikeByUserId) myLikeStatus = foundedLikeByUserId.likeStatus;
         }
         return {
