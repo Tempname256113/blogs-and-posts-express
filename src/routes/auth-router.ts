@@ -1,17 +1,19 @@
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {Router} from "express";
-import {usersQueryRepository} from "../repositories/users/users-query-repository";
+import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
 import {
     createNewUserValidationMiddlewaresArray
 } from "../middlewares/middlewares-arrays/create-new-user-validation-middlewares-array";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
 import {requestLimiterMiddleware} from "../middlewares/request-limiter-middleware";
-import {iocContainer} from "../composition-root";
+import {container} from "../composition-root";
 import {AuthController} from "./auth-controller";
 
-const authController = iocContainer.getInstance<AuthController>(AuthController);
+// const authController = iocContainer.getInstance<AuthController>(AuthController);
+const authController = container.resolve(AuthController);
+const usersQueryRepository = container.resolve(UsersQueryRepository);
 
 export const authRouter = Router();
 

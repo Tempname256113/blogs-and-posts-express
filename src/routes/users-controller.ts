@@ -12,7 +12,9 @@ import {RequestUserType, UsersQueryPaginationType, UserType} from "../models/use
 import {
     ResultOfPaginationUsersByQueryType
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
+import {injectable} from "inversify";
 
+@injectable()
 export class UsersController {
     constructor(protected usersQueryRepository: UsersQueryRepository, protected usersService: UsersService) {
     }

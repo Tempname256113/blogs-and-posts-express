@@ -10,7 +10,9 @@ import {
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 import {CommentLikesModel} from "../../models/comment-likes-model";
 import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class CommentsQueryRepository {
     async getCommentsWithPagination(
         {
@@ -38,5 +40,3 @@ export class CommentsQueryRepository {
         return CommentsLikesModel.findOne(filter);
     }
 }
-
-export const commentsQueryRepository = new CommentsQueryRepository();

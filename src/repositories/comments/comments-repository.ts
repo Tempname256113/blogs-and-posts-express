@@ -2,7 +2,9 @@ import {CommentInTheDBType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
 import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
 import {CommentLikesModel} from "../../models/comment-likes-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class CommentsRepository {
     // создает комментарий в базе данных, нужно передать шаблон для создания комментария.
     // такие шаблоны будут находиться в базе данных.

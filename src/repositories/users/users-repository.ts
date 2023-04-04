@@ -1,6 +1,8 @@
 import {UserType, UserTypeExtended} from "../../models/user-models";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
+import {injectable} from "inversify";
 
+@injectable()
 export class UsersRepository {
     async createUser(newUserTemplate: UserTypeExtended): Promise<UserType> {
         await new UserModel(newUserTemplate).save();

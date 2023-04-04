@@ -1,4 +1,4 @@
-import {commentsQueryRepository, CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
 import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
 import {CommentDocumentMongooseType, CommentType} from "../models/comment-models";
@@ -7,7 +7,9 @@ import {ErrorObjType} from "../models/errorObj-model";
 import {jwtMethods} from "./application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {LikesInfoType} from "../models/comment-likes-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class CommentsController {
     constructor(protected commentsQueryRepository: CommentsQueryRepository, protected commentsService: CommentsService) {
     }
@@ -62,7 +64,7 @@ export class CommentsController {
         req: RequestWithURIParamsAndBody<{commentId: string}, {likeStatus: 'None' | 'Like' | 'Dislike'}>,
         res: Response
     ){
-        const foundedCommentById: CommentDocumentMongooseType | null = await commentsQueryRepository.getCommentByID(req.params.commentId);
+        const foundedCommentById: CommentDocumentMongooseType | null = await this.commentsQueryRepository.getCommentByID(req.params.commentId);
         if (!foundedCommentById) return res.sendStatus(404);
         const userId: string = req.context.accessTokenPayload!.userId;
         await this.commentsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, commentId: req.params.commentId});

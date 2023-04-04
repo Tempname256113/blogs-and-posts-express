@@ -16,7 +16,9 @@ import {
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 import {BlogType, RequestBlogType} from "../models/blog-models";
 import {PostType, RequestPostType} from "../models/post-models";
+import {injectable} from "inversify";
 
+@injectable()
 export class BlogsController {
     constructor(protected blogsQueryRepository: BlogsQueryRepository, protected blogsService: BlogsService) {
     }

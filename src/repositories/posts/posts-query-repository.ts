@@ -5,7 +5,9 @@ import {
 } from "../mongo-DB-features/pagination-by-query-params-functions";
 import {queryPaginationType} from "../../models/query-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class PostsQueryRepository {
     async getPostsWithSortAndPagination(
         {
@@ -27,5 +29,3 @@ export class PostsQueryRepository {
         return PostModel.findOne({id}, {_id: false});
     }
 }
-
-export const postsQueryRepository = new PostsQueryRepository();

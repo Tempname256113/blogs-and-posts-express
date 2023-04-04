@@ -1,6 +1,8 @@
 import {PostType, RequestPostType} from "../../models/post-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class PostsRepository {
     async createNewPost(newPostTemplate: PostType): Promise<PostType> {
         await new PostModel(newPostTemplate).save();
@@ -35,5 +37,3 @@ export class PostsRepository {
         await PostModel.deleteMany();
     }
 }
-
-export const postsRepository = new PostsRepository();

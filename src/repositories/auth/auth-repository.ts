@@ -1,7 +1,9 @@
 import {UserTypeExtended, UserTypeExtendedOptionalFields} from "../../models/user-models";
 import {DataForUpdateSessionType, SessionType} from "../../models/session-models";
 import {SessionModel, UserModel} from "../../mongoose-db-models/auth-db-models";
+import {injectable} from "inversify";
 
+@injectable()
 export class AuthRepository {
     async createNewUser(newUser: UserTypeExtended): Promise<void> {
         await new UserModel(newUser).save();

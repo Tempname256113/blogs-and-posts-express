@@ -5,10 +5,11 @@ import {blogIdUriParamCheckMiddleware} from "../middlewares/blogId-uri-param-che
 import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
 } from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
-import {iocContainer} from "../composition-root";
+import {container} from "../composition-root";
 import {BlogsController} from "./blogs-controller";
 
-const blogsController = iocContainer.getInstance<BlogsController>(BlogsController);
+// const blogsController = iocContainer.getInstance<BlogsController>(BlogsController);
+const blogsController = container.resolve(BlogsController);
 
 export const blogsRouter = Router();
 

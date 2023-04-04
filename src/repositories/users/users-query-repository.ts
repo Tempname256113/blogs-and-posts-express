@@ -5,7 +5,9 @@ import {
     ResultOfPaginationUsersByQueryType
 } from "../mongo-DB-features/pagination-by-query-params-functions";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
+import {injectable} from "inversify";
 
+@injectable()
 export class UsersQueryRepository {
     async getAllUsersWithPagination(
         {
@@ -51,5 +53,3 @@ export class UsersQueryRepository {
         return UserModel.findOne({'passwordRecovery.recoveryCode': recoveryCode}, {_id: false});
     }
 }
-
-export const usersQueryRepository = new UsersQueryRepository();

@@ -4,10 +4,11 @@ import {postsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
 import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
-import {iocContainer} from "../composition-root";
+import {container} from "../composition-root";
 import {PostsController} from "./posts-controller";
 
-const postsController = iocContainer.getInstance<PostsController>(PostsController);
+// const postsController = iocContainer.getInstance<PostsController>(PostsController);
+const postsController = container.resolve(PostsController);
 
 export const postsRouter = Router();
 

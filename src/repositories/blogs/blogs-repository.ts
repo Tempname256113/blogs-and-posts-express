@@ -1,6 +1,8 @@
 import {BlogType, RequestBlogType} from "../../models/blog-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class BlogsRepository {
     async createNewBlog(newBlogTemplate: BlogType): Promise<BlogType> {
         await new BlogModel(newBlogTemplate).save();
@@ -25,5 +27,3 @@ export class BlogsRepository {
         await BlogModel.deleteMany();
     }
 }
-
-export const blogsRepository = new BlogsRepository();

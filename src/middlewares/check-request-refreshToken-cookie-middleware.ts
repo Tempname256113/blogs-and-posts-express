@@ -1,8 +1,11 @@
 import {Request, Response, NextFunction} from "express";
 import {RefreshTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "../routes/application/jwt-methods";
-import {authQueryRepository} from "../repositories/auth/auth-query-repository";
+import {AuthQueryRepository} from "../repositories/auth/auth-query-repository";
 import {SessionType} from "../models/session-models";
+import {container} from "../composition-root";
+
+const authQueryRepository = container.resolve(AuthQueryRepository);
 
 const refreshTokenPropTitle: string = 'refreshToken';
 

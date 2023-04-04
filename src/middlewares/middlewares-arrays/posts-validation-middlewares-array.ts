@@ -1,7 +1,10 @@
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../catch-errors-middleware";
-import {blogsQueryRepository} from "../../repositories/blogs/blogs-query-repository";
+import {BlogsQueryRepository} from "../../repositories/blogs/blogs-query-repository";
 import {blogIdUriParamCheckMiddleware} from "../blogId-uri-param-check-middleware";
+import {container} from "../../composition-root";
+
+const blogsQueryRepository = container.resolve(BlogsQueryRepository);
 
 const titleFieldValidation = body('title')
     .isString()

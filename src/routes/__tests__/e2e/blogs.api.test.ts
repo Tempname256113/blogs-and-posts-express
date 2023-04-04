@@ -3,9 +3,13 @@ import request from "supertest";
 
 import {app} from "../../../app";
 import {BlogType, RequestBlogType} from "../../../models/blog-models";
-import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
-import {postsRepository} from "../../../repositories/posts/posts-repository";
+import {BlogsRepository} from "../../../repositories/blogs/blogs-repository";
+import {PostsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
+import {container} from "../../../composition-root";
+
+const postsRepository = container.resolve(PostsRepository);
+const blogsRepository = container.resolve(BlogsRepository);
 
 const errorsTemplate = {
     errorCase1: {

@@ -1,9 +1,12 @@
 import {NextFunction, Response} from "express";
 import {jwtMethods} from "../routes/application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
-import {commentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {RequestWithURIParams} from "../models/req-res-models";
 import {CommentInTheDBType, CommentType} from "../models/comment-models";
+import {container} from "../composition-root";
+
+const commentsQueryRepository = container.resolve(CommentsQueryRepository);
 
 /* middleware для проверки существования комментария и его принадлежности пользователю который хочет его изменить.
 * если комментарий пользователю не принадлежит, то в ответе возвращается 403 код

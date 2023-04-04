@@ -1,6 +1,9 @@
 import {body} from "express-validator";
-import {usersQueryRepository} from "../../repositories/users/users-query-repository";
+import {UsersQueryRepository} from "../../repositories/users/users-query-repository";
 import {catchErrorsMiddleware} from "../catch-errors-middleware";
+import {container} from "../../composition-root";
+
+const usersQueryRepository = container.resolve(UsersQueryRepository);
 
 const passwordValidation = body('password')
     .isString()

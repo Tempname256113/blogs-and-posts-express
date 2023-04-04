@@ -3,7 +3,9 @@ import {PostsRepository} from "../repositories/posts/posts-repository";
 import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {BlogType} from "../models/blog-models";
 import {v4 as uuid4} from "uuid";
+import {injectable} from "inversify";
 
+@injectable()
 export class PostsService {
     constructor(
         protected blogsQueryRepository: BlogsQueryRepository,

@@ -2,10 +2,11 @@ import {Router} from "express";
 import {basicAuthorizationCheckMiddleware} from "../middlewares/basic-authorization-check-middleware";
 import {body} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
-import {iocContainer} from "../composition-root";
+import {container} from "../composition-root";
 import {UsersController} from "./users-controller";
 
-const usersController = iocContainer.getInstance<UsersController>(UsersController);
+// const usersController = iocContainer.getInstance<UsersController>(UsersController);
+const usersController = container.resolve(UsersController);
 
 export const usersRouter = Router();
 

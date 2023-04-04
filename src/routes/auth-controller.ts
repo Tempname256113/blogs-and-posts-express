@@ -8,9 +8,11 @@ import {createNewPairOfTokens} from "./application/jwt-methods";
 import {DataForUpdateSessionType} from "../models/session-models";
 import {InfoAboutUserType, RequestUserType, UserTypeExtended} from "../models/user-models";
 import {validationResult} from "express-validator";
+import {injectable} from "inversify";
 
 const refreshTokenPropTitle: string = 'refreshToken';
 
+@injectable()
 export class AuthController {
     constructor(protected authService: AuthService, protected usersQueryRepository: UsersQueryRepository) {
     }

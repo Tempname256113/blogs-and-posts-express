@@ -1,6 +1,8 @@
 import {SessionType} from "../../models/session-models";
 import {SessionModel} from "../../mongoose-db-models/auth-db-models";
+import {injectable} from "inversify";
 
+@injectable()
 export class AuthQueryRepository {
     async getSessionByDeviceId(deviceId: string): Promise<SessionType | null> {
         return SessionModel.findOne({deviceId}, {_id: false});
@@ -9,5 +11,3 @@ export class AuthQueryRepository {
         return SessionModel.find({userId}, {_id: false});
     }
 }
-
-export const authQueryRepository = new AuthQueryRepository();

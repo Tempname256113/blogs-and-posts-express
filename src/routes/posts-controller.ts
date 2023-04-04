@@ -22,7 +22,9 @@ import {ErrorObjType} from "../models/errorObj-model";
 import {CommentType} from "../models/comment-models";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "./application/jwt-methods";
+import {injectable} from "inversify";
 
+@injectable()
 export class PostsController {
     constructor(
         protected postsQueryRepository: PostsQueryRepository,

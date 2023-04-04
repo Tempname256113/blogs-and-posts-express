@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {BlogType} from "../../models/blog-models";
 import {
     paginationBlogsByQueryParams,
@@ -9,7 +10,9 @@ import {
 } from "../mongo-DB-features/pagination-by-query-params-functions";
 import {queryPaginationType} from "../../models/query-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
+import {injectable} from "inversify";
 
+@injectable()
 export class BlogsQueryRepository {
     async getBlogsWithSortAndPagination(
         {
@@ -51,5 +54,3 @@ export class BlogsQueryRepository {
         return BlogModel.findOne({id}, {_id: false});
     }
 }
-
-export const blogsQueryRepository = new BlogsQueryRepository();

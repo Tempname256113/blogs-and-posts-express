@@ -8,6 +8,7 @@ import {UsersQueryRepository} from "../repositories/users/users-query-repository
 import {createNewPairOfTokens} from "../routes/application/jwt-methods";
 import {DataForUpdateSessionType, SessionType} from "../models/session-models";
 import {AuthQueryRepository} from "../repositories/auth/auth-query-repository";
+import {injectable} from "inversify";
 
 const envVariables = {
     mailUser: process.env.MAIL_USER,
@@ -93,6 +94,7 @@ const mailer = {
     }
 }
 
+@injectable()
 export class AuthService {
     constructor(
         protected authRepository: AuthRepository,

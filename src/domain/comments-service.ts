@@ -3,8 +3,10 @@ import {UsersQueryRepository} from "../repositories/users/users-query-repository
 import {UserTypeExtended} from "../models/user-models";
 import {CommentsRepository} from "../repositories/comments/comments-repository";
 import {CommentLikesModel} from "../models/comment-likes-model";
-import {CommentsQueryRepository, commentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
+import {injectable} from "inversify";
 
+@injectable()
 export class CommentsService {
     constructor(
         protected usersQueryRepository: UsersQueryRepository,

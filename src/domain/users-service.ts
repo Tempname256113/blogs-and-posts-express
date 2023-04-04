@@ -2,7 +2,9 @@ import {RequestUserType, UserType, UserTypeExtended} from "../models/user-models
 import {genSalt, hash} from "bcrypt";
 import {UsersRepository} from "../repositories/users/users-repository";
 import {v4 as uuidv4} from 'uuid';
+import {injectable} from "inversify";
 
+@injectable()
 export class UsersService {
     constructor(protected usersRepository: UsersRepository) {}
     async createUser({login,password,email}: RequestUserType): Promise<UserType>{

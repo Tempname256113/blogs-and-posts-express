@@ -1,11 +1,15 @@
 
 import request from "supertest"
 import {app} from "../../../app";
-import {blogsRepository} from "../../../repositories/blogs/blogs-repository";
+import {BlogsRepository} from "../../../repositories/blogs/blogs-repository";
 import {PostType, RequestPostType} from "../../../models/post-models";
 import {BlogType} from "../../../models/blog-models";
-import {postsRepository} from "../../../repositories/posts/posts-repository";
+import {PostsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
+import {container} from "../../../composition-root";
+
+const postsRepository = container.resolve(PostsRepository);
+const blogsRepository = container.resolve(BlogsRepository);
 
 const errorsTemplate = {
     errorCase1: {
