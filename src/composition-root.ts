@@ -20,6 +20,8 @@ import {BlogsService} from "./domain/blogs-service";
 import {BlogsRepository} from "./repositories/blogs/blogs-repository";
 import {AuthController} from "./routes/auth-controller";
 
+const objects: any[] = [];
+
 const usersRepository = new UsersRepository();
 const usersQueryRepository = new UsersQueryRepository();
 const authRepository = new AuthRepository();
@@ -32,17 +34,36 @@ const blogsRepository = new BlogsRepository();
 
 
 
-export const usersService = new UsersService(usersRepository);
-export const authService = new AuthService(authRepository, usersQueryRepository, authQueryRepository);
-export const postsService = new PostsService(blogsQueryRepository, postsRepository);
-export const commentsService = new CommentsService(usersQueryRepository, commentsRepository, commentsQueryRepository);
-export const blogsService = new BlogsService(blogsRepository, postsService, blogsQueryRepository);
+const usersService = new UsersService(usersRepository);
+const authService = new AuthService(authRepository, usersQueryRepository, authQueryRepository);
+const postsService = new PostsService(blogsQueryRepository, postsRepository);
+const commentsService = new CommentsService(usersQueryRepository, commentsRepository, commentsQueryRepository);
+const blogsService = new BlogsService(blogsRepository, postsService, blogsQueryRepository);
+objects.push(usersService);
+objects.push(authService);
+objects.push(postsService);
+objects.push(commentsService);
+objects.push(blogsService);
 
 
 
-export const usersController = new UsersController(usersQueryRepository, usersService);
-export const securityDevicesController = new SecurityDevicesController(authQueryRepository, authService);
-export const postsController = new PostsController(postsQueryRepository, commentsQueryRepository, postsService, commentsService);
-export const commentsController = new CommentsController(commentsQueryRepository, commentsService);
-export const blogsController = new BlogsController(blogsQueryRepository, blogsService);
-export const authController = new AuthController(authService, usersQueryRepository);
+const usersController = new UsersController(usersQueryRepository, usersService);
+const securityDevicesController = new SecurityDevicesController(authQueryRepository, authService);
+const postsController = new PostsController(postsQueryRepository, commentsQueryRepository, postsService, commentsService);
+const commentsController = new CommentsController(commentsQueryRepository, commentsService);
+const blogsController = new BlogsController(blogsQueryRepository, blogsService);
+const authController = new AuthController(authService, usersQueryRepository);
+objects.push(usersController);
+objects.push(securityDevicesController);
+objects.push(postsController);
+objects.push(commentsController);
+objects.push(blogsController);
+objects.push(authController);
+
+
+export const iocContainer = {
+    getInstance<T>(classType: any) {
+        const targetInstance = objects.find(obj => obj instanceof classType);
+        return targetInstance as T;
+    }
+}

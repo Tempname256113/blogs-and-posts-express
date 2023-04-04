@@ -8,7 +8,10 @@ import {
 } from "../middlewares/middlewares-arrays/create-new-user-validation-middlewares-array";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
 import {requestLimiterMiddleware} from "../middlewares/request-limiter-middleware";
-import {authController} from "../composition-root";
+import {iocContainer} from "../composition-root";
+import {AuthController} from "./auth-controller";
+
+const authController = iocContainer.getInstance<AuthController>(AuthController);
 
 export const authRouter = Router();
 

@@ -1,6 +1,9 @@
 import {Router} from "express";
 import {checkRequestRefreshTokenCookieMiddleware} from "../middlewares/check-request-refreshToken-cookie-middleware";
-import {securityDevicesController} from "../composition-root";
+import {iocContainer} from "../composition-root";
+import {SecurityDevicesController} from "./security-devices-controller";
+
+const securityDevicesController = iocContainer.getInstance<SecurityDevicesController>(SecurityDevicesController);
 
 export const securityDevicesRouter = Router();
 

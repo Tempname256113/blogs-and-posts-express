@@ -12,7 +12,18 @@ import {requestLimiterRepository} from "./repositories/request-limiter-middlewar
 import {body, validationResult} from "express-validator";
 import {checkRequestRefreshTokenCookieMiddleware} from "./middlewares/check-request-refreshToken-cookie-middleware";
 import {catchErrorsMiddleware} from "./middlewares/catch-errors-middleware";
-import {authService, blogsService, commentsService, postsService, usersService} from "./composition-root";
+import {iocContainer} from "./composition-root";
+import {AuthService} from "./domain/auth-service";
+import {BlogsService} from "./domain/blogs-service";
+import {PostsService} from "./domain/posts-service";
+import {UsersService} from "./domain/users-service";
+import {CommentsService} from "./domain/comments-service";
+
+const blogsService = iocContainer.getInstance<BlogsService>(BlogsService);
+const postsService = iocContainer.getInstance<PostsService>(PostsService);
+const usersService = iocContainer.getInstance<UsersService>(UsersService);
+const commentsService = iocContainer.getInstance<CommentsService>(CommentsService);
+const authService = iocContainer.getInstance<AuthService>(AuthService);
 
 export const app = express();
 

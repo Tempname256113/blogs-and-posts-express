@@ -3,7 +3,10 @@ import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-aut
 import {checkForChangeCommentMiddleware} from "../middlewares/check-for-change-comment-middleware";
 import {body, validationResult} from "express-validator";
 import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
-import {commentsController} from "../composition-root";
+import {iocContainer} from "../composition-root";
+import {CommentsController} from "./comments-controller";
+
+const commentsController = iocContainer.getInstance<CommentsController>(CommentsController);
 
 export const commentsRouter = Router();
 
