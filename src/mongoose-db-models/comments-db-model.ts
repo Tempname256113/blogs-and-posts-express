@@ -1,6 +1,6 @@
 import {model, Schema} from "mongoose";
 import {CommentInTheDBType, CommentMethodsType, CommentMongooseModel} from "../models/comment-models";
-import {CommentLikesModel, LikesInfoType} from "../models/comment-likes-model";
+import {CommentLikesModel, CommentLikesInfoType} from "../models/comment-likes-model";
 import {CommentsLikesModel} from "./likes-db-model";
 
 const commentSchema = new Schema<CommentInTheDBType, CommentMongooseModel, CommentMethodsType>(
@@ -18,7 +18,7 @@ const commentSchema = new Schema<CommentInTheDBType, CommentMongooseModel, Comme
 );
 
 commentSchema.method('getLikesInfo',
-    async function getLikesInfo(currentUserId: string | null = null): Promise<LikesInfoType> {
+    async function getLikesInfo(currentUserId: string | null = null): Promise<CommentLikesInfoType> {
         const commentId = this.commentId;
         const likesFilter = {$and: [{commentId}, {likeStatus: 'Like'}]};
         const dislikesFilter = {$and: [{commentId}, {likeStatus: 'Dislike'}]};

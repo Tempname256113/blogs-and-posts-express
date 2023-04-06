@@ -1,5 +1,5 @@
 import {Document, Model} from "mongoose";
-import {LikesInfoType} from "./comment-likes-model";
+import {CommentLikesInfoType} from "./comment-likes-model";
 
 type CommentInTheDBType = {
     postId: string,
@@ -26,7 +26,7 @@ type CommentType = {
 }
 
 type CommentMethodsType = {
-    getLikesInfo(currentUserId?: string | null):  Promise<LikesInfoType>
+    getLikesInfo(currentUserId?: string | null):  Promise<CommentLikesInfoType>
 }
 
 type CommentMongooseModel = Model<CommentInTheDBType, {}, CommentMethodsType>

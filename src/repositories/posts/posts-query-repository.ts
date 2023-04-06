@@ -1,4 +1,4 @@
-import {PostType} from "../../models/post-models";
+import {PostInTheDBType} from "../../models/post-models";
 import {
     paginationPostsByQueryParams,
     ResultOfPaginationPostsByQueryType
@@ -25,7 +25,7 @@ export class PostsQueryRepository {
         }
         return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig);
     };
-    async getPostByID(id: string): Promise<PostType | null> {
+    async getPostByID(id: string): Promise<PostInTheDBType | null> {
         return PostModel.findOne({id}, {_id: false});
     }
 }

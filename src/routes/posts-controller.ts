@@ -17,12 +17,13 @@ import {
     ResultOfPaginationCommentsByQueryType,
     ResultOfPaginationPostsByQueryType
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
-import {PostType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, RequestPostType} from "../models/post-models";
 import {ErrorObjType} from "../models/errorObj-model";
-import {CommentType} from "../models/comment-models";
+import {CommentInTheDBType, CommentMethodsType, CommentType} from "../models/comment-models";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "./application/jwt-methods";
 import {injectable} from "inversify";
+import {HydratedDocument} from "mongoose";
 
 @injectable()
 export class PostsController {
@@ -46,7 +47,7 @@ export class PostsController {
     };
 
     async getPostById(req: RequestWithURIParams<{ id: string }>, res: Response) {
-        const getPost: PostType | null = await this.postsQueryRepository.getPostByID(req.params.id);
+        const getPost: PostInTheDBType | null = await this.postsQueryRepository.getPostByID(req.params.id);
         getPost ? res.status(200).send(getPost) : res.sendStatus(404);
     };
 
@@ -62,7 +63,7 @@ export class PostsController {
             return accessTokenPayload.userId;
         };
         const userId: string | null = getUserId();
-        const foundedPostById: PostType | null = await this.postsQueryRepository.getPostByID(req.params.id);
+        const foundedPostById: PostInTheDBType | null = await this.postsQueryRepository.getPostByID(req.params.id);
         if (!foundedPostById) return res.sendStatus(404);
         const paginationQueryConfig: { postId: string, userId: string | null } & queryPaginationType = {
             postId: req.params.id,
@@ -76,8 +77,8 @@ export class PostsController {
         res.status(200).send(commentsWithPagination);
     };
 
-    async createNewPost(req: RequestWithBody<RequestPostType>, res: ResponseWithBody<ErrorObjType | PostType>) {
-        const createdPost: PostType = await this.postsService.createNewPost({
+    async createNewPost(req: RequestWithBody<RequestPostType>, res: ResponseWithBody<ErrorObjType | PostInTheDBType>) {
+        const createdPost: PostInTheDBType = await this.postsService.createNewPost({
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
@@ -90,7 +91,7 @@ export class PostsController {
         req: RequestWithURIParamsAndBody<{ id: string }, { content: string }>,
         res: ResponseWithBody<CommentType | ErrorObjType>
     ) {
-        const foundedPost: PostType | null = await this.postsQueryRepository.getPostByID(req.params.id);
+        const foundedPost: PostInTheDBType | null = await this.postsQueryRepository.getPostByID(req.params.id);
         if (!foundedPost) return res.sendStatus(404);
         const dataForCreateNewComment = {
             content: req.body.content,
@@ -109,5 +110,16 @@ export class PostsController {
     async deletePostById(req: RequestWithURIParams<{ id: string }>, res: Response) {
         const deletePostStatus: boolean = await this.postsService.deletePostByID(req.params.id);
         deletePostStatus ? res.sendStatus(204) : res.sendStatus(404);
+    };
+
+    async changeLikeStatus(
+        req: RequestWithURIParamsAndBody<{postId: string}, {likeStatus: 'None' | 'Like' | 'Dislike'}>,
+        res: Response
+    ) {
+        const foundedPostById: HydratedDocument<CommentInTheDBType, CommentMethodsType> | null = await this.commentsQueryRepository.getCommentByID(req.params.commentId);
+        if (!foundedCommentById) return res.sendStatus(404);
+        const userId: string = req.context.accessTokenPayload!.userId;
+        await this.commentsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, commentId: req.params.commentId});
+        res.sendStatus(204);
     }
 }

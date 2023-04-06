@@ -1,5 +1,5 @@
 import {BlogType} from "../../models/blog-models";
-import {PostType} from "../../models/post-models";
+import {PostInTheDBType} from "../../models/post-models";
 import {queryPaginationType} from "../../models/query-models";
 import {UserTypeExtended} from "../../models/user-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
@@ -8,7 +8,7 @@ import {PostModel} from "../../mongoose-db-models/posts-db-model";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
 import {CommentDocumentMongooseType, CommentInTheDBType, CommentType} from "../../models/comment-models";
 import {CommentModel} from "../../mongoose-db-models/comments-db-model";
-import {LikesInfoType} from "../../models/comment-likes-model";
+import {CommentLikesInfoType} from "../../models/comment-likes-model";
 
 type ResultOfPaginationBlogsByQueryType = {
     pagesCount: number,
@@ -23,7 +23,7 @@ type ResultOfPaginationPostsByQueryType = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: PostType[]
+    items: PostInTheDBType[]
 }
 
 type ResultOfPaginationUsersByQueryType = {
@@ -98,12 +98,12 @@ const paginationPostsByQueryParams = async (
     sortDirection === 'asc' ? sortDir = 1 : sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir};
-    const arrayOfReturnedWithPaginationPosts: PostType[] = await PostModel
+    const arrayOfReturnedWithPaginationPosts: PostInTheDBType[] = await PostModel
         .find(searchFilter, {_id: false})
         .sort(sortConfig)
         .limit(Number(pageSize))
         .skip(howMuchToSkip);
-    const allPostsFromDB: PostType[] = await PostModel.find(searchFilter);
+    const allPostsFromDB: PostInTheDBType[] = await PostModel.find(searchFilter);
     const totalCount: number = allPostsFromDB.length;
     const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
     return {
@@ -168,7 +168,7 @@ const paginationCommentsByQueryParams = async (
             })
     let commentsArray: CommentType[] = [];
     for (const commentFromDB of arrayOfReturnedWithPaginationComments) {
-        const commentLikesInfo: LikesInfoType = await commentFromDB.getLikesInfo(userId);
+        const commentLikesInfo: CommentLikesInfoType = await commentFromDB.getLikesInfo(userId);
         const compileComment: CommentType = {
             id: commentFromDB.commentId,
             content: commentFromDB.content,

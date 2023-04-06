@@ -1,4 +1,4 @@
-import {PostType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, RequestPostType} from "../models/post-models";
 import {PostsRepository} from "../repositories/posts/posts-repository";
 import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {BlogType} from "../models/blog-models";
@@ -11,13 +11,13 @@ export class PostsService {
         protected blogsQueryRepository: BlogsQueryRepository,
         protected postsRepository: PostsRepository
     ) {}
-    async createNewPost(newPost: RequestPostType): Promise<PostType> {
+    async createNewPost(newPost: RequestPostType): Promise<PostInTheDBType> {
         /* blog придет потому что роут который обращается к этому сервису на уровне представления с помощью middleware
         уже проверил существует этот blog в базе данных или нет. если запрос дошел сюда, то он существует.
         еще одну проверку здесь делать не надо
         */
         const blog: BlogType | null = await this.blogsQueryRepository.getBlogByID(newPost.blogId);
-        const newPostTemplate: PostType = {
+        const newPostTemplate: PostInTheDBType = {
             id: uuid4(),
             title: newPost.title,
             shortDescription: newPost.shortDescription,

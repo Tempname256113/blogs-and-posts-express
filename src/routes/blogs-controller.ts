@@ -15,7 +15,7 @@ import {
     ResultOfPaginationPostsByQueryType
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 import {BlogType, RequestBlogType} from "../models/blog-models";
-import {PostType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, RequestPostType} from "../models/post-models";
 import {injectable} from "inversify";
 
 @injectable()
@@ -68,14 +68,14 @@ export class BlogsController {
         res.status(201).send(createdBlog);
     };
 
-    async createNewPostByBlogId(req: RequestWithURIParamsAndBody<{ blogId: string }, RequestPostType>, res: Response<PostType>) {
+    async createNewPostByBlogId(req: RequestWithURIParamsAndBody<{ blogId: string }, RequestPostType>, res: Response<PostInTheDBType>) {
         const newPostTemplate: RequestPostType = {
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
             blogId: req.params.blogId
         };
-        const createdPost: PostType = await this.blogsService.createNewPostForSpecificBlog(newPostTemplate);
+        const createdPost: PostInTheDBType = await this.blogsService.createNewPostForSpecificBlog(newPostTemplate);
         res.status(201).send(createdPost);
     };
 

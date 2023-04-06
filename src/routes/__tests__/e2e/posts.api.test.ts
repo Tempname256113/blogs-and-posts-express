@@ -2,7 +2,7 @@
 import request from "supertest"
 import {app} from "../../../app";
 import {BlogsRepository} from "../../../repositories/blogs/blogs-repository";
-import {PostType, RequestPostType} from "../../../models/post-models";
+import {PostInTheDBType, RequestPostType} from "../../../models/post-models";
 import {BlogType} from "../../../models/blog-models";
 import {PostsRepository} from "../../../repositories/posts/posts-repository";
 import {createNewBlogWithoutErrors} from "../../testsAdditional/blogs/additionalFunctionsForBlogsRouteTests";
@@ -34,12 +34,12 @@ const errorsTemplate = {
     }
 }
 
-const createNewPostWithoutErrors = async (scenario: number = 1): Promise<PostType> => {
+const createNewPostWithoutErrors = async (scenario: number = 1): Promise<PostInTheDBType> => {
     const newBlog: BlogType = await createNewBlogWithoutErrors();
     interface INewPostTemplate {
         [scenario: string]: {
             reqBody: RequestPostType;
-            resBody: PostType;
+            resBody: PostInTheDBType;
         }
     }
     const newPostTemplate: INewPostTemplate = {
@@ -73,12 +73,12 @@ const createNewPostWithoutErrors = async (scenario: number = 1): Promise<PostTyp
     return response.body;
 }
 
-const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<PostType> => {
+const createUpdateNewPostWithoutErrors = async (scenario: number = 1): Promise<PostInTheDBType> => {
     const newPost = await createNewPostWithoutErrors();
     interface IUpdatePostTemplate {
         [scenario: string]: {
             reqBody: RequestPostType
-            resBody: PostType
+            resBody: PostInTheDBType
         }
     }
     const updatePostTemplate: IUpdatePostTemplate = {

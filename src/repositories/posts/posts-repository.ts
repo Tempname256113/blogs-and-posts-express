@@ -1,10 +1,10 @@
-import {PostType, RequestPostType} from "../../models/post-models";
+import {PostInTheDBType, RequestPostType} from "../../models/post-models";
 import {PostModel} from "../../mongoose-db-models/posts-db-model";
 import {injectable} from "inversify";
 
 @injectable()
 export class PostsRepository {
-    async createNewPost(newPostTemplate: PostType): Promise<PostType> {
+    async createNewPost(newPostTemplate: PostInTheDBType): Promise<PostInTheDBType> {
         await new PostModel(newPostTemplate).save();
         return newPostTemplate;
     };
