@@ -25,15 +25,15 @@ type CommentType = {
     }
 }
 
-type CommentDocumentMongooseType = CommentInTheDBType & Document & {
-    getLikesInfo: (currentUserId?: string | null) => Promise<LikesInfoType>
+type CommentMethodsType = {
+    getLikesInfo(currentUserId?: string | null):  Promise<LikesInfoType>
 }
 
-type CommentModelMongooseType = Model<CommentDocumentMongooseType>
+type CommentMongooseModel = Model<CommentInTheDBType, {}, CommentMethodsType>
 
 export {
     CommentInTheDBType,
     CommentType,
-    CommentDocumentMongooseType,
-    CommentModelMongooseType
+    CommentMethodsType,
+    CommentMongooseModel
 }

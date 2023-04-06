@@ -1,13 +1,14 @@
 import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {CommentsService} from "../domain/comments-service";
 import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
-import {CommentDocumentMongooseType, CommentType} from "../models/comment-models";
+import {CommentInTheDBType, CommentMethodsType, CommentType} from "../models/comment-models";
 import {Response} from "express";
 import {ErrorObjType} from "../models/errorObj-model";
 import {jwtMethods} from "./application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {LikesInfoType} from "../models/comment-likes-model";
 import {injectable} from "inversify";
+import {HydratedDocument} from "mongoose";
 
 @injectable()
 export class CommentsController {
@@ -23,7 +24,7 @@ export class CommentsController {
             return accessTokenPayload.userId;
         };
         const userId: string | null = getUserId();
-        const foundedCommentById: CommentDocumentMongooseType | null = await this.commentsQueryRepository.getCommentByID(req.params.id);
+        const foundedCommentById: HydratedDocument<CommentInTheDBType, CommentMethodsType> | null = await this.commentsQueryRepository.getCommentByID(req.params.id);
         if (!foundedCommentById) return res.sendStatus(404);
         const commentLikesInfo: LikesInfoType = await foundedCommentById.getLikesInfo(userId);
         const commentToClient: CommentType = {
@@ -64,7 +65,7 @@ export class CommentsController {
         req: RequestWithURIParamsAndBody<{commentId: string}, {likeStatus: 'None' | 'Like' | 'Dislike'}>,
         res: Response
     ){
-        const foundedCommentById: CommentDocumentMongooseType | null = await this.commentsQueryRepository.getCommentByID(req.params.commentId);
+        const foundedCommentById: HydratedDocument<CommentInTheDBType, CommentMethodsType> | null = await this.commentsQueryRepository.getCommentByID(req.params.commentId);
         if (!foundedCommentById) return res.sendStatus(404);
         const userId: string = req.context.accessTokenPayload!.userId;
         await this.commentsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, commentId: req.params.commentId});

@@ -1,9 +1,9 @@
 import {model, Schema} from "mongoose";
-import {CommentDocumentMongooseType, CommentModelMongooseType} from "../models/comment-models";
+import {CommentInTheDBType, CommentMethodsType, CommentMongooseModel} from "../models/comment-models";
 import {CommentLikesModel, LikesInfoType} from "../models/comment-likes-model";
 import {CommentsLikesModel} from "./likes-db-model";
 
-const commentSchema = new Schema<CommentDocumentMongooseType>(
+const commentSchema = new Schema<CommentInTheDBType, CommentMongooseModel, CommentMethodsType>(
     {
         postId: String,
         commentId: String,
@@ -17,8 +17,8 @@ const commentSchema = new Schema<CommentDocumentMongooseType>(
     }
 );
 
-commentSchema.methods = {
-    async getLikesInfo(currentUserId: string | null = null): Promise<LikesInfoType>{
+commentSchema.method('getLikesInfo',
+    async function getLikesInfo(currentUserId: string | null = null): Promise<LikesInfoType> {
         const commentId = this.commentId;
         const likesFilter = {$and: [{commentId}, {likeStatus: 'Like'}]};
         const dislikesFilter = {$and: [{commentId}, {likeStatus: 'Dislike'}]};
@@ -35,10 +35,9 @@ commentSchema.methods = {
             dislikesCount: dislikesByCommentId,
             myLikeStatus
         }
-    }
-}
+})
 
-const CommentModel = model<CommentDocumentMongooseType, CommentModelMongooseType>('Comments', commentSchema);
+const CommentModel = model<CommentInTheDBType, CommentMongooseModel>('Comments', commentSchema);
 
 export {
     CommentModel

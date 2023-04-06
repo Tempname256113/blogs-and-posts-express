@@ -3,7 +3,7 @@ import {jwtMethods} from "../routes/application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {RequestWithURIParams} from "../models/req-res-models";
-import {CommentInTheDBType, CommentType} from "../models/comment-models";
+import {CommentInTheDBType} from "../models/comment-models";
 import {container} from "../composition-root";
 
 const commentsQueryRepository = container.resolve(CommentsQueryRepository);
