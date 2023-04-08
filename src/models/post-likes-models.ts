@@ -1,4 +1,4 @@
-type PostLikesModel = {
+type PostLikeModelType = {
     postId: string;
     userId: string;
     userLogin: string;
@@ -6,21 +6,21 @@ type PostLikesModel = {
     likeStatus: 'Like' | 'Dislike';
 }
 
-type PostNewestLikes = {
+type PostNewestLikesType = {
     addedAt: string;
     userId: string;
     login: string;
 }
 
-type PostExtendedLikesInfo = {
+type PostExtendedLikesInfoType = {
     likesCount: number;
     dislikesCount: number;
     myLikeStatus: 'None' | 'Like' | 'Dislike';
-    newestLikes: PostNewestLikes[]
+    newestLikes: PostNewestLikesType[]
 }
 
 export {
-    PostLikesModel,
-    PostNewestLikes,
-    PostExtendedLikesInfo
+    PostLikeModelType,
+    PostNewestLikesType,
+    PostExtendedLikesInfoType
 }

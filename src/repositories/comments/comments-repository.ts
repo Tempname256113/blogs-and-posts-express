@@ -1,7 +1,7 @@
 import {CommentInTheDBType} from "../../models/comment-models";
-import {CommentModel} from "../../mongoose-db-models/comments-db-model";
-import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
-import {CommentLikesModel} from "../../models/comment-likes-model";
+import {CommentModel} from "../../mongoose-db-models/comment-db-model";
+import {CommentsLikesModel} from "../../mongoose-db-models/comment-likes-db-model";
+import {CommentLikeModelType} from "../../models/comment-like-model-type";
 import {injectable} from "inversify";
 
 @injectable()
@@ -28,7 +28,7 @@ export class CommentsRepository {
         const deleteStatus = await CommentsLikesModel.deleteOne(filter);
         return deleteStatus.deletedCount > 0;
     };
-    async addLikeStatus(likeData: CommentLikesModel): Promise<void>{
+    async addLikeStatus(likeData: CommentLikeModelType): Promise<void>{
         await new CommentsLikesModel({
             userId: likeData.userId,
             commentId: likeData.commentId,

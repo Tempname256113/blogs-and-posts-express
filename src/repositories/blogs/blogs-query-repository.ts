@@ -40,7 +40,7 @@ export class BlogsQueryRepository {
             sortDirection,
             pageNumber,
             pageSize
-        }: { blogId: string } & queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
+        }: { blogId: string } & queryPaginationType, userId: string | null): Promise<ResultOfPaginationPostsByQueryType> {
         const queryPaginationWithSearchConfig: QueryPaginationWithSearchConfigType = {
             searchFilter: {blogId},
             sortBy,
@@ -48,7 +48,7 @@ export class BlogsQueryRepository {
             pageNumber,
             pageSize
         }
-        return paginationPostsByQueryParams(queryPaginationWithSearchConfig);
+        return paginationPostsByQueryParams(queryPaginationWithSearchConfig, userId);
     };
     async getBlogByID(id: string): Promise<BlogType | null> {
         return BlogModel.findOne({id}, {_id: false});

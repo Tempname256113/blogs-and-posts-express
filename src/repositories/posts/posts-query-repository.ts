@@ -1,11 +1,12 @@
-import {PostInTheDBType} from "../../models/post-models";
+import {PostInTheDBType, PostMethodsType} from "../../models/post-models";
 import {
     paginationPostsByQueryParams,
     ResultOfPaginationPostsByQueryType
 } from "../mongo-DB-features/pagination-by-query-params-functions";
 import {queryPaginationType} from "../../models/query-models";
-import {PostModel} from "../../mongoose-db-models/posts-db-model";
+import {PostModel} from "../../mongoose-db-models/post-db-model";
 import {injectable} from "inversify";
+import {HydratedDocument} from "mongoose";
 
 @injectable()
 export class PostsQueryRepository {
@@ -15,7 +16,7 @@ export class PostsQueryRepository {
             sortDirection,
             pageNumber,
             pageSize
-        }: queryPaginationType): Promise<ResultOfPaginationPostsByQueryType> {
+        }: queryPaginationType, userId: string | null): Promise<ResultOfPaginationPostsByQueryType> {
         const queryPaginationTypeWithSearchConfig = {
             searchFilter: {},
             sortBy: sortBy,
@@ -23,9 +24,9 @@ export class PostsQueryRepository {
             pageNumber: pageNumber,
             pageSize: pageSize
         }
-        return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig);
+        return paginationPostsByQueryParams(queryPaginationTypeWithSearchConfig, userId);
     };
-    async getPostByID(id: string): Promise<PostInTheDBType | null> {
+    async getPostByID(id: string): Promise<HydratedDocument<PostInTheDBType, PostMethodsType> | null> {
         return PostModel.findOne({id}, {_id: false});
     }
 }

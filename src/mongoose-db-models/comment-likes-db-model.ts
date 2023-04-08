@@ -1,7 +1,7 @@
 import {model, Schema} from "mongoose";
-import {CommentLikesModel} from "../models/comment-likes-model";
+import {CommentLikeModelType} from "../models/comment-like-model-type";
 
-const commentsLikesSchema = new Schema<CommentLikesModel>(
+const commentsLikesSchema = new Schema<CommentLikeModelType>(
     {
         commentId: String,
         userId: String,
@@ -12,7 +12,7 @@ const commentsLikesSchema = new Schema<CommentLikesModel>(
         collection: 'comments-likes'
     });
 
-const CommentsLikesModel = model<CommentLikesModel>('comments-likes', commentsLikesSchema);
+const CommentsLikesModel = model<CommentLikeModelType>('comments-likes', commentsLikesSchema);
 
 export {
     CommentsLikesModel

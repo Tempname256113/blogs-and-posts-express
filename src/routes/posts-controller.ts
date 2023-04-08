@@ -17,13 +17,15 @@ import {
     ResultOfPaginationCommentsByQueryType,
     ResultOfPaginationPostsByQueryType
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
-import {PostInTheDBType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, PostMethodsType, PostType, RequestPostType} from "../models/post-models";
 import {ErrorObjType} from "../models/errorObj-model";
 import {CommentInTheDBType, CommentMethodsType, CommentType} from "../models/comment-models";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "./application/jwt-methods";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
+import {CommentLikeInfoType} from "../models/comment-like-model-type";
+import {PostExtendedLikesInfoType} from "../models/post-likes-models";
 
 @injectable()
 export class PostsController {
@@ -41,14 +43,47 @@ export class PostsController {
             sortDirection: req.query.sortDirection ?? 'desc',
             pageNumber: req.query.pageNumber ?? 1,
             pageSize: req.query.pageSize ?? 10
-        }
-        const receivedPost: ResultOfPaginationPostsByQueryType = await this.postsQueryRepository.getPostsWithSortAndPagination(paginationConfig);
+        };
+        const getUserId = (): string | null => {
+            const accessToken: string | undefined = req.headers.authorization;
+            if (!accessToken) return null;
+            const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(accessToken);
+            if (!accessTokenPayload) return null;
+            return accessTokenPayload.userId;
+        };
+        const userId: string | null = getUserId();
+        const receivedPost: ResultOfPaginationPostsByQueryType = await this.postsQueryRepository.getPostsWithSortAndPagination(paginationConfig, userId);
         res.status(200).send(receivedPost);
     };
 
     async getPostById(req: RequestWithURIParams<{ id: string }>, res: Response) {
-        const getPost: PostInTheDBType | null = await this.postsQueryRepository.getPostByID(req.params.id);
-        getPost ? res.status(200).send(getPost) : res.sendStatus(404);
+        const getUserId = (): string | null => {
+            const accessToken: string | undefined = req.headers.authorization;
+            if (!accessToken) return null;
+            const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(accessToken);
+            if (!accessTokenPayload) return null;
+            return accessTokenPayload.userId;
+        };
+        const userId: string | null = getUserId();
+        const foundedPostById: HydratedDocument<PostInTheDBType, PostMethodsType> | null = await this.postsQueryRepository.getPostByID(req.params.id);
+        if (!foundedPostById) return res.sendStatus(404);
+        const postLikesInfo: PostExtendedLikesInfoType = await foundedPostById.getLikesInfo(userId);
+        const commentToClient: PostType = {
+            id: foundedPostById.id,
+            title: foundedPostById.title,
+            shortDescription: foundedPostById.shortDescription,
+            content: foundedPostById.content,
+            blogId: foundedPostById.blogId,
+            blogName: foundedPostById.blogName,
+            createdAt: new Date(foundedPostById.createdAt).toISOString(),
+            extendedLikesInfo: {
+                likesCount: postLikesInfo.likesCount,
+                dislikesCount: postLikesInfo.dislikesCount,
+                myStatus: postLikesInfo.myLikeStatus,
+                newestLikes: []
+            }
+        }
+        res.status(200).send(commentToClient);
     };
 
     async getAllCommentsByPostId(
@@ -77,8 +112,8 @@ export class PostsController {
         res.status(200).send(commentsWithPagination);
     };
 
-    async createNewPost(req: RequestWithBody<RequestPostType>, res: ResponseWithBody<ErrorObjType | PostInTheDBType>) {
-        const createdPost: PostInTheDBType = await this.postsService.createNewPost({
+    async createNewPost(req: RequestWithBody<RequestPostType>, res: ResponseWithBody<ErrorObjType | PostType>) {
+        const createdPost: PostType = await this.postsService.createNewPost({
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,

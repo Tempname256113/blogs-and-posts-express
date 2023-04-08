@@ -1,17 +1,17 @@
 
-type CommentLikesModel = {
+type CommentLikeModelType = {
     commentId: string;
     userId: string;
     likeStatus: 'Like' | 'Dislike';
 }
 
-type CommentLikesInfoType = {
+type CommentLikeInfoType = {
     likesCount: number;
     dislikesCount: number;
     myLikeStatus: 'None' | 'Like' | 'Dislike';
 }
 
 export {
-    CommentLikesModel,
-    CommentLikesInfoType
+    CommentLikeModelType,
+    CommentLikeInfoType
 }

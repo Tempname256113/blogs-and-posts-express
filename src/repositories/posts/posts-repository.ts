@@ -1,12 +1,11 @@
 import {PostInTheDBType, RequestPostType} from "../../models/post-models";
-import {PostModel} from "../../mongoose-db-models/posts-db-model";
+import {PostModel} from "../../mongoose-db-models/post-db-model";
 import {injectable} from "inversify";
 
 @injectable()
 export class PostsRepository {
-    async createNewPost(newPostTemplate: PostInTheDBType): Promise<PostInTheDBType> {
+    async createNewPost(newPostTemplate: PostInTheDBType): Promise<void> {
         await new PostModel(newPostTemplate).save();
-        return newPostTemplate;
     };
     // возвращает true в случае удачного изменения объекта
     // или false в случае неудачного

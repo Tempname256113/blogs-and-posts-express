@@ -1,4 +1,4 @@
-import {PostInTheDBType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, PostType, RequestPostType} from "../models/post-models";
 import {PostsRepository} from "../repositories/posts/posts-repository";
 import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
 import {BlogType} from "../models/blog-models";
@@ -11,7 +11,7 @@ export class PostsService {
         protected blogsQueryRepository: BlogsQueryRepository,
         protected postsRepository: PostsRepository
     ) {}
-    async createNewPost(newPost: RequestPostType): Promise<PostInTheDBType> {
+    async createNewPost(newPost: RequestPostType): Promise<PostType> {
         /* blog придет потому что роут который обращается к этому сервису на уровне представления с помощью middleware
         уже проверил существует этот blog в базе данных или нет. если запрос дошел сюда, то он существует.
         еще одну проверку здесь делать не надо
@@ -24,9 +24,25 @@ export class PostsService {
             content: newPost.content,
             blogId: newPost.blogId,
             blogName: blog!.name,
-            createdAt: new Date().toISOString()
-        }
-        return this.postsRepository.createNewPost(newPostTemplate);
+            createdAt: new Date().getTime()
+        };
+        const newPostToClient: PostType = {
+            id: newPostTemplate.id,
+            title: newPost.title,
+            shortDescription: newPost.shortDescription,
+            content: newPost.content,
+            blogId: newPost.blogId,
+            blogName: blog!.name,
+            createdAt: new Date(newPostTemplate.createdAt).toISOString(),
+            extendedLikesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None',
+                newestLikes: []
+            }
+        };
+        await this.postsRepository.createNewPost(newPostTemplate);
+        return newPostToClient;
     };
     async updatePostByID(id: string, requestPost: RequestPostType): Promise<boolean> {
         return this.postsRepository.updatePostByID(id, requestPost);

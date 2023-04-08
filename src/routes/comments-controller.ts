@@ -6,7 +6,7 @@ import {Response} from "express";
 import {ErrorObjType} from "../models/errorObj-model";
 import {jwtMethods} from "./application/jwt-methods";
 import {AccessTokenPayloadType} from "../models/token-models";
-import {CommentLikesInfoType} from "../models/comment-likes-model";
+import {CommentLikeInfoType} from "../models/comment-like-model-type";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
 
@@ -26,7 +26,7 @@ export class CommentsController {
         const userId: string | null = getUserId();
         const foundedCommentById: HydratedDocument<CommentInTheDBType, CommentMethodsType> | null = await this.commentsQueryRepository.getCommentByID(req.params.id);
         if (!foundedCommentById) return res.sendStatus(404);
-        const commentLikesInfo: CommentLikesInfoType = await foundedCommentById.getLikesInfo(userId);
+        const commentLikesInfo: CommentLikeInfoType = await foundedCommentById.getLikesInfo(userId);
         const commentToClient: CommentType = {
             id: foundedCommentById.commentId,
             content: foundedCommentById.content,

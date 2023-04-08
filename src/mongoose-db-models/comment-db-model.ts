@@ -1,7 +1,7 @@
 import {model, Schema} from "mongoose";
 import {CommentInTheDBType, CommentMethodsType, CommentMongooseModel} from "../models/comment-models";
-import {CommentLikesModel, CommentLikesInfoType} from "../models/comment-likes-model";
-import {CommentsLikesModel} from "./likes-db-model";
+import {CommentLikeModelType, CommentLikeInfoType} from "../models/comment-like-model-type";
+import {CommentsLikesModel} from "./comment-likes-db-model";
 
 const commentSchema = new Schema<CommentInTheDBType, CommentMongooseModel, CommentMethodsType>(
     {
@@ -18,7 +18,7 @@ const commentSchema = new Schema<CommentInTheDBType, CommentMongooseModel, Comme
 );
 
 commentSchema.method('getLikesInfo',
-    async function getLikesInfo(currentUserId: string | null = null): Promise<CommentLikesInfoType> {
+    async function getLikesInfo(currentUserId: string | null = null): Promise<CommentLikeInfoType> {
         const commentId = this.commentId;
         const likesFilter = {$and: [{commentId}, {likeStatus: 'Like'}]};
         const dislikesFilter = {$and: [{commentId}, {likeStatus: 'Dislike'}]};
@@ -27,7 +27,7 @@ commentSchema.method('getLikesInfo',
         let myLikeStatus: 'Like' | 'Dislike' | 'None' = 'None';
         if (currentUserId) {
             const filter = {$and: [{userId: currentUserId}, {commentId}]};
-            const foundedLikeByUserId: CommentLikesModel | null = await CommentsLikesModel.findOne(filter).lean();
+            const foundedLikeByUserId: CommentLikeModelType | null = await CommentsLikesModel.findOne(filter).lean();
             if (foundedLikeByUserId) myLikeStatus = foundedLikeByUserId.likeStatus;
         }
         return {

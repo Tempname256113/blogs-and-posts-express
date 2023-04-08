@@ -2,7 +2,7 @@ import {CommentInTheDBType, CommentType} from "../models/comment-models";
 import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 import {UserTypeExtended} from "../models/user-models";
 import {CommentsRepository} from "../repositories/comments/comments-repository";
-import {CommentLikesModel} from "../models/comment-likes-model";
+import {CommentLikeModelType} from "../models/comment-like-model-type";
 import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
 import {injectable} from "inversify";
 
@@ -62,7 +62,7 @@ export class CommentsService {
         if (changeLikeStatusData.likeStatus === 'None') {
             await this.commentsRepository.deleteLikeStatus(changeLikeStatusData.userId, changeLikeStatusData.commentId);
         } else {
-            const foundedLike: CommentLikesModel | null = await this.commentsQueryRepository.getLike(changeLikeStatusData.userId, changeLikeStatusData.commentId);
+            const foundedLike: CommentLikeModelType | null = await this.commentsQueryRepository.getLike(changeLikeStatusData.userId, changeLikeStatusData.commentId);
             if (!foundedLike) {
                 await this.commentsRepository.addLikeStatus({
                     commentId: changeLikeStatusData.commentId,

@@ -1,14 +1,15 @@
 import {BlogType} from "../../models/blog-models";
-import {PostInTheDBType} from "../../models/post-models";
+import {PostInTheDBType, PostMethodsType, PostType} from "../../models/post-models";
 import {queryPaginationType} from "../../models/query-models";
 import {UserTypeExtended} from "../../models/user-models";
 import {BlogModel} from "../../mongoose-db-models/blogs-db-model";
-import {SortOrder} from "mongoose";
-import {PostModel} from "../../mongoose-db-models/posts-db-model";
+import {HydratedDocument, SortOrder} from "mongoose";
+import {PostModel} from "../../mongoose-db-models/post-db-model";
 import {UserModel} from "../../mongoose-db-models/auth-db-models";
-import {CommentDocumentMongooseType, CommentInTheDBType, CommentType} from "../../models/comment-models";
-import {CommentModel} from "../../mongoose-db-models/comments-db-model";
-import {CommentLikesInfoType} from "../../models/comment-likes-model";
+import {CommentInTheDBType, CommentMethodsType, CommentType} from "../../models/comment-models";
+import {CommentModel} from "../../mongoose-db-models/comment-db-model";
+import {CommentLikeInfoType} from "../../models/comment-like-model-type";
+import {PostExtendedLikesInfoType, PostLikeModelType} from "../../models/post-likes-models";
 
 type ResultOfPaginationBlogsByQueryType = {
     pagesCount: number,
@@ -23,7 +24,7 @@ type ResultOfPaginationPostsByQueryType = {
     page: number,
     pageSize: number,
     totalCount: number,
-    items: PostInTheDBType[]
+    items: PostType[]
 }
 
 type ResultOfPaginationUsersByQueryType = {
@@ -92,26 +93,47 @@ const paginationPostsByQueryParams = async (
         sortDirection,
         pageNumber,
         pageSize
-    }: QueryPaginationWithSearchConfigType): Promise<ResultOfPaginationPostsByQueryType> => {
+    }: QueryPaginationWithSearchConfigType, userId: string | null): Promise<ResultOfPaginationPostsByQueryType> => {
     const howMuchToSkip: number = (Number(pageNumber) - 1) * Number(pageSize);
     let sortDir: SortOrder;
     sortDirection === 'asc' ? sortDir = 1 : sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir};
-    const arrayOfReturnedWithPaginationPosts: PostInTheDBType[] = await PostModel
-        .find(searchFilter, {_id: false})
-        .sort(sortConfig)
-        .limit(Number(pageSize))
-        .skip(howMuchToSkip);
-    const allPostsFromDB: PostInTheDBType[] = await PostModel.find(searchFilter);
-    const totalCount: number = allPostsFromDB.length;
-    const pagesCount: number = Math.ceil(totalCount / Number(pageSize));
+    const findOptions = {
+        sort: sortConfig,
+        limit: Number(pageSize),
+        skip: howMuchToSkip
+    };
+    const arrayOfReturnedWithPaginationPosts: HydratedDocument<PostInTheDBType, PostMethodsType>[] = await PostModel
+        .find(searchFilter, {_id: false}, findOptions);
+    const allPostsFromDB: number = await PostModel.countDocuments(searchFilter);
+    const pagesCount: number = Math.ceil(allPostsFromDB / Number(pageSize));
+    const arrayOfPosts: PostType[] = [];
+    for (const postFromDB of arrayOfReturnedWithPaginationPosts) {
+        const postLikesInfo: PostExtendedLikesInfoType = await postFromDB.getLikesInfo(userId);
+        const compilePost: PostType = {
+            id: postFromDB.id,
+            title: postFromDB.title,
+            shortDescription: postFromDB.shortDescription,
+            content: postFromDB.content,
+            blogName: postFromDB.blogName,
+            blogId: postFromDB.blogId,
+            createdAt: postFromDB.createdAt,
+            extendedLikesInfo: {
+                likesCount: postLikesInfo.likesCount,
+                dislikesCount: postLikesInfo.dislikesCount,
+                myLikeStatus: postLikesInfo.myLikeStatus,
+                newestLikes: postLikesInfo.newestLikes
+            }
+        };
+        arrayOfPosts.push(compilePost);
+    }
     return {
         pagesCount,
         page: Number(pageNumber),
         pageSize: Number(pageSize),
-        totalCount,
-        items: arrayOfReturnedWithPaginationPosts
+        totalCount: allPostsFromDB,
+        items: arrayOfPosts
     }
 }
 
@@ -158,17 +180,18 @@ const paginationCommentsByQueryParams = async (
     sortDirection === 'asc' ? sortDir = 1 : sortDir = -1;
 
     const sortConfig = {[sortBy]: sortDir};
-    const arrayOfReturnedWithPaginationComments: CommentDocumentMongooseType[] = await CommentModel
-        .find(searchFilter,
-            {_id: false, postId: false},
-            {
-                sort: sortConfig,
-                limit: Number(pageSize),
-                skip: howMuchToSkip
-            })
-    let commentsArray: CommentType[] = [];
+    const findOptions = {
+        sort: sortConfig,
+        limit: Number(pageSize),
+        skip: howMuchToSkip
+    };
+    const arrayOfReturnedWithPaginationComments: HydratedDocument<CommentInTheDBType, CommentMethodsType>[] = await CommentModel
+        .find(searchFilter, {_id: false, postId: false}, findOptions);
+    const allCommentsFromDB: number = await CommentModel.countDocuments(searchFilter);
+    const pagesCount: number = Math.ceil(allCommentsFromDB / Number(pageSize));
+    const commentsArray: CommentType[] = [];
     for (const commentFromDB of arrayOfReturnedWithPaginationComments) {
-        const commentLikesInfo: CommentLikesInfoType = await commentFromDB.getLikesInfo(userId);
+        const commentLikesInfo: CommentLikeInfoType = await commentFromDB.getLikesInfo(userId);
         const compileComment: CommentType = {
             id: commentFromDB.commentId,
             content: commentFromDB.content,
@@ -185,8 +208,6 @@ const paginationCommentsByQueryParams = async (
         }
         commentsArray.push(compileComment);
     };
-    const allCommentsFromDB: number = await CommentModel.countDocuments(searchFilter);
-    const pagesCount: number = Math.ceil(allCommentsFromDB / Number(pageSize));
     return {
         pagesCount,
         page: Number(pageNumber),

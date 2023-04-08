@@ -4,9 +4,9 @@ import {
     QueryPaginationWithSearchConfigType,
     ResultOfPaginationCommentsByQueryType
 } from "../mongo-DB-features/pagination-by-query-params-functions";
-import {CommentModel} from "../../mongoose-db-models/comments-db-model";
-import {CommentLikesModel} from "../../models/comment-likes-model";
-import {CommentsLikesModel} from "../../mongoose-db-models/likes-db-model";
+import {CommentModel} from "../../mongoose-db-models/comment-db-model";
+import {CommentLikeModelType} from "../../models/comment-like-model-type";
+import {CommentsLikesModel} from "../../mongoose-db-models/comment-likes-db-model";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
 import {CommentInTheDBType, CommentMethodsType} from "../../models/comment-models";
@@ -34,7 +34,7 @@ export class CommentsQueryRepository {
     async getCommentByID(id: string): Promise<HydratedDocument<CommentInTheDBType, CommentMethodsType> | null> {
         return CommentModel.findOne({commentId: id}, {_id: false});
     };
-    async getLike(userId: string, commentId: string) : Promise <CommentLikesModel | null> {
+    async getLike(userId: string, commentId: string) : Promise <CommentLikeModelType | null> {
         const filter = {$and: [{userId}, {commentId}]};
         return CommentsLikesModel.findOne(filter).lean();
     }
