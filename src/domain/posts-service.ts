@@ -4,12 +4,18 @@ import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository
 import {BlogType} from "../models/blog-models";
 import {v4 as uuid4} from "uuid";
 import {injectable} from "inversify";
+import {PostLikeModelType} from "../models/post-likes-models";
+import {PostsQueryRepository} from "../repositories/posts/posts-query-repository";
+import {UserTypeExtended} from "../models/user-models";
+import {UsersQueryRepository} from "../repositories/users/users-query-repository";
 
 @injectable()
 export class PostsService {
     constructor(
         protected blogsQueryRepository: BlogsQueryRepository,
-        protected postsRepository: PostsRepository
+        protected postsRepository: PostsRepository,
+        protected postsQueryRepository: PostsQueryRepository,
+        protected usersQueryRepository: UsersQueryRepository
     ) {}
     async createNewPost(newPost: RequestPostType): Promise<PostType> {
         /* blog придет потому что роут который обращается к этому сервису на уровне представления с помощью middleware
@@ -52,5 +58,32 @@ export class PostsService {
     };
     async deleteAllData(): Promise<void> {
         await this.postsRepository.deleteAllData();
-    }
+    };
+    async changeLikeStatus(changeLikeStatusData: {likeStatus: 'None' | 'Like' | 'Dislike', userId: string, postId: string}): Promise<void>{
+        if (changeLikeStatusData.likeStatus === 'None') {
+            await this.postsRepository.deleteLikeStatus(changeLikeStatusData.userId, changeLikeStatusData.postId);
+        } else {
+            const foundedLike: PostLikeModelType | null = await this.postsQueryRepository.getLike(changeLikeStatusData.userId, changeLikeStatusData.postId);
+            if (!foundedLike) {
+                const user: UserTypeExtended | null = await this.usersQueryRepository.getUserById(changeLikeStatusData.userId);
+                const userLogin = user!.accountData.login;
+                await this.postsRepository.addLikeStatus({
+                    postId: changeLikeStatusData.postId,
+                    userId: changeLikeStatusData.userId,
+                    userLogin,
+                    addedAt: new Date().getTime(),
+                    likeStatus: changeLikeStatusData.likeStatus
+                });
+            } else {
+                await this.postsRepository.updateLikeStatus({
+                    userId: changeLikeStatusData.userId,
+                    postId: changeLikeStatusData.postId,
+                    likeStatus: changeLikeStatusData.likeStatus
+                });
+            }
+        }
+    };
+    async deleteAllPostsLikes(): Promise<void>{
+        await this.postsRepository.deleteAllPostsLikes();
+    };
 }

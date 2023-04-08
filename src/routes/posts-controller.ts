@@ -19,12 +19,11 @@ import {
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 import {PostInTheDBType, PostMethodsType, PostType, RequestPostType} from "../models/post-models";
 import {ErrorObjType} from "../models/errorObj-model";
-import {CommentInTheDBType, CommentMethodsType, CommentType} from "../models/comment-models";
+import {CommentType} from "../models/comment-models";
 import {AccessTokenPayloadType} from "../models/token-models";
 import {jwtMethods} from "./application/jwt-methods";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
-import {CommentLikeInfoType} from "../models/comment-like-model-type";
 import {PostExtendedLikesInfoType} from "../models/post-likes-models";
 
 @injectable()
@@ -151,10 +150,10 @@ export class PostsController {
         req: RequestWithURIParamsAndBody<{postId: string}, {likeStatus: 'None' | 'Like' | 'Dislike'}>,
         res: Response
     ) {
-        const foundedPostById: HydratedDocument<CommentInTheDBType, CommentMethodsType> | null = await this.commentsQueryRepository.getCommentByID(req.params.commentId);
-        if (!foundedCommentById) return res.sendStatus(404);
+        const foundedPostById: HydratedDocument<PostInTheDBType, PostMethodsType> | null = await this.postsQueryRepository.getPostByID(req.params.postId);
+        if (!foundedPostById) return res.sendStatus(404);
         const userId: string = req.context.accessTokenPayload!.userId;
-        await this.commentsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, commentId: req.params.commentId});
+        await this.postsService.changeLikeStatus({likeStatus: req.body.likeStatus, userId, postId: req.params.postId});
         res.sendStatus(204);
     }
 }

@@ -43,6 +43,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
         usersService.deleteAllData(),
         commentsService.deleteAllData(),
         commentsService.deleteAllCommentsLikes(),
+        postsService.deleteAllPostsLikes(),
         authService.deleteAllSessions(),
         requestLimiterRepository.deleteAllIpAddresses()
     ]);

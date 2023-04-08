@@ -15,8 +15,10 @@ import {
     ResultOfPaginationPostsByQueryType
 } from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
 import {BlogType, RequestBlogType} from "../models/blog-models";
-import {PostInTheDBType, RequestPostType} from "../models/post-models";
+import {PostInTheDBType, PostType, RequestPostType} from "../models/post-models";
 import {injectable} from "inversify";
+import {AccessTokenPayloadType} from "../models/token-models";
+import {jwtMethods} from "./application/jwt-methods";
 
 @injectable()
 export class BlogsController {
@@ -53,8 +55,16 @@ export class BlogsController {
             sortDirection: req.query.sortDirection ?? 'desc',
             pageNumber: req.query.pageNumber ?? 1,
             pageSize: req.query.pageSize ?? 10,
-        }
-        const posts: ResultOfPaginationPostsByQueryType = await this.blogsQueryRepository.getAllPostsForSpecifiedBlog(paginationConfig);
+        };
+        const getUserId = (): string | null => {
+            const accessToken: string | undefined = req.headers.authorization;
+            if (!accessToken) return null;
+            const accessTokenPayload: AccessTokenPayloadType | null = jwtMethods.compareToken.accessToken(accessToken);
+            if (!accessTokenPayload) return null;
+            return accessTokenPayload.userId;
+        };
+        const userId: string | null = getUserId();
+        const posts: ResultOfPaginationPostsByQueryType = await this.blogsQueryRepository.getAllPostsForSpecifiedBlog(paginationConfig, userId);
         res.status(200).send(posts);
     };
 
@@ -68,14 +78,14 @@ export class BlogsController {
         res.status(201).send(createdBlog);
     };
 
-    async createNewPostByBlogId(req: RequestWithURIParamsAndBody<{ blogId: string }, RequestPostType>, res: Response<PostInTheDBType>) {
+    async createNewPostByBlogId(req: RequestWithURIParamsAndBody<{ blogId: string }, RequestPostType>, res: Response<PostType>) {
         const newPostTemplate: RequestPostType = {
             title: req.body.title,
             shortDescription: req.body.shortDescription,
             content: req.body.content,
             blogId: req.params.blogId
         };
-        const createdPost: PostInTheDBType = await this.blogsService.createNewPostForSpecificBlog(newPostTemplate);
+        const createdPost: PostType = await this.blogsService.createNewPostForSpecificBlog(newPostTemplate);
         res.status(201).send(createdPost);
     };
 

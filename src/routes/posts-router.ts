@@ -41,3 +41,10 @@ postsRouter.delete('/:id',
     basicAuthorizationCheckMiddleware,
     postsController.deletePostById.bind(postsController)
 );
+
+postsRouter.put('/:postId/like-status',
+    bearerUserAuthTokenCheckMiddleware,
+    body('likeStatus').isString().trim().isIn(['None', 'Like', 'Dislike']),
+    catchErrorsMiddleware,
+    postsController.changeLikeStatus.bind(postsController)
+);

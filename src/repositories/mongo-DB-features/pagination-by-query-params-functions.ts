@@ -118,11 +118,11 @@ const paginationPostsByQueryParams = async (
             content: postFromDB.content,
             blogName: postFromDB.blogName,
             blogId: postFromDB.blogId,
-            createdAt: postFromDB.createdAt,
+            createdAt: new Date(postFromDB.createdAt).toISOString(),
             extendedLikesInfo: {
                 likesCount: postLikesInfo.likesCount,
                 dislikesCount: postLikesInfo.dislikesCount,
-                myLikeStatus: postLikesInfo.myLikeStatus,
+                myStatus: postLikesInfo.myLikeStatus,
                 newestLikes: postLikesInfo.newestLikes
             }
         };
