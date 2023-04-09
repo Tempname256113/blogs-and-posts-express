@@ -79,7 +79,7 @@ export class PostsController {
                 likesCount: postLikesInfo.likesCount,
                 dislikesCount: postLikesInfo.dislikesCount,
                 myStatus: postLikesInfo.myLikeStatus,
-                newestLikes: []
+                newestLikes: postLikesInfo.newestLikes
             }
         }
         res.status(200).send(commentToClient);
