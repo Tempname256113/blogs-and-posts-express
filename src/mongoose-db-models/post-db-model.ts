@@ -11,7 +11,7 @@ const postSchema = new Schema<PostInTheDBType, PostMongooseModel, PostMethodsTyp
         content: String,
         blogId: String,
         blogName: String,
-        createdAt: String
+        createdAt: Number
     }, {
         strict: true,
         versionKey: false
