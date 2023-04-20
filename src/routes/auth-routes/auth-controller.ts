@@ -1,12 +1,12 @@
-import {AuthService} from "../domain/auth-service";
-import {UsersQueryRepository} from "../repositories/users/users-query-repository";
-import {RequestWithBody, ResponseWithBody} from "../models/req-res-models";
-import {ErrorObjType} from "../models/errorObj-model";
+import {AuthService} from "../../domain/auth-service";
+import {UsersQueryRepository} from "../../repositories/users/users-query-repository";
+import {RequestWithBody, ResponseWithBody} from "../../models/req-res-models";
+import {ErrorObjType} from "../../models/errorObj-model";
 import {Request, Response} from "express";
-import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../models/token-models";
-import {createNewPairOfTokens} from "./application/jwt-methods";
-import {DataForUpdateSessionType} from "../models/session-models";
-import {InfoAboutUserType, RequestUserType, UserTypeExtended} from "../models/user-models";
+import {AccessTokenPayloadType, RefreshTokenPayloadType} from "../../models/token-models";
+import {createNewPairOfTokens} from "../application/jwt-methods";
+import {DataForUpdateSessionType} from "../../models/session-models";
+import {InfoAboutUserType, RequestUserType, UserTypeExtended} from "../../models/user-models";
 import {validationResult} from "express-validator";
 import {injectable} from "inversify";
 

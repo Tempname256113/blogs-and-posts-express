@@ -18,7 +18,7 @@ import {CommentsController} from "./routes/comments-controller";
 import {BlogsController} from "./routes/blogs-controller";
 import {BlogsService} from "./domain/blogs-service";
 import {BlogsRepository} from "./repositories/blogs/blogs-repository";
-import {AuthController} from "./routes/auth-controller";
+import {AuthController} from "./routes/auth-routes/auth-controller";
 import 'reflect-metadata';
 import {Container} from "inversify";
 
