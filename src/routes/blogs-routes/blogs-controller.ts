@@ -1,5 +1,5 @@
-import {BlogsQueryRepository} from "../repositories/blogs/blogs-query-repository";
-import {BlogsService} from "../domain/blogs-service";
+import {BlogsQueryRepository} from "../../repositories/blogs/blogs-query-repository";
+import {BlogsService} from "../../domain/blogs-service";
 import {
     reqQueryPagination,
     RequestWithBody,
@@ -7,18 +7,18 @@ import {
     RequestWithURIParams,
     RequestWithURIParamsAndBody,
     RequestWithURIParamsAndQuery
-} from "../models/req-res-models";
+} from "../../models/req-res-models";
 import {Response} from "express";
-import {queryPaginationType} from "../models/query-models";
+import {queryPaginationType} from "../../models/query-models";
 import {
     ResultOfPaginationBlogsByQueryType,
     ResultOfPaginationPostsByQueryType
-} from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
-import {BlogType, RequestBlogType} from "../models/blog-models";
-import {PostInTheDBType, PostType, RequestPostType} from "../models/post-models";
+} from "../../repositories/mongo-DB-features/pagination-by-query-params-functions";
+import {BlogType, RequestBlogType} from "../../models/blog-models";
+import {PostInTheDBType, PostType, RequestPostType} from "../../models/post-models";
 import {injectable} from "inversify";
-import {AccessTokenPayloadType} from "../models/token-models";
-import {jwtMethods} from "./application/jwt-methods";
+import {AccessTokenPayloadType} from "../../models/token-models";
+import {jwtMethods} from "../application/jwt-methods";
 
 @injectable()
 export class BlogsController {

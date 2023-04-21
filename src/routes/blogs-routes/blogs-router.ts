@@ -1,11 +1,11 @@
 import {Router} from "express";
-import {basicAuthorizationCheckMiddleware} from "../middlewares/basic-authorization-check-middleware";
-import {blogsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/blogs-validation-middlewares-array";
-import {blogIdUriParamCheckMiddleware} from "../middlewares/blogId-uri-param-check-middleware";
+import {basicAuthorizationCheckMiddleware} from "../../middlewares/basic-authorization-check-middleware";
+import {blogsValidationMiddlewaresArray} from "../../middlewares/middlewares-arrays/blogs-validation-middlewares-array";
+import {blogIdUriParamCheckMiddleware} from "../../middlewares/blogId-uri-param-check-middleware";
 import {
     postsValidationMiddlewaresArrayWithUriBlogIdCheck
-} from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
-import {container} from "../composition-root";
+} from "../../middlewares/middlewares-arrays/posts-validation-middlewares-array";
+import {container} from "../../composition-root";
 import {BlogsController} from "./blogs-controller";
 
 // const blogsController = iocContainer.getInstance<BlogsController>(BlogsController);
