@@ -14,7 +14,7 @@ import {BlogsQueryRepository} from "./repositories/blogs/blogs-query-repository"
 import {PostsRepository} from "./repositories/posts/posts-repository";
 import {CommentsService} from "./domain/comments-service";
 import {CommentsRepository} from "./repositories/comments/comments-repository";
-import {CommentsController} from "./routes/comments-controller";
+import {CommentsController} from "./routes/comments-routes/comments-controller";
 import {BlogsController} from "./routes/blogs-routes/blogs-controller";
 import {BlogsService} from "./domain/blogs-service";
 import {BlogsRepository} from "./repositories/blogs/blogs-repository";

@@ -3,7 +3,7 @@ import {blogsRouter} from "./routes/blogs-routes/blogs-router";
 import {postsRouter} from "./routes/posts-router";
 import {usersRouter} from "./routes/users-router";
 import {authRouter} from "./routes/auth-router";
-import {commentsRouter} from "./routes/comments-router";
+import {commentsRouter} from "./routes/comments-routes/comments-router";
 import cookieParser from "cookie-parser";
 import {securityDevicesRouter} from "./routes/security-devices-router";
 import {jwtMethods} from "./routes/application/jwt-methods";

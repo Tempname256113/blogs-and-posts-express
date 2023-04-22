@@ -1,12 +1,12 @@
-import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
-import {CommentsService} from "../domain/comments-service";
-import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../models/req-res-models";
-import {CommentInTheDBType, CommentMethodsType, CommentType} from "../models/comment-models";
+import {CommentsQueryRepository} from "../../repositories/comments/comments-query-repository";
+import {CommentsService} from "../../domain/comments-service";
+import {RequestWithURIParams, RequestWithURIParamsAndBody, ResponseWithBody} from "../../models/req-res-models";
+import {CommentInTheDBType, CommentMethodsType, CommentType} from "../../models/comment-models";
 import {Response} from "express";
-import {ErrorObjType} from "../models/errorObj-model";
-import {jwtMethods} from "./application/jwt-methods";
-import {AccessTokenPayloadType} from "../models/token-models";
-import {CommentLikeInfoType} from "../models/comment-like-model-type";
+import {ErrorObjType} from "../../models/errorObj-model";
+import {jwtMethods} from "../application/jwt-methods";
+import {AccessTokenPayloadType} from "../../models/token-models";
+import {CommentLikeInfoType} from "../../models/comment-like-model-type";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
 
