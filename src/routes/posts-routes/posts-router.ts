@@ -1,10 +1,10 @@
 import {Router} from "express";
-import {basicAuthorizationCheckMiddleware} from "../middlewares/basic-authorization-check-middleware";
-import {postsValidationMiddlewaresArray} from "../middlewares/middlewares-arrays/posts-validation-middlewares-array";
+import {basicAuthorizationCheckMiddleware} from "../../middlewares/basic-authorization-check-middleware";
+import {postsValidationMiddlewaresArray} from "../../middlewares/middlewares-arrays/posts-validation-middlewares-array";
 import {body} from "express-validator";
-import {catchErrorsMiddleware} from "../middlewares/catch-errors-middleware";
-import {bearerUserAuthTokenCheckMiddleware} from "../middlewares/bearer-user-auth-token-check-middleware";
-import {container} from "../composition-root";
+import {catchErrorsMiddleware} from "../../middlewares/catch-errors-middleware";
+import {bearerUserAuthTokenCheckMiddleware} from "../../middlewares/bearer-user-auth-token-check-middleware";
+import {container} from "../../composition-root";
 import {PostsController} from "./posts-controller";
 
 // const postsController = iocContainer.getInstance<PostsController>(PostsController);

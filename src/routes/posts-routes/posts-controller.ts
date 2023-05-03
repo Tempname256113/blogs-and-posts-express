@@ -1,7 +1,7 @@
-import {PostsQueryRepository} from "../repositories/posts/posts-query-repository";
-import {CommentsQueryRepository} from "../repositories/comments/comments-query-repository";
-import {PostsService} from "../domain/posts-service";
-import {CommentsService} from "../domain/comments-service";
+import {PostsQueryRepository} from "../../repositories/posts/posts-query-repository";
+import {CommentsQueryRepository} from "../../repositories/comments/comments-query-repository";
+import {PostsService} from "../../domain/posts-service";
+import {CommentsService} from "../../domain/comments-service";
 import {
     reqQueryPagination,
     RequestWithBody,
@@ -10,21 +10,21 @@ import {
     RequestWithURIParamsAndBody,
     RequestWithURIParamsAndQuery,
     ResponseWithBody
-} from "../models/req-res-models";
+} from "../../models/req-res-models";
 import {Response} from "express";
-import {queryPaginationType} from "../models/query-models";
+import {queryPaginationType} from "../../models/query-models";
 import {
     ResultOfPaginationCommentsByQueryType,
     ResultOfPaginationPostsByQueryType
-} from "../repositories/mongo-DB-features/pagination-by-query-params-functions";
-import {PostInTheDBType, PostMethodsType, PostType, RequestPostType} from "../models/post-models";
-import {ErrorObjType} from "../models/errorObj-model";
-import {CommentType} from "../models/comment-models";
-import {AccessTokenPayloadType} from "../models/token-models";
-import {jwtMethods} from "./application/jwt-methods";
+} from "../../repositories/mongo-DB-features/pagination-by-query-params-functions";
+import {PostInTheDBType, PostMethodsType, PostType, RequestPostType} from "../../models/post-models";
+import {ErrorObjType} from "../../models/errorObj-model";
+import {CommentType} from "../../models/comment-models";
+import {AccessTokenPayloadType} from "../../models/token-models";
+import {jwtMethods} from "../application/jwt-methods";
 import {injectable} from "inversify";
 import {HydratedDocument} from "mongoose";
-import {PostExtendedLikesInfoType} from "../models/post-likes-models";
+import {PostExtendedLikesInfoType} from "../../models/post-likes-models";
 
 @injectable()
 export class PostsController {

@@ -1,6 +1,6 @@
 import express, {Request, Response} from "express";
 import {blogsRouter} from "./routes/blogs-routes/blogs-router";
-import {postsRouter} from "./routes/posts-router";
+import {postsRouter} from "./routes/posts-routes/posts-router";
 import {usersRouter} from "./routes/users-router";
 import {authRouter} from "./routes/auth-router";
 import {commentsRouter} from "./routes/comments-routes/comments-router";
