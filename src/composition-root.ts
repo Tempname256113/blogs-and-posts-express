@@ -5,7 +5,7 @@ import {UsersQueryRepository} from "./repositories/users/users-query-repository"
 import {AuthService} from "./domain/auth-service";
 import {AuthRepository} from "./repositories/auth/auth-repository";
 import {AuthQueryRepository} from "./repositories/auth/auth-query-repository";
-import {SecurityDevicesController} from "./routes/security-devices-controller";
+import {SecurityDevicesController} from "./routes/security-routes/security-devices-controller";
 import {PostsController} from "./routes/posts-routes/posts-controller";
 import {PostsQueryRepository} from "./repositories/posts/posts-query-repository";
 import {CommentsQueryRepository} from "./repositories/comments/comments-query-repository";

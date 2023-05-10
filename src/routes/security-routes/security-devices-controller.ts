@@ -1,9 +1,9 @@
-import {AuthQueryRepository} from "../repositories/auth/auth-query-repository";
-import {AuthService} from "../domain/auth-service";
+import {AuthQueryRepository} from "../../repositories/auth/auth-query-repository";
+import {AuthService} from "../../domain/auth-service";
 import {Request, Response} from "express";
-import {RequestWithURIParams, ResponseWithBody} from "../models/req-res-models";
-import {SessionType, UserSessionsDataType} from "../models/session-models";
-import {RefreshTokenPayloadType} from "../models/token-models";
+import {RequestWithURIParams, ResponseWithBody} from "../../models/req-res-models";
+import {SessionType, UserSessionsDataType} from "../../models/session-models";
+import {RefreshTokenPayloadType} from "../../models/token-models";
 import {injectable} from "inversify";
 
 @injectable()
